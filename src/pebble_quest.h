@@ -51,7 +51,6 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MAX_MOVEMENT_INTERVAL           200  // milliseconds per step
 #define PLAYER_TIMER_DURATION           20   // milliseconds
 #define FLASH_TIMER_DURATION            20   // milliseconds
-#define DEFAULT_NUM_FLASHES             2
 #define MAX_SMALL_INT_VALUE             9999
 #define MAX_SMALL_INT_DIGITS            4
 #define MAX_LARGE_INT_VALUE             999999999
@@ -84,7 +83,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define DEFAULT_MAX_HP                  30
 #define DEFAULT_MAX_MP                  30
 #define DEFAULT_STAT_BOOST              5
-#define DEFAULT_GOLD                    5
+#define RANDOM_GOLD_AMOUNT              (rand() % 20 + 1)
 #define DEFAULT_QUEST_REWARD            (25 * (rand() % 10 + 1))
 #define NUM_PLAYER_ANIMATIONS           2 // No. of steps in the player's attack animation.
 #define HP_RECOVERY_RATE                1 // HP per second.
@@ -92,16 +91,19 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MIN_DAMAGE                      2
 #define MP_LOSS_PER_SPELL               -2
 #define STORAGE_KEY                     841
-#define MAX_GOLD                        9999
-#define MAX_POTIONS                     99
-#define MAX_HEAVY_ITEMS                 5
+#define NUM_POTION_TYPES                2  // HP_POTION and MP_POTION.
+#define MAX_HEAVY_ITEMS                 6  // "Heavy items" refers to robe/armor, shield, and weapons.
+#define NUM_HEAVY_ITEM_TYPES            11 // "Heavy items" refers to robe/armor, shield, and weapons.
+#define NUM_SPECIAL_ITEM_TYPES          3  // GOLD, KEY, and ARTIFACT.
+#define NUM_PEBBLE_TYPES                7
+#define PLAYER_INVENTORY_SIZE           (NUM_PEBBLE_TYPES + NUM_POTION_TYPES + NUM_SPECIAL_ITEMS + MAX_HEAVY_ITEMS)
+#define MERCHANT_INVENTORY_SIZE         (NUM_HEAVY_ITEM_TYPES + NUM_POTION_TYPES)
 #define MAX_INFUSED_PEBBLES             2
 #define MAX_NPCS_AT_ONE_TIME            3
 #define MIN_NPCS_PER_QUEST              10
 #define MAX_NPCS_PER_QUEST              30
 #define ANIMATED                        true
 #define NOT_ANIMATED                    false
-#define NUM_PEBBLE_TYPES                7
 
 /******************************************************************************
   Enumerations (replaced with #defines to save memory)
@@ -133,29 +135,34 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define SOLID               2
 #define EMPTY               3
 #define CAPTIVE             4
-#define GOLD                5
-#define KEY                 6
-#define ARTIFACT            7
-#define HP_POTION           8
-#define MP_POTION           9
-#define ROBE                10
-#define LIGHT_ARMOR         11
-#define HEAVY_ARMOR         12
-#define SHIELD              13
-#define DAGGER              14
-#define SWORD               15
-#define AXE                 16
-#define STAFF               17
-#define HAMMER              18
-#define FLAIL               19
-#define BOW                 20
-#define PEBBLE_OF_FIRE      21
-#define PEBBLE_OF_ICE       22
-#define PEBBLE_OF_LIGHTNING 23
-#define PEBBLE_OF_LIFE      24
-#define PEBBLE_OF_DEATH     25
-#define PEBBLE_OF_LIGHT     26
-#define PEBBLE_OF_THE_VOID  27
+#define LOOT                5 // Plus item type value (see below).
+
+// Item types:
+#define GOLD                0
+#define KEY                 1
+#define ARTIFACT            2
+#define HP_POTION           3
+#define MP_POTION           4
+#define PEBBLE_OF_FIRE      5
+#define PEBBLE_OF_ICE       6
+#define PEBBLE_OF_LIGHTNING 7
+#define PEBBLE_OF_LIFE      8
+#define PEBBLE_OF_DEATH     9
+#define PEBBLE_OF_LIGHT     10
+#define PEBBLE_OF_DARKNESS  11
+#define ROBE                12
+#define LIGHT_ARMOR         13
+#define HEAVY_ARMOR         14
+#define SHIELD              15
+#define DAGGER              16
+#define SWORD               17
+#define AXE                 18
+#define STAFF               19
+#define MACE                20
+#define FLAIL               21
+#define BOW                 22
+
+#define FIRST_HEAVY_ITEM_INDEX ROBE
 
 // Equip targets (i.e., places where an item may be equipped):
 #define BODY              0
@@ -243,15 +250,17 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define SCROLL_MODE          2
 #define MAIN_MENU_MODE       3
 #define INVENTORY_MODE       4
-#define PEBBLE_OPTIONS_MODE  5
-#define PEBBLE_INFUSION_MODE 6
-#define MARKET_MODE          7
-#define BUYING_MODE          8
-#define SELLING_MODE         9
-#define LOOT_MODE            10
-#define REPLACE_ITEM_MODE    11
-#define LEVEL_UP_MODE        12
-#define NUM_GAME_MODES       13
+#define EQUIP_OPTIONS_MODE   5
+#define PEBBLE_OPTIONS_MODE  6
+#define PEBBLE_INFUSION_MODE 7
+#define MARKET_MODE          8
+#define BUYING_MODE          9
+#define SELLING_MODE         10
+#define LOOT_MODE            11
+#define REPLACE_ITEM_MODE    12
+#define SHOW_STATS_MODE      13
+#define LEVEL_UP_MODE        14
+#define NUM_GAME_MODES       15
 
 // Directions:
 #define NORTH          0
@@ -264,11 +273,10 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Structures
 ******************************************************************************/
 
-typedef struct HeavyItem {
+typedef struct Item {
   int16_t type,
-          equip_target,
-          infused_pebbles[MAX_INFUSED_PEBBLES];
-} __attribute__((__packed__)) heavy_item_t;
+          n; // 'Quantity' for Pebbles/potions, 'infusion value' for others.
+} __attribute__((__packed__)) item_t;
 
 typedef struct NonPlayerCharacter {
   GPoint position;
@@ -283,17 +291,12 @@ typedef struct PlayerCharacter {
   int16_t direction,
           stats[NUM_CHARACTER_STATS],
           status_effects[NUM_STATUS_EFFECTS],
-          exp_points,
           level,
-          gold,
-          hp_potions,
-          mp_potions,
-          pebbles[NUM_PEBBLE_TYPES],
+          exp_points,
           num_quests_completed,
-          num_pebbles_found;
-  bool has_key;
-  heavy_item_t *heavy_items[MAX_HEAVY_ITEMS],
-               *equipped_items[NUM_EQUIP_TARGETS];
+          num_pebbles_found,
+          equipped_item_indices[NUM_EQUIP_TARGETS];
+  heavy_item_t *inventory[PLAYER_INVENTORY_SIZE];
 } __attribute__((__packed__)) player_t;
 
 typedef struct Quest {
@@ -353,7 +356,7 @@ int16_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee);
 bool touching(const GPoint cell, const GPoint cell_2);
 void damage_player(int16_t damage);
 void damage_npc(npc_t *npc, const int16_t damage);
-bool adjust_player_gold(const int16_t amount);
+bool adjust_item_quantity(const int16_t item, const int16_t amount);
 void adjust_player_current_hp(const int16_t amount);
 void remove_npc(npc_t *npc);
 void adjust_player_current_mp(const int16_t amount);
@@ -372,7 +375,7 @@ void set_cell_type(GPoint cell, const int16_t type);
 npc_t *get_npc_at(const GPoint cell);
 bool out_of_bounds(const GPoint cell);
 bool occupiable(const GPoint cell);
-void show_scroll(int16_t scroll);
+void show_scroll(const int16_t scroll);
 void show_window(Window *window, bool animated);
 static void menu_draw_header_callback(GContext* ctx,
                                       const Layer *cell_layer,
@@ -385,7 +388,8 @@ static void menu_draw_row_callback(GContext *ctx,
 void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data);
-int16_t get_boosted_stat_value(const int16_t stat_index);
+int16_t get_boosted_stat_value(const int16_t stat_index,
+                               const int16_t boost_amount);
 /*static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer,
                                                void *data);*/
 static int16_t menu_get_header_height_callback(MenuLayer *menu_layer,
@@ -421,8 +425,8 @@ void draw_status_bar(GContext *ctx);
 void draw_status_meter(GContext *ctx,
                        const GPoint origin,
                        const float ratio);
-void flash(const int16_t num_flashes);
-static void flash_timer_callback(void *num_flashes_remaining);
+void flash_screen(void);
+static void flash_timer_callback(void *data);
 static void player_timer_callback(void *data);
 static void graphics_window_appear(Window *window);
 static void graphics_window_disappear(Window *window);
@@ -436,16 +440,20 @@ void graphics_click_config_provider(void *context);
 void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
 void scroll_click_config_provider(void *context);
 int16_t get_opposite_direction(const int16_t direction);
-void cat_int_onto_str(char *dest_str, int32_t integer);
+void strcat_item_name(char *dest_str, const int16_t item);
+void strcat_magic_type(char *dest_str, const int16_t magic_type);
+void strcat_stat_name(char *dest_str, const int16_t stat);
+void strcat_stat_value(char *dest_str, const int16_t stat);
+void strcat_int(char *dest_str, int16_t integer);
 void assign_minor_stats(int16_t *stats_array);
-void add_item_to_inventory(int16_t type);
-void equip(heavy_item_t *item, int16_t equip_target);
+void add_item_to_inventory(const int16_t type);
+void equip(const heavy_item_t *item, const int16_t equip_target);
 void init_player(void);
 void deinit_player(void);
-void init_npc(npc_t *npc, int16_t type, GPoint position);
-void init_heavy_item(heavy_item_t *item, int16_t type);
+void init_npc(npc_t *npc, const int16_t type, const GPoint position);
+void init_heavy_item(heavy_item_t *item, const int16_t type);
 void init_wall_coords(void);
-void init_quest(int16_t type);
+void init_quest(const int16_t type);
 void init_quest_location(void);
 void deinit_quest(void);
 void init_scroll(void);

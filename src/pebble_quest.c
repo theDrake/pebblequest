@@ -284,7 +284,6 @@ void damage_player(int16_t damage)
     damage = MIN_DAMAGE;
   }
   vibes_short_pulse();
-  flash(1);
   adjust_player_current_hp(damage * -1);
 }
 
@@ -315,32 +314,33 @@ void damage_npc(npc_t *npc, const int16_t damage)
 }
 
 /******************************************************************************
-   Function: adjust_player_gold
+   Function: adjust_item_quantity
 
-Description: Adjusts the player's gold by a given amount, which may be positive
-             or negative. If the adjustment would increase the player's gold
-             above MAX_SMALL_INT_VALUE, the player's gold is simply set to
-             MAX_SMALL_INT_VALUE and "false" is returned. If it would reduce
-             the player's gold below zero, no adjustment is made and "false"
-             is returned.
+Description: Adjusts the quantity of a given item in the player's inventory by
+             a given amount, which may be positive or negative. (If the
+             adjustment would increase the item's quantity above
+             MAX_SMALL_INT_VALUE, the quantity is set to MAX_SMALL_INT_VALUE
+             and "false" is returned. If it would reduce the quantity below
+             zero, no adjustment is made and "false" is returned.)
 
-     Inputs: amount - Adjustment amount (which may be positive or negative).
+     Inputs: item   - Integer representing the item of interest.
+             amount - Adjustment amount (which may be positive or negative).
 
     Outputs: "True" if the adjustment succeeds.
 ******************************************************************************/
-bool adjust_player_gold(const int16_t amount)
+bool adjust_item_quantity(const int16_t item, const int16_t amount)
 {
-  if (g_player->gold + amount < 0)
+  if (g_player->inventory[item]->n + amount < 0)
   {
     return false;
   }
-  else if (g_player->gold + amount > MAX_SMALL_INT_VALUE)
+  else if (g_player->inventory[item]->n + amount > MAX_SMALL_INT_VALUE)
   {
-    g_player->gold = MAX_SMALL_INT_VALUE;
+    g_player->inventory[item]->n = MAX_SMALL_INT_VALUE;
 
     return false;
   }
-  g_player->gold += amount;
+  g_player->inventory[item]->n += amount;
 
   return true;
 }
@@ -477,7 +477,7 @@ void end_quest(void)
 
   if (g_quest->completed)
   {
-    adjust_player_gold(g_quest->reward);
+    adjust_item_quantity(GOLD, g_quest->reward);
     show_scroll(VICTORY_SCROLL);
   }
   else
@@ -721,16 +721,12 @@ GPoint get_cell_farther_away(const GPoint reference_point,
   {
     case NORTH:
       return GPoint(reference_point.x, reference_point.y - distance);
-      break;
     case SOUTH:
       return GPoint(reference_point.x, reference_point.y + distance);
-      break;
     case EAST:
       return GPoint(reference_point.x + distance, reference_point.y);
-      break;
     default: // case WEST:
       return GPoint(reference_point.x - distance, reference_point.y);
-      break;
   }
 }
 
@@ -751,16 +747,12 @@ int16_t get_direction_to_the_left(const int16_t reference_direction)
   {
     case NORTH:
       return WEST;
-      break;
     case WEST:
       return SOUTH;
-      break;
     case SOUTH:
       return EAST;
-      break;
     default: // case EAST:
       return NORTH;
-      break;
   }
 }
 
@@ -781,16 +773,12 @@ int16_t get_direction_to_the_right(const int16_t reference_direction)
   {
     case NORTH:
       return EAST;
-      break;
     case EAST:
       return SOUTH;
-      break;
     case SOUTH:
       return WEST;
-      break;
     default: // case WEST:
       return NORTH;
-      break;
   }
 }
 
@@ -901,7 +889,7 @@ Description: Displays desired scroll text via the scroll window.
 
     Outputs: None.
 ******************************************************************************/
-void show_scroll(int16_t scroll)
+void show_scroll(const int16_t scroll)
 {
   static char scroll_str[SCROLL_STR_LEN + 1]; // To store scroll text.
   GSize content_size;                         // To adjust scroll size.
@@ -1014,13 +1002,13 @@ static void menu_draw_header_callback(GContext *ctx,
   else if (g_game_mode == LEVEL_UP_MODE)
   {
     strcpy(header_str, "Level ");
-    cat_int_onto_str(header_str, g_player->level);
+    strcat_int(header_str, g_player->level);
     strcat(header_str, " reached!");
   }
   else // MARKET_MODE, BUYING_MODE, or SELLING_MODE
   {
     strcpy(header_str, "Market - Gold: ");
-    cat_int_onto_str(header_str, g_player->gold);
+    strcat_int(header_str, g_player->gold);
   }
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
@@ -1042,106 +1030,106 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
-  //int16_t i;
+  int16_t i;
+  char title_str[MENU_TITLE_STR_LEN + 1]       = "",
+       subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
 
-  if (g_game_mode == MAIN_MENU_MODE)
+  switch (g_game_mode)
   {
-    switch (cell_index->row)
-    {
-      case 0:
-        menu_cell_basic_draw(ctx,
-                             cell_layer,
-                             g_quest == NULL ? "New Quest" : "Continue",
-                             "",
-                             NULL);
-        break;
-      case 1:
-        menu_cell_basic_draw(ctx,
-                             cell_layer,
-                             "Character Stats",
-                             "Strength, Agility, etc.",
-                             NULL);
-        break;
-      case 2:
-        menu_cell_basic_draw(ctx,
-                             cell_layer,
-                             "Inventory",
-                             "Use/equip items.",
-                             NULL);
-        break;
-      default: // case 3:
-        menu_cell_basic_draw(ctx,
-                             cell_layer,
-                             "Marketplace",
-                             g_quest == NULL ? "Buy/sell items." :
-                                               "Not during quests!",
-                             NULL);
-        break;
-    }
+    case SHOW_STATS_MODE:
+    case LEVEL_UP_MODE:
+      strcat_stat_name(title_cell_index->row));
+      strcat_stat_value(title_str, cell_index->row);
+      if (g_game_mode == LEVEL_UP_MODE)
+      {
+        strcat(title_str, "->");
+        strcat_int(title_str, get_boosted_stat_value(cell_index->row));
+      }
+      break;
+    case MAIN_MENU_MODE:
+      switch (cell_index->row)
+      {
+        case 0:
+          strcat(title_str, g_quest == NULL ? "New Quest" : "Continue");
+          break;
+        case 1:
+          strcat(title_str, "Character Stats");
+          strcat(subtitle_str, "Strength, Agility...");
+          break;
+        case 2:
+          strcat(title_str, "Inventory");
+          strcat(subtitle_str, "Use/equip items.");
+          break;
+        default: // case 3:
+          strcat(title_str, "Marketplace");
+          strcat(subtitle_str, g_quest == NULL ? "Buy/sell items." :
+                                                 "Not during quests!");
+          break;
+      }
+      break;
+    case INVENTORY_MODE:
+    case SELLING_MODE:
+    case PEBBLE_INFUSION_MODE:
+    case REPLACE_ITEM_MODE:
+      if (cell_index->row < FIRST_HEAVY_ITEM_INDEX)
+      {
+        strcat_item_name(title_str, cell_index->row);
+        strcat(title_str, " (")
+        strcat_int(g_player->inventory[cell_index->row]->n);
+        strcat(title_str, ")")
+        if (g_game_mode == SELLING_MODE)
+        {
+          strcat(subtitle_str, "Sell for ");
+          strcat_int(subtitle_str, get_item_value(cell_index->row));
+          strcat(subtitle_str, " gold?");
+        }
+      }
+      else // Heavy items:
+      {
+        strcat_item_name(title_str, g_player->inventory[cell_index->row]);
+        if (g_player->inventory[cell_index->row]->n > 0)
+        {
+          strcat(title_str, " of ");
+          strcat_magic_type(subtitle_str,
+                            g_player->inventory[cell_index->row]->n);
+        }
+      }
+      break;
+    case EQUIP_OPTIONS_MODE:
+    case PEBBLE_OPTIONS_MODE:
+      switch (cell_index->row)
+      {
+        strcat(subtitle_str, "Current: ");
+        case 0:
+          strcat(title_str, "Equip to Right Hand");
+          break;
+        case 1:
+          strcat(title_str, "Equip to Left Hand");
+          break;
+        default: // Only used in PEBBLE_OPTIONS_MODE.
+          strcat(title_str, "Infuse into Item");
+          strcat(subtitle_str, "This is permanent!");
+          break;
+      }
+      break;
+    case LOOT_MODE:
+      break;
+    case MARKET_MODE:
+      switch (cell_index->row)
+      {
+        case 0:
+          strcat(title_str, "Buy");
+          break;
+        default:
+          strcat(title_str, "Sell");
+          break;
+      }
+      break;
+    case BUYING_MODE:
+      break;
   }
-  else if (g_game_mode == INVENTORY_MODE)
-  {
-    //for (i = 0; )
-  }
-  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
-  {
-    switch (cell_index->row)
-    {
-      case 0:
-        menu_cell_basic_draw(ctx,
-                             cell_layer,
-                             "Equip, Right Hand",
-                             "Current: ",
-                             NULL);
-        break;
-      case 1:
-        menu_cell_basic_draw(ctx,
-                             cell_layer,
-                             "Equip, Left Hand",
-                             "Current: ",
-                             NULL);
-        break;
-      default: // case 2:
-        menu_cell_basic_draw(ctx,
-                             cell_layer,
-                             "Infuse into Item",
-                             "This is permanent!",
-                             NULL);
-        break;
-    }
-  }
-  else if (g_game_mode == LOOT_MODE)
-  {
-  }
-  else if (g_game_mode == LEVEL_UP_MODE)
-  {
-  }
-  else if (g_game_mode == MARKET_MODE)
-  {
-    switch (cell_index->row)
-    {
-      case 0:
-        menu_cell_basic_draw(ctx,
-                             cell_layer,
-                             "Buy",
-                             "",
-                             NULL);
-        break;
-      default: // case 1:
-        menu_cell_basic_draw(ctx,
-                             cell_layer,
-                             "Sell",
-                             "",
-                             NULL);
-        break;
-    }
-  }
-  else if (g_game_mode == BUYING_MODE)
-  {
-  }
-  else if (g_game_mode == SELLING_MODE)
-  {
-  }
+
+  menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
 }
 
 /******************************************************************************
@@ -1159,6 +1147,14 @@ void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data)
 {
+  if (g_player->stats[cell_index->row] >= MAX_SMALL_INT_VALUE)
+  {
+    return;
+  }
+
+  g_player->stats[cell_index->row] = get_boosted_stat_value(cell_index->row);
+  menu_layer_reload_data(g_menu_layer);
+
   switch (cell_index->row)
   {
     case 0: // New Quest / Continue
@@ -1190,96 +1186,22 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
 }
 
-/*static void ad_hoc_menu_draw_row_callback(GContext *ctx,
-                                          const Layer *cell_layer,
-                                          MenuIndex *cell_index,
-                                          void *data)
-{
-  char title_str[MENU_TITLE_STR_LEN + 1],
-       subtitle_str[MENU_SUBTITLE_STR_LEN + 1];
-
-  // Determine the row's title:
-  switch (cell_index->row)
-  {
-    case STRENGTH:
-      strcpy(title_str, "Strength");
-      break;
-    case AGILITY:
-      strcpy(title_str, "Agility");
-      break;
-    case INTELLECT:
-      strcpy(title_str, "Intellect");
-      break;
-    case MAX_HP:
-      strcpy(title_str, "HP");
-      break;
-    case MAX_MP:
-      strcpy(title_str, "MP");
-      break;
-    case PHYSICAL_POWER:
-      strcpy(title_str, "Phys. Power");
-      break;
-    case PHYSICAL_DEFENSE:
-      strcpy(title_str, "Phys. Defense");
-      break;
-    case MAGICAL_POWER:
-      strcpy(title_str, "Mag. Power");
-      break;
-    case MAGICAL_DEFENSE:
-      strcpy(title_str, "Mag. Defense");
-      break;
-    default: // case SPEED:
-      strcpy(title_str, "Speed");
-      break;
-  }
-
-  // Determine the row's subtitle:
-  if (g_player->stats[cell_index->row] >= MAX_SMALL_INT_VALUE)
-  {
-    strcpy(subtitle_str, "9999 (Maxed Out)");
-  }
-  else
-  {
-    strcpy(subtitle_str, "");
-    cat_int_onto_str(subtitle_str, g_player->stats[cell_index->row]);
-    strcat(subtitle_str, " -> ");
-    cat_int_onto_str(subtitle_str, g_player->stats[cell_index->row] + 1);
-  }
-
-  // Finally, draw the row in the ad hoc menu:
-  menu_cell_basic_draw(ctx,
-                       cell_layer,
-                       title_str,
-                       subtitle_str,
-                       NULL);
-}
-
-void ad_hoc_menu_select_callback(MenuLayer *menu_layer,
-                                 MenuIndex *cell_index,
-                                 void *data)
-{
-  if (g_player->stats[cell_index->row] >= MAX_SMALL_INT_VALUE)
-  {
-    return;
-  }
-
-  g_player->stats[cell_index->row] = get_boosted_stat_value(cell_index->row);
-  menu_layer_reload_data(g_menu_layer);
-}*/
-
 /******************************************************************************
    Function: get_boosted_stat_value
 
-Description: Determines what value a given stat will be raised to if boosted.
+Description: Determines what value a given stat will be raised to if boosted by
+             a given amount, which is either the sum of those values or
+             MAX_SMALL_INT_VALUE.
 
-     Inputs: stat_index - Index value of the stat of interest.
+     Inputs: stat_index   - Index value of the stat of interest.
+             boost_amount - Desired boost amount.
 
     Outputs: The new value the stat will have if it is boosted.
 ******************************************************************************/
-int16_t get_boosted_stat_value(const int16_t stat_index)
+int16_t get_boosted_stat_value(const int16_t stat_index,
+                               const int16_t boost_amount)
 {
-  int16_t boosted_stat_value = g_player->stats[stat_index] +
-                                DEFAULT_STAT_BOOST;
+  int16_t boosted_stat_value = g_player->stats[stat_index] + boost_amount;
 
   if (boosted_stat_value >= MAX_SMALL_INT_VALUE)
   {
@@ -1323,13 +1245,36 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
                                            uint16_t section_index,
                                            void *data)
 {
-  if (true)
+  if (g_game_mode == MAIN_MENU_MODE)
   {
     return MAIN_MENU_NUM_ROWS;
   }
-  else
+  else if (g_game_mode == INVENTORY_MODE ||
+           g_game_mode == SELLING_MODE)
   {
-    return 0;
+    return get_inventory_size();
+  }
+  else if (g_game_mode == PEBBLE_INFUSION_MODE ||
+           g_game_mode == REPLACE_ITEM_MODE)
+  {
+    return get_heavy_inventory_size();
+  }
+  else if (g_game_mode == BUYING_MODE)
+  {
+    return MERCHANT_INVENTORY_SIZE;
+  }
+  else if (g_game_mode == LOOT_MODE)
+  {
+    return 1;
+  }
+  else if (g_game_mode == EQUIP_OPTIONS_MODE ||
+           g_game_mode == MARKET_MODE)
+  {
+    return 2;
+  }
+  else // PEBBLE_OPTIONS_MODE or LEVEL_UP_MODE
+  {
+    return 3;
   }
 }
 
@@ -1419,7 +1364,6 @@ void draw_player_action(GContext *ctx)
 {
   //int16_t i;
 
-  flash(1);
   /*graphics_context_set_stroke_color(ctx, GColorWhite);
   graphics_draw_line(ctx,
                      GPoint(SCREEN_CENTER_POINT_X, GRAPHICS_FRAME_HEIGHT),
@@ -1654,10 +1598,12 @@ void draw_cell_walls(GContext *ctx,
         fill_quad(ctx,
                   GPoint(left + exit_offset_x, top + exit_offset_y),
                   GPoint(left + exit_offset_x, bottom + 4),
-                  GPoint(depth == 0 ? SCREEN_WIDTH : right - exit_offset_x,
+                  GPoint(depth == 0 ? GRAPHICS_FRAME_WIDTH :
+                                      right - exit_offset_x,
                          top - (depth == 0 ? y_offset - 5 : y_offset / 3) +
                            exit_offset_y),
-                  GPoint(depth == 0 ? SCREEN_WIDTH : right - exit_offset_x,
+                  GPoint(depth == 0 ? GRAPHICS_FRAME_WIDTH :
+                                      right - exit_offset_x,
                          bottom + (depth == 0 ? y_offset : y_offset / 3)),
                   GColorBlack);
       }
@@ -2450,62 +2396,35 @@ Description: Draws the outline of an ellipse according to given specifications.
 }*/
 
 /******************************************************************************
-   Function: flash
+   Function: flash_screen
 
-Description: "Flashes" the graphics frame a given number of times.
+Description: Briefly "flashes" the graphics frame by inverting all its pixels.
 
-     Inputs: num_flashes - Number of times to "flash" the screen.
+     Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void flash(const int16_t num_flashes)
+void flash_screen(void)
 {
-  static int16_t num_flashes_remaining;
-
-  if (num_flashes > 0 && g_graphics_window != NULL)
-  {
-    num_flashes_remaining = num_flashes - 1;
-    layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), false);
-    g_flash_timer = app_timer_register(FLASH_TIMER_DURATION,
-                                       flash_timer_callback,
-                                       &num_flashes_remaining);
-  }
+  layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), false);
+  g_flash_timer = app_timer_register(FLASH_TIMER_DURATION,
+                                     flash_timer_callback,
+                                     NULL);
 }
 
 /******************************************************************************
    Function: flash_timer_callback
 
-Description: Called when the flash timer reaches zero. If the graphics frame
-             inverter is currently shown, it will be hidden and the timer will
-             be reset to cause a delay before any remaining flashes. If instead
-             the inverter is already hidden, "flash()" will be called again in
-             order to complete any remaining flashes.
+Description: Called when the flash timer reaches zero. Hides the inverter
+             layer, ending the "flash."
 
-     Inputs: num_flashes_remaining - Pointer to the number of flashes
-                                     remaining.
+     Inputs: data - Pointer to additional data (not used).
 
     Outputs: None.
 ******************************************************************************/
-static void flash_timer_callback(void *num_flashes_remaining)
+static void flash_timer_callback(void *data)
 {
-  if (g_graphics_window == NULL)
-  {
-    return;
-  }
-  else if (layer_get_hidden(inverter_layer_get_layer(g_inverter_layer)))
-  {
-    flash(*(const int16_t *)num_flashes_remaining);
-  }
-  else
-  {
-    layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
-    if (*(const int16_t *)num_flashes_remaining > 0)
-    {
-      g_flash_timer = app_timer_register(FLASH_TIMER_DURATION,
-                                         flash_timer_callback,
-                                         num_flashes_remaining);
-    }
-  }
+  layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
 }
 
 /******************************************************************************
@@ -2640,10 +2559,11 @@ void graphics_select_single_click(ClickRecognizerRef recognizer, void *context)
   npc_t *npc;
 
   // If a Pebble is equipped (and the player has enough MP), cast a spell:
-  if (g_player->equipped_items[RIGHT_HAND]->type >= PEBBLE_OF_FIRE &&
+  if (g_player->inventory[equipped_item_indices[RIGHT_HAND]]->type >=
+        PEBBLE_OF_FIRE &&
       g_player->stats[CURRENT_MP] >= MP_LOSS_PER_SPELL)
   {
-    flash(1);
+    flash_screen();
     adjust_player_current_mp(MP_LOSS_PER_SPELL);
     g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
                                         player_timer_callback,
@@ -2786,25 +2706,281 @@ int16_t get_opposite_direction(const int16_t direction)
   {
     case NORTH:
       return SOUTH;
-      break;
     case SOUTH:
       return NORTH;
-      break;
     case EAST:
       return WEST;
-      break;
     default: // case WEST:
       return EAST;
+  }
+}
+
+/******************************************************************************
+   Function: strcat_item_name
+
+Description: Concatenates the name of a given item onto a given string.
+
+     Inputs: dest_str - Pointer to the destination string.
+             item     - Integer representing the item of interest.
+
+    Outputs: None.
+******************************************************************************/
+void strcat_item_name(char *dest_str, const int16_t item)
+{
+  if (item >= PEBBLE_OF_FIRE)
+  {
+    strcat(dest_str, "Pebble of ");
+    strcat_magic_type(dest_str, item);
+  }
+  else
+  {
+    switch(item)
+    {
+      case GOLD:
+        strcat(dest_str, "Bag of Gold");
+        break;
+      case KEY:
+        strcat(dest_str, "Key");
+        break;
+      case ARTIFACT:
+        strcat(dest_str, "Artifact");
+        break;
+      case HP_POTION:
+        strcat(dest_str, "Healing Potion");
+        break;
+      case MP_POTION:
+        strcat(dest_str, "Magic Potion");
+        break;
+      case ROBE:
+        strcat(dest_str, "Robe");
+        break;
+      case LIGHT_ARMOR:
+        strcat(dest_str, "Light Armor");
+        break;
+      case HEAVY_ARMOR:
+        strcat(dest_str, "Heavy Armor");
+        break;
+      case DAGGER:
+        strcat(dest_str, "Dagger");
+        break;
+      case SWORD:
+        strcat(dest_str, "Sword");
+        break;
+      case AXE:
+        strcat(dest_str, "Axe");
+        break;
+      case STAFF:
+        strcat(dest_str, "Staff");
+        break;
+      case MACE:
+        strcat(dest_str, "Mace");
+        break;
+      case FLAIL:
+        strcat(dest_str, "Flail");
+        break;
+      case BOW:
+        strcat(dest_str, "Bow");
+        break;
+    }
+  }
+}
+
+/******************************************************************************
+   Function: strcat_magic_type
+
+Description: Concatenates the name of a given magic type onto a given string.
+
+     Inputs: dest_str   - Pointer to the destination string.
+             magic_type - Integer representing the desired magic type.
+
+    Outputs: None.
+******************************************************************************/
+void strcat_magic_type(char *dest_str, const int16_t magic_type)
+{
+  switch(magic_type)
+  {
+    case PEBBLE_OF_FIRE:
+      strcat(dest_str, "Fire");
+      break;
+    case PEBBLE_OF_ICE:
+      strcat(dest_str, "Ice");
+      break;
+    case PEBBLE_OF_LIGHTNING:
+      strcat(dest_str, "Lightning");
+      break;
+    case PEBBLE_OF_LIFE:
+      strcat(dest_str, "Life");
+      break;
+    case PEBBLE_OF_DEATH:
+      strcat(dest_str, "Death");
+      break;
+    case PEBBLE_OF_LIGHT:
+      strcat(dest_str, "Light");
+      break;
+    case PEBBLE_OF_DARKNESS:
+      strcat(dest_str, "Darkness");
+      break;
+    case PEBBLE_OF_FIRE * PEBBLE_OF_FIRE:
+      strcat(dest_str, "Flame");
+      break;
+    case PEBBLE_OF_ICE * PEBBLE_OF_ICE:
+      strcat(dest_str, "Frost");
+      break;
+    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_LIGHTNING:
+      strcat(dest_str, "Thunder");
+      break;
+    case PEBBLE_OF_LIFE * PEBBLE_OF_LIFE:
+      strcat(dest_str, "Vitality");
+      break;
+    case PEBBLE_OF_DEATH * PEBBLE_OF_DEATH:
+      strcat(dest_str, "Ruin");
+      break;
+    case PEBBLE_OF_LIGHT * PEBBLE_OF_LIGHT:
+      strcat(dest_str, "Holiness");
+      break;
+    case PEBBLE_OF_DARKNESS * PEBBLE_OF_DARKNESS:
+      strcat(dest_str, "the Void");
+      break;
+    case PEBBLE_OF_FIRE * PEBBLE_OF_ICE:
+      strcat(dest_str, "Iceflame");
+      break;
+    case PEBBLE_OF_FIRE * PEBBLE_OF_LIGHTNING:
+      strcat(dest_str, "Firebolt");
+      break;
+    case PEBBLE_OF_FIRE * PEBBLE_OF_LIFE:
+      strcat(dest_str, "Consuming");
+      break;
+    case PEBBLE_OF_FIRE * PEBBLE_OF_DEATH:
+      strcat(dest_str, "Hellfire");
+      break;
+    case PEBBLE_OF_FIRE * PEBBLE_OF_LIGHT:
+      strcat(dest_str, "Holy Flame");
+      break;
+    case PEBBLE_OF_FIRE * PEBBLE_OF_DARKNESS:
+      strcat(dest_str, "Dark Flame");
+      break;
+    case PEBBLE_OF_ICE * PEBBLE_OF_LIGHTNING:
+      strcat(dest_str, "Icebolt");
+      break;
+    case PEBBLE_OF_ICE * PEBBLE_OF_LIFE:
+      strcat(dest_str, "Draining");
+      break;
+    case PEBBLE_OF_ICE * PEBBLE_OF_DEATH:
+      strcat(dest_str, "Icy Death");
+      break;
+    case PEBBLE_OF_ICE * PEBBLE_OF_LIGHT:
+      strcat(dest_str, "Cold Light");
+      break;
+    case PEBBLE_OF_ICE * PEBBLE_OF_DARKNESS:
+      strcat(dest_str, "Freezing");
+      break;
+    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_LIFE:
+      strcat(dest_str, "Lifebolt");
+      break;
+    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_DEATH:
+      strcat(dest_str, "Deathbolt");
+      break;
+    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_LIGHT:
+      strcat(dest_str, "Sunlight");
+      break;
+    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_DARKNESS:
+      strcat(dest_str, "Dark Lightning");
+      break;
+    case PEBBLE_OF_LIFE * PEBBLE_OF_DEATH:
+      strcat(dest_str, "Vampirism");
+      break;
+    case PEBBLE_OF_LIFE * PEBBLE_OF_LIGHT:
+      strcat(dest_str, "Vigor");
+      break;
+    case PEBBLE_OF_LIFE * PEBBLE_OF_DARKNESS:
+      strcat(dest_str, "Devouring");
+      break;
+    case PEBBLE_OF_DEATH * PEBBLE_OF_LIGHT:
+      strcat(dest_str, "Fury");
+      break;
+    case PEBBLE_OF_DEATH * PEBBLE_OF_DARKNESS:
+      strcat(dest_str, "Oblivion");
+      break;
+    case PEBBLE_OF_LIGHT * PEBBLE_OF_DARKNESS:
+      strcat(dest_str, "Moonlight");
       break;
   }
 }
 
 /******************************************************************************
-   Function: cat_int_onto_str
+   Function: strcat_stat_name
 
-Description: Concatenates an integer value onto the end of a string. The
-             absolute value of the integer may not exceed MAX_LARGE_INT_VALUE
-             (if it does, MAX_LARGE_INT_VALUE will be used in its place). If
+Description: Concatenates the name of a given stat onto a given string.
+
+     Inputs: dest_str - Pointer to the destination string.
+             stat     - Integer representing the stat of interest.
+
+    Outputs: None.
+******************************************************************************/
+void strcat_stat_name(char *dest_str, const int16_t stat)
+{
+  switch(stat)
+  {
+    case STRENGTH:
+      strcat(stat_name, "Strength");
+      break;
+    case AGILITY:
+      strcat(stat_name, "Agility");
+      break;
+    case INTELLECT:
+      strcat(stat_name, "Intellect");
+      break;
+    case MAX_HP:
+      strcat(stat_name, "HP");
+      break;
+    case MAX_MP:
+      strcat(stat_name, "MP");
+      break;
+    case PHYSICAL_POWER:
+      strcat(stat_name, "Phys. Power");
+      break;
+    case PHYSICAL_DEFENSE:
+      strcat(stat_name, "Phys. Defense");
+      break;
+    case MAGICAL_POWER:
+      strcat(stat_name, "Mag. Power");
+      break;
+    case MAGICAL_DEFENSE:
+      strcat(stat_name, "Mag. Defense");
+      break;
+  }
+  strcat(stat_name, " ");
+}
+
+/******************************************************************************
+   Function: strcat_stat_value
+
+Description: Concatenates the value of a given stat onto a given string. (This
+             function was created because of the anomalous cases of MAX_HP and
+             MAX_MP, wherein the current HP/MP and a "slash" are also
+             concatenated.)
+
+     Inputs: dest_str - Pointer to the destination string.
+             stat     - Integer representing the stat of interest.
+
+    Outputs: None.
+******************************************************************************/
+void strcat_stat_value(char *dest_str, const int16_t stat)
+{
+  if (stat == MAX_HP || stat == MAX_MP)
+  {
+    strcat_int(dest_str, g_player->stats[stat + (CURRENT_HP - MAX_HP)]);
+    strcat(dest_str, "/");
+  }
+  strcat_int(dest_str, g_player->stats[stat]);
+}
+
+/******************************************************************************
+   Function: strcat_int
+
+Description: Concatenates a "small" integer value onto the end of a string. The
+             absolute value of the integer may not exceed MAX_SMALL_INT_VALUE
+             (if it does, MAX_SMALL_INT_VALUE will be used in its place). If
              the integer is negative, a minus sign will be included.
 
      Inputs: dest_str - Pointer to the destination string.
@@ -2813,10 +2989,10 @@ Description: Concatenates an integer value onto the end of a string. The
 
     Outputs: None.
 ******************************************************************************/
-void cat_int_onto_str(char *dest_str, int32_t integer)
+void strcat_int(char *dest_str, int16_t integer)
 {
   int16_t i, j;
-  static char int_str[MAX_LARGE_INT_DIGITS + 1];
+  static char int_str[MAX_SMALL_INT_DIGITS + 1];
   bool negative = false;
 
   int_str[0] = '\0';
@@ -2825,9 +3001,9 @@ void cat_int_onto_str(char *dest_str, int32_t integer)
     negative = true;
     integer *= -1;
   }
-  if (integer > MAX_LARGE_INT_VALUE)
+  if (integer > MAX_SMALL_INT_VALUE)
   {
-    integer = MAX_LARGE_INT_VALUE;
+    integer = MAX_SMALL_INT_VALUE;
   }
   if (integer == 0)
   {
@@ -2878,9 +3054,9 @@ void assign_minor_stats(int16_t *stats_array)
   stats_array[PHYSICAL_POWER]   = stats_array[STRENGTH * 2] +
                                     stats_array[AGILITY];
   stats_array[PHYSICAL_DEFENSE] = stats_array[STRENGTH] +
-                                    stats_array[AGILITY * 2];
+                                  stats_array[AGILITY * 2];
   stats_array[MAGICAL_POWER]    = stats_array[INTELLECT * 2] +
-                                    stats_array[AGILITY];
+                                  stats_array[AGILITY];
   stats_array[MAGICAL_DEFENSE]  = stats_array[INTELLECT] +
                                     stats_array[AGILITY * 2];
 }
@@ -2889,35 +3065,35 @@ void assign_minor_stats(int16_t *stats_array)
    Function: add_item_to_inventory
 
 Description: Adds an item of a given type to the player's inventory. If it's a
-             heavy item, a new "heavy_item_t" struct will be initialized.
+             heavy item, a new "item_t" struct will be initialized. If there's
+             no more room for heavy items, the "replace item" menu will be
+             shown.
 
      Inputs: type - The type of item to be added.
 
     Outputs: None.
 ******************************************************************************/
-void add_item_to_inventory(int16_t type)
+void add_item_to_inventory(const int16_t type)
 {
   int16_t i;
 
-  if (type == HP_POTION)
+  if (type < FIRST_HEAVY_ITEM_INDEX)
   {
-    g_player->hp_potions++;
+    g_player->inventory[type]->n++;
   }
-  else if (type == MP_POTION)
+  else
   {
-    g_player->mp_potions++;
-  }
-  else if (type >= PEBBLE_OF_FIRE)
-  {
-    // Subtract PEBBLE_OF_FIRE from "type" to get a 0-6 range:
-    g_player->pebbles[type - PEBBLE_OF_FIRE]++;
-  }
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
-    if (g_player->heavy_items[i] == NULL)
+    for (i = FIRST_HEAVY_ITEM_INDEX; i < PLAYER_INVENTORY_SIZE; ++i)
     {
-      g_player->heavy_items[i] = malloc(sizeof(heavy_item_t));
-      init_heavy_item(g_player->heavy_items[i], type);
+      if (g_player->inventory[i] == NULL)
+      {
+        g_player->inventory[i] = malloc(sizeof(item_t));
+        init_item(g_player->inventory[i], type);
+      }
+      else if (i == PLAYER_INVENTORY_SIZE - 1)
+      {
+        g_game_mode = REPLACE_ITEM_MODE;
+      }
     }
   }
 }
@@ -2925,16 +3101,16 @@ void add_item_to_inventory(int16_t type)
 /******************************************************************************
    Function: equip
 
-Description: Equips a given item to a given equip target, unequipping any
-             previously equipped item in the process, and adjusts the player's
-             stats accordingly.
+Description: Equips the item at a given inventory index to a given equip
+             target, unequipping any previously equipped item in the process
+             and adjusting the player's stats accordingly.
 
-     Inputs: item         - Pointer to the item of interest.
+     Inputs: item_index   - Index of the item in the "inventory" array.
              equip_target - Integer indicating where to equip the item.
 
     Outputs: None.
 ******************************************************************************/
-void equip(heavy_item_t *item, int16_t equip_target)
+void equip(const int16_t item_index, const int16_t equip_target)
 {
   /*int16_t i;
 
@@ -2942,7 +3118,7 @@ void equip(heavy_item_t *item, int16_t equip_target)
   {
 
   }*/
-  g_player->equipped_items[equip_target] = item;
+  g_player->equipped_item_indices[equip_target] = item_index;
 }
 
 /******************************************************************************
@@ -2959,27 +3135,31 @@ void init_player(void)
 {
   int i;
 
-  g_player->exp_points           = 0;
   g_player->level                = 1;
-  g_player->gold                 = DEFAULT_GOLD;
-  g_player->hp_potions           = 0;
-  g_player->mp_potions           = 0;
+  g_player->exp_points           = 0;
   g_player->num_quests_completed = 0;
   g_player->num_pebbles_found    = 0;
   g_player->stats[STRENGTH]      = DEFAULT_BASE_STAT_VALUE;
   g_player->stats[AGILITY]       = DEFAULT_BASE_STAT_VALUE;
   g_player->stats[INTELLECT]     = DEFAULT_BASE_STAT_VALUE;
   assign_minor_stats(g_player->stats);
-  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
+  for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
   {
-    g_player->pebbles[i] = 0;
+    if (i < FIRST_HEAVY_ITEM_INDEX)
+    {
+      g_player->inventory[i]       = malloc(sizeof(item_t));
+      g_player->inventory[i]->type = GOLD + i;
+      g_player->inventory[i]->n    = 0;
+    }
+    else
+    {
+      g_player->inventory[i] = NULL;
+    }
   }
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
-    g_player->heavy_items[i] = NULL;
-  }
+  add_item_to_inventory(ROBE);
+  equip(g_player->inventory[FIRST_HEAVY_ITEM_INDEX], BODY);
   add_item_to_inventory(DAGGER);
-  equip(g_player->heavy_items[0], RIGHT_HAND);
+  equip(g_player->inventory[FIRST_HEAVY_ITEM_INDEX + 1], RIGHT_HAND);
 }
 
 /******************************************************************************
@@ -2998,11 +3178,11 @@ void deinit_player(void)
 
   if (g_player != NULL)
   {
-    for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
+    for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
     {
-      if (g_player->heavy_items[i] != NULL)
+      if (g_player->inventory[i] != NULL)
       {
-        free(g_player->heavy_items[i]);
+        free(g_player->inventory[i]);
       }
     }
     free(g_player);
@@ -3022,7 +3202,7 @@ Description: Initializes a non-player character (NPC) struct according to a
 
     Outputs: None.
 ******************************************************************************/
-void init_npc(npc_t *npc, int16_t type, GPoint position)
+void init_npc(npc_t *npc, const int16_t type, const GPoint position)
 {
   int16_t i;
 
@@ -3062,16 +3242,16 @@ void init_npc(npc_t *npc, int16_t type, GPoint position)
 }
 
 /******************************************************************************
-   Function: init_heavy_item
+   Function: init_item
 
-Description: Initializes a new heavy item struct according to a given type.
+Description: Initializes a new item struct according to a given type.
 
-     Inputs: item - Pointer to the heavy item struct.
-             type - Integer indicating the type of heavy item.
+     Inputs: item - Pointer to the item struct.
+             type - Integer indicating the type of item.
 
     Outputs: None.
 ******************************************************************************/
-void init_heavy_item(heavy_item_t *item, int16_t type)
+void init_item(item_t *item, const int16_t type)
 {
   int16_t i;
 
@@ -3136,25 +3316,27 @@ void init_wall_coords(void)
       GRAPHICS_FRAME_WIDTH - g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].x;
     g_back_wall_coords[i][STRAIGHT_AHEAD][BOTTOM_RIGHT].y =
       GRAPHICS_FRAME_HEIGHT -
-      g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].y;
+        g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].y;
     wall_width = g_back_wall_coords[i][STRAIGHT_AHEAD][BOTTOM_RIGHT].x -
-                 g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].x;
+                   g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].x;
     for (j = 1; j <= STRAIGHT_AHEAD; ++j)
     {
-      g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT] =
+      g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT]       =
         g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT];
-      g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT].x -= wall_width * j;
-      g_back_wall_coords[i][STRAIGHT_AHEAD - j][BOTTOM_RIGHT] =
+      g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT].x     -= wall_width *
+                                                                     j;
+      g_back_wall_coords[i][STRAIGHT_AHEAD - j][BOTTOM_RIGHT]   =
         g_back_wall_coords[i][STRAIGHT_AHEAD][BOTTOM_RIGHT];
       g_back_wall_coords[i][STRAIGHT_AHEAD - j][BOTTOM_RIGHT].x -= wall_width *
-                                                                   j;
-      g_back_wall_coords[i][STRAIGHT_AHEAD + j][TOP_LEFT] =
+                                                                     j;
+      g_back_wall_coords[i][STRAIGHT_AHEAD + j][TOP_LEFT]       =
         g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT];
-      g_back_wall_coords[i][STRAIGHT_AHEAD + j][TOP_LEFT].x += wall_width * j;
-      g_back_wall_coords[i][STRAIGHT_AHEAD + j][BOTTOM_RIGHT] =
+      g_back_wall_coords[i][STRAIGHT_AHEAD + j][TOP_LEFT].x     += wall_width *
+                                                                     j;
+      g_back_wall_coords[i][STRAIGHT_AHEAD + j][BOTTOM_RIGHT]   =
         g_back_wall_coords[i][STRAIGHT_AHEAD][BOTTOM_RIGHT];
       g_back_wall_coords[i][STRAIGHT_AHEAD + j][BOTTOM_RIGHT].x += wall_width *
-                                                                   j;
+                                                                     j;
     }
   }
 }
@@ -3169,7 +3351,7 @@ Description: Initializes the global quest struct according to a given quest
 
     Outputs: None.
 ******************************************************************************/
-void init_quest(int16_t type)
+void init_quest(const int16_t type)
 {
   int16_t i;
 
@@ -3211,8 +3393,8 @@ Description: Initializes the current quest's location (i.e., its 2D "cells"
 ******************************************************************************/
 void init_quest_location(void)
 {
+  int16_t i, j, builder_direction;
   GPoint builder_position;
-  int16_t  i, j, builder_direction;
 
   // First, set each cell to solid:
   for (i = 0; i < LOCATION_WIDTH; ++i)
@@ -3385,7 +3567,7 @@ void init_graphics(void)
   });
   window_set_click_config_provider(g_graphics_window,
                                    (ClickConfigProvider)
-                                   graphics_click_config_provider);
+                                     graphics_click_config_provider);
   layer_set_update_proc(window_get_root_layer(g_graphics_window), draw_scene);
 
   // Graphics frame inverter (for the "flash" effect):
@@ -3476,9 +3658,21 @@ void init(void)
 
   // Check for saved data and initialize the player struct:
   g_player = malloc(sizeof(player_t));
-  if (persist_exists(STORAGE_KEY))
+  for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
   {
-    persist_read_data(STORAGE_KEY, g_player, sizeof(player_t));
+    g_player->inventory[i] = malloc(sizeof(item_t));
+  }
+  if (persist_exists(STORAGE_KEY + PLAYER_INVENTORY_SIZE))
+  {
+    persist_read_data(STORAGE_KEY + PLAYER_INVENTORY_SIZE,
+                      g_player,
+                      sizeof(player_t));
+    for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
+    {
+      persist_read_data(STORAGE_KEY + i,
+                        g_player->inventory[i],
+                        sizeof(item_t));
+    }
   }
   else
   {
@@ -3497,7 +3691,17 @@ Description: Deinitializes the PebbleQuest app.
 ******************************************************************************/
 void deinit(void)
 {
-  persist_write_data(STORAGE_KEY, g_player, sizeof(player_t));
+  int16_t i;
+
+  for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
+  {
+    persist_write_data(STORAGE_KEY + i,
+                       g_player->inventory[i],
+                       sizeof(item_t));
+  }
+  persist_write_data(STORAGE_KEY + PLAYER_INVENTORY_SIZE,
+                     g_player,
+                     sizeof(player_t));
   deinit_scroll();
   deinit_graphics();
   deinit_menu_window();
