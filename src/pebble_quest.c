@@ -170,103 +170,6 @@ Description: Determines whether the player is (more or less) visible from a
 }*/
 
 /******************************************************************************
-   Function: get_pursuit_direction
-
-Description: Determines in which direction a character at a given position
-             ought to move in order to pursue a character at another given
-             position. (Simplistic: no complex path-finding.)
-
-     Inputs: pursuer - Position of the pursuing character.
-             pursuee - Position of the character being pursued.
-
-    Outputs: Integer representing the direction in which the NPC ought to move.
-******************************************************************************/
-int16_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee)
-{
-  int16_t diff_x                     = pursuer.x - pursuee.x,
-          diff_y                     = pursuer.y - pursuee.y;
-  const int16_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
-                vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
-  bool checked_horizontal_direction  = false,
-       checked_vertical_direction    = false;
-
-  // Check for alignment along the x-axis:
-  if (diff_x == 0)
-  {
-    if (diff_y == 1 /* The two are already touching. */ ||
-        occupiable(get_cell_farther_away(pursuer,
-                                         vertical_direction,
-                                         1)))
-    {
-      return vertical_direction;
-    }
-    checked_vertical_direction = true;
-  }
-
-  // Check for alignment along the y-axis:
-  if (diff_y == 0)
-  {
-    if (diff_x == 1 /* The two are already touching. */ ||
-        occupiable(get_cell_farther_away(pursuer,
-                                         horizontal_direction,
-                                         1)))
-    {
-      return horizontal_direction;
-    }
-    checked_horizontal_direction = true;
-  }
-
-  // If not aligned along either axis, a direction in either axis will do:
-  while (!checked_horizontal_direction || !checked_vertical_direction)
-  {
-    if (checked_vertical_direction ||
-        (!checked_horizontal_direction && rand() % 2))
-    {
-      if (occupiable(get_cell_farther_away(pursuer,
-                                           horizontal_direction,
-                                           1)))
-      {
-        return horizontal_direction;
-      }
-      checked_horizontal_direction = true;
-    }
-    if (!checked_vertical_direction)
-    {
-      if (occupiable(get_cell_farther_away(pursuer,
-                                           vertical_direction,
-                                           1)))
-      {
-        return vertical_direction;
-      }
-      checked_vertical_direction = true;
-    }
-  }
-
-  // If we reach this point, the NPC is stuck in a corner. I'm okay with that:
-  return horizontal_direction;
-}
-
-/******************************************************************************
-   Function: touching
-
-Description: Determines whether two cells are "touching," meaning they are next
-             to each other (diagonal doesn't count).
-
-     Inputs: cell   - First set of cell coordinates.
-             cell_2 - Second set of cell coordinates.
-
-    Outputs: "True" if the two cells are touching.
-******************************************************************************/
-bool touching(const GPoint cell, const GPoint cell_2)
-{
-  const int16_t diff_x = cell.x - cell_2.x,
-                diff_y = cell.y - cell_2.y;
-
-  return ((diff_x == 0 && abs(diff_y) == 1) ||
-          (diff_y == 0 && abs(diff_x) == 1));
-}
-
-/******************************************************************************
    Function: damage_player
 
 Description: Damages the player according to his/her defense vs. a given damage
@@ -501,7 +404,6 @@ Description: Creates an NPC of a given type at a given location and adds it to
 ******************************************************************************/
 void add_new_npc(const int16_t npc_type, const GPoint position)
 {
-  int16_t count = 1;
   npc_t *npc_pointer = g_quest->npcs;
 
   if (occupiable(position))
@@ -515,14 +417,10 @@ void add_new_npc(const int16_t npc_type, const GPoint position)
     }
     while (npc_pointer->next != NULL)
     {
-      count++;
       npc_pointer = npc_pointer->next;
     }
-    if (count < MAX_NPCS_AT_ONE_TIME)
-    {
-      npc_pointer->next = malloc(sizeof(npc_t));
-      init_npc(npc_pointer->next, npc_type, position);
-    }
+    npc_pointer->next = malloc(sizeof(npc_t));
+    init_npc(npc_pointer->next, npc_type, position);
   }
 }
 
@@ -731,6 +629,83 @@ GPoint get_cell_farther_away(const GPoint reference_point,
 }
 
 /******************************************************************************
+   Function: get_pursuit_direction
+
+Description: Determines in which direction a character at a given position
+             ought to move in order to pursue a character at another given
+             position. (Simplistic: no complex path-finding.)
+
+     Inputs: pursuer - Position of the pursuing character.
+             pursuee - Position of the character being pursued.
+
+    Outputs: Integer representing the direction in which the NPC ought to move.
+******************************************************************************/
+int16_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee)
+{
+  int16_t diff_x                     = pursuer.x - pursuee.x,
+          diff_y                     = pursuer.y - pursuee.y;
+  const int16_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
+                vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
+  bool checked_horizontal_direction  = false,
+       checked_vertical_direction    = false;
+
+  // Check for alignment along the x-axis:
+  if (diff_x == 0)
+  {
+    if (diff_y == 1 /* The two are already touching. */ ||
+        occupiable(get_cell_farther_away(pursuer,
+                                         vertical_direction,
+                                         1)))
+    {
+      return vertical_direction;
+    }
+    checked_vertical_direction = true;
+  }
+
+  // Check for alignment along the y-axis:
+  if (diff_y == 0)
+  {
+    if (diff_x == 1 /* The two are already touching. */ ||
+        occupiable(get_cell_farther_away(pursuer,
+                                         horizontal_direction,
+                                         1)))
+    {
+      return horizontal_direction;
+    }
+    checked_horizontal_direction = true;
+  }
+
+  // If not aligned along either axis, a direction in either axis will do:
+  while (!checked_horizontal_direction || !checked_vertical_direction)
+  {
+    if (checked_vertical_direction ||
+        (!checked_horizontal_direction && rand() % 2))
+    {
+      if (occupiable(get_cell_farther_away(pursuer,
+                                           horizontal_direction,
+                                           1)))
+      {
+        return horizontal_direction;
+      }
+      checked_horizontal_direction = true;
+    }
+    if (!checked_vertical_direction)
+    {
+      if (occupiable(get_cell_farther_away(pursuer,
+                                           vertical_direction,
+                                           1)))
+      {
+        return vertical_direction;
+      }
+      checked_vertical_direction = true;
+    }
+  }
+
+  // If we reach this point, the NPC is stuck in a corner. I'm okay with that:
+  return horizontal_direction;
+}
+
+/******************************************************************************
    Function: get_direction_to_the_left
 
 Description: Given a north/south/east/west reference direction, returns the
@@ -780,6 +755,56 @@ int16_t get_direction_to_the_right(const int16_t reference_direction)
     default: // case WEST:
       return NORTH;
   }
+}
+
+/******************************************************************************
+   Function: get_opposite_direction
+
+Description: Returns the opposite of a given direction value (i.e., given the
+             argument "NORTH", "SOUTH" will be returned).
+
+     Inputs: direction - The direction whose opposite is desired.
+
+    Outputs: Integer representing the opposite of the given direction.
+******************************************************************************/
+int16_t get_opposite_direction(const int16_t direction)
+{
+  switch (direction)
+  {
+    case NORTH:
+      return SOUTH;
+    case SOUTH:
+      return NORTH;
+    case EAST:
+      return WEST;
+    default: // case WEST:
+      return EAST;
+  }
+}
+
+/******************************************************************************
+   Function: get_boosted_stat_value
+
+Description: Determines what value a given stat will be raised to if boosted by
+             a given amount, which is either the sum of those values or
+             MAX_SMALL_INT_VALUE.
+
+     Inputs: stat_index   - Index value of the stat of interest.
+             boost_amount - Desired boost amount.
+
+    Outputs: The new value the stat will have if it is boosted.
+******************************************************************************/
+int16_t get_boosted_stat_value(const int16_t stat_index,
+                               const int16_t boost_amount)
+{
+  int16_t boosted_stat_value = g_player->stats[stat_index] + boost_amount;
+
+  if (boosted_stat_value >= MAX_SMALL_INT_VALUE)
+  {
+    return MAX_SMALL_INT_VALUE;
+  }
+
+  return boosted_stat_value;
 }
 
 /******************************************************************************
@@ -878,6 +903,26 @@ bool occupiable(const GPoint cell)
   return get_cell_type(cell) <= EMPTY              &&
          !gpoint_equal(&g_player->position, &cell) &&
          get_npc_at(cell) == NULL;
+}
+
+/******************************************************************************
+   Function: touching
+
+Description: Determines whether two cells are "touching," meaning they are next
+             to each other (diagonal doesn't count).
+
+     Inputs: cell   - First set of cell coordinates.
+             cell_2 - Second set of cell coordinates.
+
+    Outputs: "True" if the two cells are touching.
+******************************************************************************/
+bool touching(const GPoint cell, const GPoint cell_2)
+{
+  const int16_t diff_x = cell.x - cell_2.x,
+                diff_y = cell.y - cell_2.y;
+
+  return ((diff_x == 0 && abs(diff_y) == 1) ||
+          (diff_y == 0 && abs(diff_x) == 1));
 }
 
 /******************************************************************************
@@ -1008,7 +1053,7 @@ static void menu_draw_header_callback(GContext *ctx,
   else // MARKET_MODE, BUYING_MODE, or SELLING_MODE
   {
     strcpy(header_str, "Market - Gold: ");
-    strcat_int(header_str, g_player->gold);
+    strcat_int(header_str, g_player->inventory[GOLD]);
   }
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
@@ -1038,12 +1083,12 @@ static void menu_draw_row_callback(GContext *ctx,
   {
     case SHOW_STATS_MODE:
     case LEVEL_UP_MODE:
-      strcat_stat_name(title_cell_index->row));
+      strcat_stat_name(title_str, cell_index->row);
       strcat_stat_value(title_str, cell_index->row);
       if (g_game_mode == LEVEL_UP_MODE)
       {
         strcat(title_str, "->");
-        strcat_int(title_str, get_boosted_stat_value(cell_index->row));
+        strcat_int(title_str, get_boosted_stat_value(cell_index->row, 1));
       }
       break;
     case MAIN_MENU_MODE:
@@ -1108,7 +1153,7 @@ static void menu_draw_row_callback(GContext *ctx,
           break;
         default: // Only used in PEBBLE_OPTIONS_MODE.
           strcat(title_str, "Infuse into Item");
-          strcat(subtitle_str, "This is permanent!");
+          strcpy(subtitle_str, "This is permanent!");
           break;
       }
       break;
@@ -1147,68 +1192,119 @@ void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data)
 {
-  if (g_player->stats[cell_index->row] >= MAX_SMALL_INT_VALUE)
+  switch (g_game_mode)
   {
-    return;
-  }
-
-  g_player->stats[cell_index->row] = get_boosted_stat_value(cell_index->row);
-  menu_layer_reload_data(g_menu_layer);
-
-  switch (cell_index->row)
-  {
-    case 0: // New Quest / Continue
-      if (g_quest == NULL)
+    case SHOW_STATS_MODE:
+    case LEVEL_UP_MODE:
+      if (g_player->stats[cell_index->row] < MAX_SMALL_INT_VALUE)
       {
-        g_quest = malloc(sizeof(quest_t));
-        init_quest(rand() % NUM_QUEST_TYPES);
-        show_scroll(g_quest->type);
-        break;
-      }
-      show_window(g_graphics_window, NOT_ANIMATED);
-      break;
-    case 1: // Status
-      //show_status();
-      break;
-    case 2: // Inventory
-      //show_inventory();
-      break;
-    default: // Marketplace
-      if (g_quest == NULL)
-      {
-        /*menu_layer_set_selected_index(g_market_menu,
-                                      (MenuIndex) {0, 0},
-                                      MenuRowAlignCenter,
-                                      NOT_ANIMATED);
-        show_window(g_market_window, ANIMATED);*/
+        g_player->stats[cell_index->row] =
+          get_boosted_stat_value(cell_index->row, 1);
+        set_game_mode(ACTIVE_MODE);
       }
       break;
-  }
+    case MAIN_MENU_MODE:
+      switch (cell_index->row)
+      {
+        case 0: // New Quest / Continue
+          if (g_quest == NULL)
+          {
+            g_quest = malloc(sizeof(quest_t));
+            init_quest(rand() % NUM_QUEST_TYPES);
+            show_scroll(g_quest->type);
+          }
+          else
+          {
+            set_game_mode(ACTIVE_MODE);
+          }
+          break;
+        case 1: // Character Stats
+          set_game_mode(SHOW_STATS_MODE);
+          break;
+        case 2: // Inventory
+          set_game_mode(INVENTORY_MODE);
+          break;
+        default: // Marketplace
+          if (g_quest == NULL)
+          {
+            set_game_mode(MARKET_MODE);
+          }
+          break;
+      }
+      break;
+    case INVENTORY_MODE:
+    case SELLING_MODE:
+    case PEBBLE_INFUSION_MODE:
+    case REPLACE_ITEM_MODE:
+      if (cell_index->row < FIRST_HEAVY_ITEM_INDEX)
+      {
+        
+      }
+      else // Heavy items:
+      {
+        
+      }
+      break;
+    case EQUIP_OPTIONS_MODE:
+    case PEBBLE_OPTIONS_MODE:
+      switch (cell_index->row)
+      {
+        case 0: // Equip to Right Hand
+          break;
+        case 1: // Equip to Left Hand
+          break;
+        default: // Infuse into Item (only used in PEBBLE_OPTIONS_MODE)
+          break;
+      }
+      break;
+    case LOOT_MODE:
+      break;
+    case MARKET_MODE:
+      switch (cell_index->row)
+      {
+        case 0: // Buy
+          set_game_mode(BUYING_MODE);
+          break;
+        default: // Sell
+          set_game_mode(SELLING_MODE);
+          break;
+      }
+      break;
+    case BUYING_MODE:
+      break;
 }
 
 /******************************************************************************
-   Function: get_boosted_stat_value
+   Function: set_game_mode
 
-Description: Determines what value a given stat will be raised to if boosted by
-             a given amount, which is either the sum of those values or
-             MAX_SMALL_INT_VALUE.
+Description: Sets the current game mode according to a given mode value, then
+             shows the graphics window, scroll window, or menu window (with
+             reloaded data) accordingly.
 
-     Inputs: stat_index   - Index value of the stat of interest.
-             boost_amount - Desired boost amount.
+     Inputs: mode - Integer representing the desired game mode.
 
-    Outputs: The new value the stat will have if it is boosted.
+    Outputs: None.
 ******************************************************************************/
-int16_t get_boosted_stat_value(const int16_t stat_index,
-                               const int16_t boost_amount)
+void set_game_mode(const int16_t mode)
 {
-  int16_t boosted_stat_value = g_player->stats[stat_index] + boost_amount;
-
-  if (boosted_stat_value >= MAX_SMALL_INT_VALUE)
+  g_game_mode = mode;
+  if (mode == ACTIVE_MODE)
   {
-    return MAX_SMALL_INT_VALUE;
+    show_window(g_graphics_window, NOT_ANIMATED);
   }
-
-  return boosted_stat_value;
+  else if (mode == SCROLL_MODE)
+  {
+    show_window(g_scroll_window, ANIMATED);
+  }
+  else
+  {
+    menu_layer_reload_data(g_menu_layer);
+    menu_layer_set_selected_index(g_menu_layer,
+                                  (MenuIndex) {0, 0},
+                                  MenuRowAlignCenter,
+                                  NOT_ANIMATED);
+    show_window(g_menu_window, NOT_ANIMATED);
+  }
 }
 
 /******************************************************************************
@@ -2663,57 +2759,39 @@ Description: Handles changes to the game world every second while in active
 ******************************************************************************/
 /*static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 {
+  int16_t current_num_npcs = 0;
   npc_t *npc_pointer;
 
-  // Handle NPC behavior:
-  npc_pointer = g_quest->npcs;
-  while (npc_pointer != NULL)
+  if (g_game_mode == ACTIVE_MODE)
   {
-    determine_npc_behavior(npc_pointer);
-    if (g_player->stats[CURRENT_HP] <= 0)
+    // Handle NPC behavior:
+    npc_pointer = g_quest->npcs;
+    while (npc_pointer != NULL)
     {
-      return;
+      determine_npc_behavior(npc_pointer);
+      if (g_player->stats[CURRENT_HP] <= 0)
+      {
+        return;
+      }
+      current_num_npcs++;
+      npc_pointer = npc_pointer->next;
     }
-    npc_pointer = npc_pointer->next;
+
+    // Determine whether a new NPC should be generated:
+    if (current_num_npcs < MAX_NPCS_AT_ONE_TIME               &&
+        g_quest->kills + current_num_npcs < g_quest->num_npcs &&
+        rand() % 4 == 0)
+    {
+      add_new_npc(RANDOM_NPC_TYPE, get_npc_spawn_point());
+    }
+
+    // Handle player stat recovery:
+    adjust_player_current_hp(HP_RECOVERY_RATE);
+    adjust_player_current_mp(MP_RECOVERY_RATE);
+
+    layer_mark_dirty(window_get_root_layer(g_graphics_window));
   }
-
-  // Periodically generate new NPCs:
-  if (g_quest->kills < g_quest->num_npcs && rand() % 5 == 0)
-  {
-    add_new_npc(get_random_npc_type(), get_npc_spawn_point());
-  }
-
-  // Handle player stat recovery:
-  adjust_player_current_hp(HP_RECOVERY_RATE);
-  adjust_player_current_mp(MP_RECOVERY_RATE);
-
-  layer_mark_dirty(window_get_root_layer(g_graphics_window));
 }*/
-
-/******************************************************************************
-   Function: get_opposite_direction
-
-Description: Returns the opposite of a given direction value (i.e., given the
-             argument "NORTH", "SOUTH" will be returned).
-
-     Inputs: direction - The direction whose opposite is desired.
-
-    Outputs: Integer representing the opposite of the given direction.
-******************************************************************************/
-int16_t get_opposite_direction(const int16_t direction)
-{
-  switch (direction)
-  {
-    case NORTH:
-      return SOUTH;
-    case SOUTH:
-      return NORTH;
-    case EAST:
-      return WEST;
-    default: // case WEST:
-      return EAST;
-  }
-}
 
 /******************************************************************************
    Function: strcat_item_name
@@ -2999,7 +3077,7 @@ void strcat_int(char *dest_str, int16_t integer)
   if (integer < 0)
   {
     negative = true;
-    integer *= -1;
+    integer  *= -1;
   }
   if (integer > MAX_SMALL_INT_VALUE)
   {

@@ -96,7 +96,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_HEAVY_ITEM_TYPES            11 // "Heavy items" refers to robe/armor, shield, and weapons.
 #define NUM_SPECIAL_ITEM_TYPES          3  // GOLD, KEY, and ARTIFACT.
 #define NUM_PEBBLE_TYPES                7
-#define PLAYER_INVENTORY_SIZE           (NUM_PEBBLE_TYPES + NUM_POTION_TYPES + NUM_SPECIAL_ITEMS + MAX_HEAVY_ITEMS)
+#define PLAYER_INVENTORY_SIZE           (NUM_PEBBLE_TYPES + NUM_POTION_TYPES + NUM_SPECIAL_ITEM_TYPES + MAX_HEAVY_ITEMS)
 #define MERCHANT_INVENTORY_SIZE         (NUM_HEAVY_ITEM_TYPES + NUM_POTION_TYPES)
 #define MAX_INFUSED_PEBBLES             2
 #define MAX_NPCS_AT_ONE_TIME            3
@@ -245,22 +245,21 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_SCROLL_TYPES    7
 
 // Game modes:
-#define PLAYER_ACTIVE        0
-#define NPCS_ACTIVE          1
-#define SCROLL_MODE          2
-#define MAIN_MENU_MODE       3
-#define INVENTORY_MODE       4
-#define EQUIP_OPTIONS_MODE   5
-#define PEBBLE_OPTIONS_MODE  6
-#define PEBBLE_INFUSION_MODE 7
-#define MARKET_MODE          8
-#define BUYING_MODE          9
-#define SELLING_MODE         10
-#define LOOT_MODE            11
-#define REPLACE_ITEM_MODE    12
-#define SHOW_STATS_MODE      13
-#define LEVEL_UP_MODE        14
-#define NUM_GAME_MODES       15
+#define ACTIVE_MODE          0
+#define SCROLL_MODE          1
+#define MAIN_MENU_MODE       2
+#define INVENTORY_MODE       3
+#define EQUIP_OPTIONS_MODE   4
+#define PEBBLE_OPTIONS_MODE  5
+#define PEBBLE_INFUSION_MODE 6
+#define MARKET_MODE          7
+#define BUYING_MODE          8
+#define SELLING_MODE         9
+#define LOOT_MODE            10
+#define REPLACE_ITEM_MODE    11
+#define SHOW_STATS_MODE      12
+#define LEVEL_UP_MODE        13
+#define NUM_GAME_MODES       14
 
 // Directions:
 #define NORTH          0
@@ -296,7 +295,7 @@ typedef struct PlayerCharacter {
           num_quests_completed,
           num_pebbles_found,
           equipped_item_indices[NUM_EQUIP_TARGETS];
-  heavy_item_t *inventory[PLAYER_INVENTORY_SIZE];
+  item_t *inventory[PLAYER_INVENTORY_SIZE];
 } __attribute__((__packed__)) player_t;
 
 typedef struct Quest {
@@ -331,6 +330,7 @@ GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
 int16_t g_game_mode,
+        g_previous_game_mode,
         g_player_animation_mode;
 GPath *g_compass_path;
 quest_t *g_quest;
@@ -348,12 +348,11 @@ static const GPathInfo COMPASS_PATH_INFO = {
   Function Declarations
 ******************************************************************************/
 
+void set_game_mode(const int16_t mode);
 void set_player_direction(const int16_t new_direction);
 void move_player(const int16_t direction);
 void move_npc(npc_t *npc, const int16_t direction);
 void determine_npc_behavior(npc_t *npc);
-int16_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee);
-bool touching(const GPoint cell, const GPoint cell_2);
 void damage_player(int16_t damage);
 void damage_npc(npc_t *npc, const int16_t damage);
 bool adjust_item_quantity(const int16_t item, const int16_t amount);
@@ -368,13 +367,18 @@ GPoint get_floor_center_point(const int16_t depth, const int16_t position);
 GPoint get_cell_farther_away(const GPoint reference_point,
                              const int16_t direction,
                              const int16_t distance);
+int16_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee);
 int16_t get_direction_to_the_left(const int16_t reference_direction);
 int16_t get_direction_to_the_right(const int16_t reference_direction);
+int16_t get_opposite_direction(const int16_t direction);
+int16_t get_boosted_stat_value(const int16_t stat_index,
+                               const int16_t boost_amount);
 int16_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int16_t type);
 npc_t *get_npc_at(const GPoint cell);
 bool out_of_bounds(const GPoint cell);
 bool occupiable(const GPoint cell);
+bool touching(const GPoint cell, const GPoint cell_2);
 void show_scroll(const int16_t scroll);
 void show_window(Window *window, bool animated);
 static void menu_draw_header_callback(GContext* ctx,
@@ -388,10 +392,6 @@ static void menu_draw_row_callback(GContext *ctx,
 void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data);
-int16_t get_boosted_stat_value(const int16_t stat_index,
-                               const int16_t boost_amount);
-/*static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer,
-                                               void *data);*/
 static int16_t menu_get_header_height_callback(MenuLayer *menu_layer,
                                                uint16_t section_index,
                                                void *data);
@@ -439,7 +439,6 @@ void graphics_select_single_click(ClickRecognizerRef recognizer,
 void graphics_click_config_provider(void *context);
 void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
 void scroll_click_config_provider(void *context);
-int16_t get_opposite_direction(const int16_t direction);
 void strcat_item_name(char *dest_str, const int16_t item);
 void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
@@ -447,11 +446,11 @@ void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
 void assign_minor_stats(int16_t *stats_array);
 void add_item_to_inventory(const int16_t type);
-void equip(const heavy_item_t *item, const int16_t equip_target);
+void equip(const item_t *item, const int16_t equip_target);
 void init_player(void);
 void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
-void init_heavy_item(heavy_item_t *item, const int16_t type);
+void init_heavy_item(item_t *item, const int16_t type);
 void init_wall_coords(void);
 void init_quest(const int16_t type);
 void init_quest_location(void);
