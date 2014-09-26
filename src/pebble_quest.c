@@ -2667,7 +2667,7 @@ static void graphics_window_disappear(Window *window)
 /******************************************************************************
    Function: graphics_up_single_repeating_click
 
-Description: The graphics window's single-click handler for the Pebble's "up"
+Description: The graphics window's single repeating click handler for the "up"
              button. Moves the player one cell forward.
 
      Inputs: recognizer - The click recognizer.
@@ -2706,8 +2706,8 @@ void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context)
 /******************************************************************************
    Function: graphics_down_single_repeating_click
 
-Description: The graphics window's single-click handler for the "down" button.
-             Moves the player one cell backward.
+Description: The graphics window's single repeating click handler for the
+             "down" button. Moves the player one cell backward.
 
      Inputs: recognizer - The click recognizer.
              context    - Pointer to the associated context.
@@ -2743,27 +2743,31 @@ void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context)
 }
 
 /******************************************************************************
-   Function: graphics_select_single_click
+   Function: graphics_select_single_repeating_click
 
-Description: The graphics window's single click handler for the "select"
-             button. Activate's the player's current attack/spell.
+Description: The graphics window's single repeating click handler for the
+             "select" button button. Activate's the player's current attack or
+             spell.
 
      Inputs: recognizer - The click recognizer.
              context    - Pointer to the associated context.
 
     Outputs: None.
 ******************************************************************************/
-void graphics_select_single_click(ClickRecognizerRef recognizer, void *context)
+void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
+                                            void *context)
 {
   GPoint cell;
   npc_t *npc;
+  //Window *window = (Window *) context;
 
   if (g_game_mode == ACTIVE_MODE)
   {
     // If a Pebble is equipped (and the player has enough MP), cast a spell:
-    if (equipped_item_indices[RIGHT_HAND] < FIRST_HEAVY_ITEM_INDEX &&
+    if (g_player->equipped_item_indices[RIGHT_HAND] < FIRST_HEAVY_ITEM_INDEX &&
         g_player->stats[CURRENT_MP] >= MP_LOSS_PER_SPELL)
     {
+      // Cast the spell:
       flash_screen();
       adjust_player_current_mp(MP_LOSS_PER_SPELL);
       g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
@@ -2801,7 +2805,7 @@ void graphics_click_config_provider(void *context)
 {
   // "Up" button:
   window_single_repeating_click_subscribe(BUTTON_ID_UP,
-                                          MOVEMENT_REPEAT_INTERVAL,
+                                          MIN_ACTION_REPEAT_INTERVAL,
                                           graphics_up_single_repeating_click);
   window_multi_click_subscribe(BUTTON_ID_UP,
                                MULTI_CLICK_MIN,
@@ -2812,7 +2816,7 @@ void graphics_click_config_provider(void *context)
 
   // "Down" button:
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN,
-                                         MOVEMENT_REPEAT_INTERVAL,
+                                         MIN_ACTION_REPEAT_INTERVAL,
                                          graphics_down_single_repeating_click);
   window_multi_click_subscribe(BUTTON_ID_DOWN,
                                MULTI_CLICK_MIN,
@@ -2822,8 +2826,9 @@ void graphics_click_config_provider(void *context)
                                graphics_down_multi_click);
 
   // "Select" button:
-  window_single_click_subscribe(BUTTON_ID_SELECT,
-                                graphics_select_single_click);
+  window_single_repeating_click_subscribe(BUTTON_ID_SELECT,
+                                       MIN_ACTION_REPEAT_INTERVAL,
+                                       graphics_select_single_repeating_click);
 }
 
 /******************************************************************************
@@ -2892,7 +2897,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         g_quest->kills + current_num_npcs < g_quest->num_npcs &&
         rand() % 4 == 0)
     {
-      add_new_npc(RANDOM_NPC_TYPE, get_npc_spawn_point());
+      add_new_npc(get_random_npc_type(), get_npc_spawn_point());
     }
 
     // Handle player stat recovery:
@@ -3128,34 +3133,34 @@ void strcat_stat_name(char *dest_str, const int16_t stat)
   switch(stat)
   {
     case STRENGTH:
-      strcat(stat_name, "Strength");
+      strcat(dest_str, "Strength");
       break;
     case AGILITY:
-      strcat(stat_name, "Agility");
+      strcat(dest_str, "Agility");
       break;
     case INTELLECT:
-      strcat(stat_name, "Intellect");
+      strcat(dest_str, "Intellect");
       break;
     case MAX_HP:
-      strcat(stat_name, "HP");
+      strcat(dest_str, "HP");
       break;
     case MAX_MP:
-      strcat(stat_name, "MP");
+      strcat(dest_str, "MP");
       break;
     case PHYSICAL_POWER:
-      strcat(stat_name, "Phys. Power");
+      strcat(dest_str, "Phys. Power");
       break;
     case PHYSICAL_DEFENSE:
-      strcat(stat_name, "Phys. Defense");
+      strcat(dest_str, "Phys. Defense");
       break;
     case MAGICAL_POWER:
-      strcat(stat_name, "Mag. Power");
+      strcat(dest_str, "Mag. Power");
       break;
     case MAGICAL_DEFENSE:
-      strcat(stat_name, "Mag. Defense");
+      strcat(dest_str, "Mag. Defense");
       break;
   }
-  strcat(stat_name, " ");
+  strcat(dest_str, " ");
 }
 
 /******************************************************************************
@@ -3353,9 +3358,9 @@ void init_player(void)
     init_item(g_player->inventory[i], 0); // "Empty," even for heavy items.
   }
   add_item_to_inventory(ROBE);
-  equip(g_player->inventory[FIRST_HEAVY_ITEM_INDEX], BODY);
+  equip(FIRST_HEAVY_ITEM_INDEX, BODY);
   add_item_to_inventory(DAGGER);
-  equip(g_player->inventory[FIRST_HEAVY_ITEM_INDEX + 1], RIGHT_HAND);
+  equip(FIRST_HEAVY_ITEM_INDEX + 1, RIGHT_HAND);
 }
 
 /******************************************************************************
@@ -3556,7 +3561,7 @@ void init_quest(const int16_t type)
   g_player->position          = g_quest->starting_point;
   g_player->stats[CURRENT_HP] = g_player->stats[MAX_HP];
   g_player->stats[CURRENT_MP] = g_player->stats[MAX_MP];
-  g_player->has_key           = false;
+  g_player->inventory[KEY]->n = 0;
   for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
   {
     g_player->status_effects[i] = 0;
@@ -3756,6 +3761,9 @@ void init_graphics(void)
   g_inverter_layer = inverter_layer_create(GRAPHICS_FRAME);
   layer_add_child(window_get_root_layer(g_graphics_window),
                   inverter_layer_get_layer(g_inverter_layer));
+
+  // Tick timer subscription:
+  tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 }
 
 /******************************************************************************
@@ -3825,6 +3833,8 @@ Description: Initializes the PebbleQuest app.
 ******************************************************************************/
 void init(void)
 {
+  int16_t i;
+
   srand(time(NULL));
   g_quest = NULL;
   init_menu_window();

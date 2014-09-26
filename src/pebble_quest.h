@@ -44,13 +44,11 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define DEFAULT_ROTATION_RATE           (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event
 #define MULTI_CLICK_MIN                 2
 #define MULTI_CLICK_MAX                 2 // We only care about double-clicks.
-#define MULTI_CLICK_TIMEOUT             0
+#define MULTI_CLICK_TIMEOUT             0 // milliseconds
 #define LAST_CLICK_ONLY                 true
-#define LONG_CLICK_DELAY                0    // milliseconds
-#define MIN_MOVEMENT_INTERVAL           1000 // milliseconds per step
-#define MAX_MOVEMENT_INTERVAL           200  // milliseconds per step
-#define PLAYER_TIMER_DURATION           20   // milliseconds
-#define FLASH_TIMER_DURATION            20   // milliseconds
+#define PLAYER_TIMER_DURATION           20  // milliseconds
+#define FLASH_TIMER_DURATION            20  // milliseconds
+#define MIN_ACTION_REPEAT_INTERVAL      200 // milliseconds per action
 #define MAX_INT_VALUE                   9999
 #define MAX_INT_DIGITS                  4
 #define FIRST_WALL_OFFSET               STATUS_BAR_HEIGHT
@@ -441,8 +439,8 @@ void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context);
 void graphics_down_single_repeating_click(ClickRecognizerRef recognizer,
                                           void *context);
 void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context);
-void graphics_select_single_click(ClickRecognizerRef recognizer,
-                                  void *context);
+void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
+                                            void *context);
 void graphics_click_config_provider(void *context);
 void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
 void scroll_click_config_provider(void *context);
@@ -454,7 +452,7 @@ void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
 void assign_minor_stats(int16_t *stats_array);
 void add_item_to_inventory(const int16_t type);
-void equip(const item_t *item, const int16_t equip_target);
+void equip(const int16_t item_index, const int16_t equip_target);
 void init_player(void);
 void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
