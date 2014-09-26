@@ -97,7 +97,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_SPECIAL_ITEM_TYPES          3  // GOLD, KEY, and ARTIFACT.
 #define NUM_PEBBLE_TYPES                7
 #define PLAYER_INVENTORY_SIZE           (NUM_PEBBLE_TYPES + NUM_POTION_TYPES + NUM_SPECIAL_ITEM_TYPES + MAX_HEAVY_ITEMS)
-#define MERCHANT_INVENTORY_SIZE         (NUM_HEAVY_ITEM_TYPES + NUM_POTION_TYPES)
+#define MERCHANT_INVENTORY_SIZE         (NUM_POTION_TYPES + NUM_HEAVY_ITEM_TYPES)
 #define MAX_INFUSED_PEBBLES             2
 #define MAX_NPCS_AT_ONE_TIME            3
 #define MIN_NPCS_PER_QUEST              10
@@ -330,7 +330,7 @@ GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
 int16_t g_game_mode,
-        g_previous_game_mode,
+        g_current_scroll,
         g_player_animation_mode;
 GPath *g_compass_path;
 quest_t *g_quest;
@@ -373,6 +373,8 @@ int16_t get_direction_to_the_right(const int16_t reference_direction);
 int16_t get_opposite_direction(const int16_t direction);
 int16_t get_boosted_stat_value(const int16_t stat_index,
                                const int16_t boost_amount);
+int16_t get_inventory_size(void);
+int16_t get_heavy_inventory_size(void);
 int16_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int16_t type);
 npc_t *get_npc_at(const GPoint cell);
@@ -430,15 +432,18 @@ static void flash_timer_callback(void *data);
 static void player_timer_callback(void *data);
 static void graphics_window_appear(Window *window);
 static void graphics_window_disappear(Window *window);
-void graphics_up_single_click(ClickRecognizerRef recognizer, void *context);
+void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
+                                        void *context);
 void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context);
-void graphics_down_single_click(ClickRecognizerRef recognizer, void *context);
+void graphics_down_single_repeating_click(ClickRecognizerRef recognizer,
+                                          void *context);
 void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context);
 void graphics_select_single_click(ClickRecognizerRef recognizer,
                                   void *context);
 void graphics_click_config_provider(void *context);
 void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
 void scroll_click_config_provider(void *context);
+void app_focus_handler(const bool in_focus);
 void strcat_item_name(char *dest_str, const int16_t item);
 void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);

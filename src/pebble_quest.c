@@ -376,17 +376,16 @@ Description: Called when the player walks into the exit, ending the current
 ******************************************************************************/
 void end_quest(void)
 {
-  //show_window(g_menu_layer_window, NOT_ANIMATED);
-
   if (g_quest->completed)
   {
     adjust_item_quantity(GOLD, g_quest->reward);
-    show_scroll(VICTORY_SCROLL);
+    g_current_scroll = VICTORY_SCROLL;
   }
   else
   {
-    show_scroll(FAILURE_SCROLL);
+    g_current_scroll = FAILURE_SCROLL;
   }
+  set_game_mode(SCROLL_MODE);
 }
 
 /******************************************************************************
@@ -808,6 +807,57 @@ int16_t get_boosted_stat_value(const int16_t stat_index,
 }
 
 /******************************************************************************
+   Function: get_inventory_size
+
+Description: Returns the number of non-heavy item types, plus the number of
+             individual heavy items, currently in the player's inventory. (Used
+             to determine how many rows to display in relevant menus.)
+
+     Inputs: None.
+
+    Outputs: Integer representing the "size" of the player's inventory.
+******************************************************************************/
+int16_t get_inventory_size(void)
+{
+  int16_t i, inventory_size = 0;
+
+  for (i = 0; i < FIRST_HEAVY_ITEM_INDEX; ++i)
+  {
+    if (player->inventory[i]->n > 0)
+    {
+      inventory_size++;
+    }
+  }
+
+  return inventory_size + get_heavy_inventory_size();
+}
+
+/******************************************************************************
+   Function: get_heavy_inventory_size
+
+Description: Returns the number of heavy items currently in the player's
+             inventory.
+
+     Inputs: None.
+
+    Outputs: The number of heavy items in the player's inventory.
+******************************************************************************/
+int16_t get_heavy_inventory_size(void)
+{
+  int16_t i, num_heavy_items = 0;
+
+  for (i = FIRST_HEAVY_ITEM_INDEX; i < PLAYER_INVENTORY_SIZE; ++i)
+  {
+    if (player->inventory[i] != NULL)
+    {
+      num_heavy_items++;
+    }
+  }
+
+  return num_heavy_items;
+}
+
+/******************************************************************************
    Function: get_cell_type
 
 Description: Returns the type of cell at a given set of coordinates.
@@ -1053,7 +1103,7 @@ static void menu_draw_header_callback(GContext *ctx,
   else // MARKET_MODE, BUYING_MODE, or SELLING_MODE
   {
     strcpy(header_str, "Market - Gold: ");
-    strcat_int(header_str, g_player->inventory[GOLD]);
+    strcat_int(header_str, g_player->inventory[GOLD]->n);
   }
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
@@ -1075,7 +1125,6 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
-  int16_t i;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
 
@@ -1119,9 +1168,9 @@ static void menu_draw_row_callback(GContext *ctx,
       if (cell_index->row < FIRST_HEAVY_ITEM_INDEX)
       {
         strcat_item_name(title_str, cell_index->row);
-        strcat(title_str, " (")
+        strcat(title_str, " (");
         strcat_int(g_player->inventory[cell_index->row]->n);
-        strcat(title_str, ")")
+        strcat(title_str, ")");
         if (g_game_mode == SELLING_MODE)
         {
           strcat(subtitle_str, "Sell for ");
@@ -1131,7 +1180,8 @@ static void menu_draw_row_callback(GContext *ctx,
       }
       else // Heavy items:
       {
-        strcat_item_name(title_str, g_player->inventory[cell_index->row]);
+        strcat_item_name(title_str,
+                         g_player->inventory[cell_index->row]->type);
         if (g_player->inventory[cell_index->row]->n > 0)
         {
           strcat(title_str, " of ");
@@ -1272,6 +1322,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       break;
     case BUYING_MODE:
       break;
+  }
 }
 
 /******************************************************************************
@@ -2575,7 +2626,7 @@ static void graphics_window_disappear(Window *window)
 {}
 
 /******************************************************************************
-   Function: graphics_up_single_click
+   Function: graphics_up_single_repeating_click
 
 Description: The graphics window's single-click handler for the Pebble's "up"
              button. Moves the player one cell forward.
@@ -2585,9 +2636,13 @@ Description: The graphics window's single-click handler for the Pebble's "up"
 
     Outputs: None.
 ******************************************************************************/
-void graphics_up_single_click(ClickRecognizerRef recognizer, void *context)
+void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
+                                        void *context)
 {
-  move_player(g_player->direction);
+  if (g_game_mode == ACTIVE_MODE)
+  {
+    move_player(g_player->direction);
+  }
 }
 
 /******************************************************************************
@@ -2603,11 +2658,14 @@ Description: The graphics window's multi-click handler for the "up" button.
 ******************************************************************************/
 void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context)
 {
-  set_player_direction(get_direction_to_the_left(g_player->direction));
+  if (g_game_mode == ACTIVE_MODE)
+  {
+    set_player_direction(get_direction_to_the_left(g_player->direction));
+  }
 }
 
 /******************************************************************************
-   Function: graphics_down_single_click
+   Function: graphics_down_single_repeating_click
 
 Description: The graphics window's single-click handler for the "down" button.
              Moves the player one cell backward.
@@ -2617,9 +2675,13 @@ Description: The graphics window's single-click handler for the "down" button.
 
     Outputs: None.
 ******************************************************************************/
-void graphics_down_single_click(ClickRecognizerRef recognizer, void *context)
+void graphics_down_single_repeating_click(ClickRecognizerRef recognizer,
+                                          void *context)
 {
-  move_player(get_opposite_direction(g_player->direction));
+  if (g_game_mode == ACTIVE_MODE)
+  {
+    move_player(get_opposite_direction(g_player->direction));
+  }
 }
 
 /******************************************************************************
@@ -2635,7 +2697,10 @@ Description: The graphics window's multi-click handler for the "down" button.
 ******************************************************************************/
 void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context)
 {
-  set_player_direction(get_direction_to_the_right(g_player->direction));
+  if (g_game_mode == ACTIVE_MODE)
+  {
+    set_player_direction(get_direction_to_the_right(g_player->direction));
+  }
 }
 
 /******************************************************************************
@@ -2654,32 +2719,35 @@ void graphics_select_single_click(ClickRecognizerRef recognizer, void *context)
   GPoint cell;
   npc_t *npc;
 
-  // If a Pebble is equipped (and the player has enough MP), cast a spell:
-  if (g_player->inventory[equipped_item_indices[RIGHT_HAND]]->type >=
-        PEBBLE_OF_FIRE &&
-      g_player->stats[CURRENT_MP] >= MP_LOSS_PER_SPELL)
+  if (g_game_mode == ACTIVE_MODE)
   {
-    flash_screen();
-    adjust_player_current_mp(MP_LOSS_PER_SPELL);
-    g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
-                                        player_timer_callback,
-                                        NULL);
-
-    // Check for a damaged NPC:
-    cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
-    while (get_cell_type(cell) > SOLID)
+    // If a Pebble is equipped (and the player has enough MP), cast a spell:
+    if (g_player->inventory[equipped_item_indices[RIGHT_HAND]]->type >=
+          PEBBLE_OF_FIRE &&
+        g_player->stats[CURRENT_MP] >= MP_LOSS_PER_SPELL)
     {
-      npc = get_npc_at(cell);
-      if (npc != NULL)
-      {
-        damage_npc(npc, g_player->stats[PHYSICAL_POWER]);
-        return;
-      }
-      cell = get_cell_farther_away(cell, g_player->direction, 1);
-    }
-  }
+      flash_screen();
+      adjust_player_current_mp(MP_LOSS_PER_SPELL);
+      g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
+                                          player_timer_callback,
+                                          NULL);
 
-  layer_mark_dirty(window_get_root_layer(g_graphics_window));
+      // Check for a damaged NPC:
+      cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
+      while (get_cell_type(cell) > SOLID)
+      {
+        npc = get_npc_at(cell);
+        if (npc != NULL)
+        {
+          damage_npc(npc, g_player->stats[PHYSICAL_POWER]);
+          return;
+        }
+        cell = get_cell_farther_away(cell, g_player->direction, 1);
+      }
+    }
+
+    layer_mark_dirty(window_get_root_layer(g_graphics_window));
+  }
 }
 
 /******************************************************************************
@@ -2694,7 +2762,9 @@ Description: Button-click configuration provider for the graphics window.
 void graphics_click_config_provider(void *context)
 {
   // "Up" button:
-  window_single_click_subscribe(BUTTON_ID_UP, graphics_up_single_click);
+  window_single_repeating_click_subscribe(BUTTON_ID_UP,
+                                          MOVEMENT_REPEAT_INTERVAL,
+                                          graphics_up_single_repeating_click);
   window_multi_click_subscribe(BUTTON_ID_UP,
                                MULTI_CLICK_MIN,
                                MULTI_CLICK_MAX,
@@ -2703,7 +2773,9 @@ void graphics_click_config_provider(void *context)
                                graphics_up_multi_click);
 
   // "Down" button:
-  window_single_click_subscribe(BUTTON_ID_DOWN, graphics_down_single_click);
+  window_single_repeating_click_subscribe(BUTTON_ID_DOWN,
+                                         MOVEMENT_REPEAT_INTERVAL,
+                                         graphics_down_single_repeating_click);
   window_multi_click_subscribe(BUTTON_ID_DOWN,
                                MULTI_CLICK_MIN,
                                MULTI_CLICK_MAX,
@@ -2757,7 +2829,7 @@ Description: Handles changes to the game world every second while in active
 
     Outputs: None.
 ******************************************************************************/
-/*static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 {
   int16_t current_num_npcs = 0;
   npc_t *npc_pointer;
@@ -2791,7 +2863,25 @@ Description: Handles changes to the game world every second while in active
 
     layer_mark_dirty(window_get_root_layer(g_graphics_window));
   }
-}*/
+}
+
+/******************************************************************************
+   Function: app_focus_handler
+
+Description: Handles PebbleQuest going out of, or coming back into, focus
+             (e.g., when a notification window temporarily hides this app).
+
+     Inputs: in_focus - "True" if PebbleQuest is now in focus.
+
+    Outputs: None.
+******************************************************************************/
+void app_focus_handler(const bool in_focus)
+{
+  if (!in_focus)
+  {
+    set_game_mode(MAIN_MENU_MODE);
+  }
+}
 
 /******************************************************************************
    Function: strcat_item_name
@@ -3731,8 +3821,7 @@ void init(void)
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
-
-  //show_window(g_menu_layer_window, ANIMATED);
+  set_game_mode(MAIN_MENU_MODE);
 
   // Check for saved data and initialize the player struct:
   g_player = malloc(sizeof(player_t));
