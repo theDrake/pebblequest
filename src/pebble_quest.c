@@ -221,10 +221,10 @@ void damage_npc(npc_t *npc, const int16_t damage)
 
 Description: Adjusts the quantity of a given item in the player's inventory by
              a given amount, which may be positive or negative. (If the
-             adjustment would increase the item's quantity above
-             MAX_SMALL_INT_VALUE, the quantity is set to MAX_SMALL_INT_VALUE
-             and "false" is returned. If it would reduce the quantity below
-             zero, no adjustment is made and "false" is returned.)
+             adjustment would increase the item's quantity above MAX_INT_VALUE,
+             the quantity is set to MAX_INT_VALUE and "false" is returned. If
+             it would reduce the quantity below zero, no adjustment is made and
+             "false" is returned.)
 
      Inputs: item   - Integer representing the item of interest.
              amount - Adjustment amount (which may be positive or negative).
@@ -237,9 +237,9 @@ bool adjust_item_quantity(const int16_t item, const int16_t amount)
   {
     return false;
   }
-  else if (g_player->inventory[item]->n + amount > MAX_SMALL_INT_VALUE)
+  else if (g_player->inventory[item]->n + amount > MAX_INT_VALUE)
   {
-    g_player->inventory[item]->n = MAX_SMALL_INT_VALUE;
+    g_player->inventory[item]->n = MAX_INT_VALUE;
 
     return false;
   }
@@ -786,7 +786,7 @@ int16_t get_opposite_direction(const int16_t direction)
 
 Description: Determines what value a given stat will be raised to if boosted by
              a given amount, which is either the sum of those values or
-             MAX_SMALL_INT_VALUE.
+             MAX_INT_VALUE.
 
      Inputs: stat_index   - Index value of the stat of interest.
              boost_amount - Desired boost amount.
@@ -798,12 +798,46 @@ int16_t get_boosted_stat_value(const int16_t stat_index,
 {
   int16_t boosted_stat_value = g_player->stats[stat_index] + boost_amount;
 
-  if (boosted_stat_value >= MAX_SMALL_INT_VALUE)
+  if (boosted_stat_value >= MAX_INT_VALUE)
   {
-    return MAX_SMALL_INT_VALUE;
+    return MAX_INT_VALUE;
   }
 
   return boosted_stat_value;
+}
+
+/******************************************************************************
+   Function: get_item_value
+
+Description: Returns the value of a given item.
+
+     Inputs: item - Integer representing the item of interest.
+
+    Outputs: The item's value.
+******************************************************************************/
+int16_t get_item_value(const int16_t item)
+{
+  switch(item)
+  {
+    case HP_POTION:
+    case MP_POTION:
+    case ROBE:
+    case DAGGER:
+    case STAFF:
+      return CHEAP_ITEM_VALUE;
+    case LIGHT_ARMOR:
+    case SHIELD:
+    case SWORD:
+    case MACE:
+      return EXPENSIVE_ITEM_VALUE;
+    case HEAVY_ARMOR:
+    case AXE:
+    case FLAIL:
+    case BOW:
+      return VERY_EXPENSIVE_ITEM_VALUE;
+    default:
+      return PEBBLE_VALUE;
+  }
 }
 
 /******************************************************************************
@@ -823,7 +857,7 @@ int16_t get_inventory_size(void)
 
   for (i = 0; i < FIRST_HEAVY_ITEM_INDEX; ++i)
   {
-    if (player->inventory[i]->n > 0)
+    if (g_player->inventory[i]->n > 0)
     {
       inventory_size++;
     }
@@ -848,7 +882,7 @@ int16_t get_heavy_inventory_size(void)
 
   for (i = FIRST_HEAVY_ITEM_INDEX; i < PLAYER_INVENTORY_SIZE; ++i)
   {
-    if (player->inventory[i] != NULL)
+    if (g_player->inventory[i]->n > 0)
     {
       num_heavy_items++;
     }
@@ -1125,6 +1159,7 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
+  int16_t magic_type;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
 
@@ -1169,24 +1204,28 @@ static void menu_draw_row_callback(GContext *ctx,
       {
         strcat_item_name(title_str, cell_index->row);
         strcat(title_str, " (");
-        strcat_int(g_player->inventory[cell_index->row]->n);
+        strcat_int(title_str, g_player->inventory[cell_index->row]->n);
         strcat(title_str, ")");
         if (g_game_mode == SELLING_MODE)
         {
           strcat(subtitle_str, "Sell for ");
-          strcat_int(subtitle_str, get_item_value(cell_index->row));
+          strcat_int(subtitle_str, get_item_value(cell_index->row) / 2);
           strcat(subtitle_str, " gold?");
         }
       }
       else // Heavy items:
       {
-        strcat_item_name(title_str,
-                         g_player->inventory[cell_index->row]->type);
-        if (g_player->inventory[cell_index->row]->n > 0)
+        strcat_item_name(title_str, g_player->inventory[cell_index->row]->n);
+        magic_type = g_player->inventory[cell_index->row]->infused_pebbles[0];
+        if (magic_type > 0)
         {
+          if (g_player->inventory[cell_index->row]->infused_pebbles[1] > 0)
+          {
+            magic_type *=
+              g_player->inventory[cell_index->row]->infused_pebbles[1];
+          }
           strcat(title_str, " of ");
-          strcat_magic_type(subtitle_str,
-                            g_player->inventory[cell_index->row]->n);
+          strcat_magic_type(subtitle_str, magic_type);
         }
       }
       break;
@@ -1246,7 +1285,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   {
     case SHOW_STATS_MODE:
     case LEVEL_UP_MODE:
-      if (g_player->stats[cell_index->row] < MAX_SMALL_INT_VALUE)
+      if (g_player->stats[cell_index->row] < MAX_INT_VALUE)
       {
         g_player->stats[cell_index->row] =
           get_boosted_stat_value(cell_index->row, 1);
@@ -2722,8 +2761,7 @@ void graphics_select_single_click(ClickRecognizerRef recognizer, void *context)
   if (g_game_mode == ACTIVE_MODE)
   {
     // If a Pebble is equipped (and the player has enough MP), cast a spell:
-    if (g_player->inventory[equipped_item_indices[RIGHT_HAND]]->type >=
-          PEBBLE_OF_FIRE &&
+    if (equipped_item_indices[RIGHT_HAND] < FIRST_HEAVY_ITEM_INDEX &&
         g_player->stats[CURRENT_MP] >= MP_LOSS_PER_SPELL)
     {
       flash_screen();
@@ -3147,9 +3185,9 @@ void strcat_stat_value(char *dest_str, const int16_t stat)
    Function: strcat_int
 
 Description: Concatenates a "small" integer value onto the end of a string. The
-             absolute value of the integer may not exceed MAX_SMALL_INT_VALUE
-             (if it does, MAX_SMALL_INT_VALUE will be used in its place). If
-             the integer is negative, a minus sign will be included.
+             absolute value of the integer may not exceed MAX_INT_VALUE (if it
+             does, MAX_INT_VALUE will be used in its place). If the integer is
+             negative, a minus sign will be included.
 
      Inputs: dest_str - Pointer to the destination string.
              integer  - Integer value to be converted to characters and
@@ -3160,7 +3198,7 @@ Description: Concatenates a "small" integer value onto the end of a string. The
 void strcat_int(char *dest_str, int16_t integer)
 {
   int16_t i, j;
-  static char int_str[MAX_SMALL_INT_DIGITS + 1];
+  static char int_str[MAX_INT_DIGITS + 1];
   bool negative = false;
 
   int_str[0] = '\0';
@@ -3169,9 +3207,9 @@ void strcat_int(char *dest_str, int16_t integer)
     negative = true;
     integer  *= -1;
   }
-  if (integer > MAX_SMALL_INT_VALUE)
+  if (integer > MAX_INT_VALUE)
   {
-    integer = MAX_SMALL_INT_VALUE;
+    integer = MAX_INT_VALUE;
   }
   if (integer == 0)
   {
@@ -3253,14 +3291,13 @@ void add_item_to_inventory(const int16_t type)
   {
     for (i = FIRST_HEAVY_ITEM_INDEX; i < PLAYER_INVENTORY_SIZE; ++i)
     {
-      if (g_player->inventory[i] == NULL)
+      if (g_player->inventory[i]->n == 0)
       {
-        g_player->inventory[i] = malloc(sizeof(item_t));
         init_item(g_player->inventory[i], type);
       }
       else if (i == PLAYER_INVENTORY_SIZE - 1)
       {
-        g_game_mode = REPLACE_ITEM_MODE;
+        set_game_mode(REPLACE_ITEM_MODE);
       }
     }
   }
@@ -3313,16 +3350,7 @@ void init_player(void)
   assign_minor_stats(g_player->stats);
   for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
   {
-    if (i < FIRST_HEAVY_ITEM_INDEX)
-    {
-      g_player->inventory[i]       = malloc(sizeof(item_t));
-      g_player->inventory[i]->type = GOLD + i;
-      g_player->inventory[i]->n    = 0;
-    }
-    else
-    {
-      g_player->inventory[i] = NULL;
-    }
+    init_item(g_player->inventory[i], 0); // "Empty," even for heavy items.
   }
   add_item_to_inventory(ROBE);
   equip(g_player->inventory[FIRST_HEAVY_ITEM_INDEX], BODY);
@@ -3348,10 +3376,7 @@ void deinit_player(void)
   {
     for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
     {
-      if (g_player->inventory[i] != NULL)
-      {
-        free(g_player->inventory[i]);
-      }
+      free(g_player->inventory[i]);
     }
     free(g_player);
     g_player = NULL;
@@ -3415,30 +3440,19 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
 Description: Initializes a new item struct according to a given type.
 
      Inputs: item - Pointer to the item struct.
-             type - Integer indicating the type of item.
+             n    - An integer representing "type" for heavy items and
+                    "quantity" for non-heavy items.
 
     Outputs: None.
 ******************************************************************************/
-void init_item(item_t *item, const int16_t type)
+void init_item(item_t *item, const int16_t n)
 {
   int16_t i;
 
-  item->type = type;
-  if (type == ROBE || type == LIGHT_ARMOR || type == HEAVY_ARMOR)
-  {
-    item->equip_target = BODY;
-  }
-  else if (type == SHIELD)
-  {
-    item->equip_target = LEFT_HAND;
-  }
-  else
-  {
-    item->equip_target = RIGHT_HAND;
-  }
+  item->n = n;
   for (i = 0; i < MAX_INFUSED_PEBBLES; ++i)
   {
-    item->infused_pebbles[i] = 0;
+    item->infused_pebbles[i] = 0; // Only important for heavy items.
   }
 }
 
@@ -3831,15 +3845,15 @@ void init(void)
   }
   if (persist_exists(STORAGE_KEY + PLAYER_INVENTORY_SIZE))
   {
-    persist_read_data(STORAGE_KEY + PLAYER_INVENTORY_SIZE,
-                      g_player,
-                      sizeof(player_t));
     for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
     {
       persist_read_data(STORAGE_KEY + i,
                         g_player->inventory[i],
                         sizeof(item_t));
     }
+    persist_read_data(STORAGE_KEY + PLAYER_INVENTORY_SIZE,
+                      g_player,
+                      sizeof(player_t));
   }
   else
   {

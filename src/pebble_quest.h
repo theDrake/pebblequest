@@ -51,10 +51,8 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MAX_MOVEMENT_INTERVAL           200  // milliseconds per step
 #define PLAYER_TIMER_DURATION           20   // milliseconds
 #define FLASH_TIMER_DURATION            20   // milliseconds
-#define MAX_SMALL_INT_VALUE             9999
-#define MAX_SMALL_INT_DIGITS            4
-#define MAX_LARGE_INT_VALUE             999999999
-#define MAX_LARGE_INT_DIGITS            9
+#define MAX_INT_VALUE                   9999
+#define MAX_INT_DIGITS                  4
 #define FIRST_WALL_OFFSET               STATUS_BAR_HEIGHT
 #define MIN_WALL_HEIGHT                 STATUS_BAR_HEIGHT
 #define GRAPHICS_FRAME_WIDTH            SCREEN_WIDTH
@@ -91,12 +89,16 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MIN_DAMAGE                      2
 #define MP_LOSS_PER_SPELL               -2
 #define STORAGE_KEY                     841
-#define NUM_POTION_TYPES                2  // HP_POTION and MP_POTION.
-#define MAX_HEAVY_ITEMS                 6  // "Heavy items" refers to robe/armor, shield, and weapons.
-#define NUM_HEAVY_ITEM_TYPES            11 // "Heavy items" refers to robe/armor, shield, and weapons.
+#define MAX_HEAVY_ITEMS                 6
+#define NUM_HEAVY_ITEM_TYPES            11 // ROBE, SHIELD, and armor/weapons.
 #define NUM_SPECIAL_ITEM_TYPES          3  // GOLD, KEY, and ARTIFACT.
+#define NUM_POTION_TYPES                2  // HP_POTION and MP_POTION.
 #define NUM_PEBBLE_TYPES                7
-#define PLAYER_INVENTORY_SIZE           (NUM_PEBBLE_TYPES + NUM_POTION_TYPES + NUM_SPECIAL_ITEM_TYPES + MAX_HEAVY_ITEMS)
+#define CHEAP_ITEM_VALUE                50
+#define EXPENSIVE_ITEM_VALUE            100
+#define VERY_EXPENSIVE_ITEM_VALUE       150
+#define PEBBLE_VALUE                    200
+#define PLAYER_INVENTORY_SIZE           (NUM_SPECIAL_ITEM_TYPES + NUM_PEBBLE_TYPES + NUM_POTION_TYPES + MAX_HEAVY_ITEMS)
 #define MERCHANT_INVENTORY_SIZE         (NUM_POTION_TYPES + NUM_HEAVY_ITEM_TYPES)
 #define MAX_INFUSED_PEBBLES             2
 #define MAX_NPCS_AT_ONE_TIME            3
@@ -273,8 +275,8 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 ******************************************************************************/
 
 typedef struct Item {
-  int16_t type,
-          n; // 'Quantity' for Pebbles/potions, 'infusion value' for others.
+  int16_t n, // "Type" for heavy items (0 == "none"), "quantity" for others.
+          infused_pebbles[MAX_INFUSED_PEBBLES];
 } __attribute__((__packed__)) item_t;
 
 typedef struct NonPlayerCharacter {
@@ -373,6 +375,7 @@ int16_t get_direction_to_the_right(const int16_t reference_direction);
 int16_t get_opposite_direction(const int16_t direction);
 int16_t get_boosted_stat_value(const int16_t stat_index,
                                const int16_t boost_amount);
+int16_t get_item_value(const int16_t item_type);
 int16_t get_inventory_size(void);
 int16_t get_heavy_inventory_size(void);
 int16_t get_cell_type(const GPoint cell);
@@ -455,7 +458,7 @@ void equip(const item_t *item, const int16_t equip_target);
 void init_player(void);
 void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
-void init_heavy_item(item_t *item, const int16_t type);
+void init_item(item_t *item, const int16_t n);
 void init_wall_coords(void);
 void init_quest(const int16_t type);
 void init_quest_location(void);
