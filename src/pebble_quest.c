@@ -1108,34 +1108,37 @@ static void menu_draw_header_callback(GContext *ctx,
 {
   char header_str[MENU_HEADER_STR_LEN + 1];
 
-  switch (g_game_mode)
+  if (g_game_mode == MAIN_MENU_MODE)
   {
-    case MAIN_MENU_MODE:
-      strcpy(header_str, "Main Menu");
-      break;
-    case INVENTORY_MODE:
-      strcpy(header_str, "Inventory");
-      break;
-    case PEBBLE_OPTIONS_MODE:
-      strcpy(header_str, "What do you want to do?");
-      break;
-    case PEBBLE_INFUSION_MODE:
-      strcpy(header_str, "Infuse which item?");
-      break;
-    case LOOT_MODE:
-      strcpy(header_str, "Loot");
-      break;
-    case LEVEL_UP_MODE:
-      strcpy(header_str, "Level ");
-      strcat_int(header_str, g_player->level);
-      strcat(header_str, " reached!");
-      break;
-    default: // MARKET_MODE, BUYING_MODE, or SELLING_MODE
-      strcpy(header_str, "Market - Gold: ");
-      strcat_int(header_str, g_player->inventory[GOLD]->n);
-      break;
+    strcpy(header_str, "Main Menu");
   }
-
+  else if (g_game_mode == INVENTORY_MODE)
+  {
+    strcpy(header_str, "Inventory");
+  }
+  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
+  {
+    strcpy(header_str, "What do you want to do?");
+  }
+  else if (g_game_mode == PEBBLE_INFUSION_MODE)
+  {
+    strcpy(header_str, "Infuse which item?");
+  }
+  else if (g_game_mode == LOOT_MODE)
+  {
+    strcpy(header_str, "Loot");
+  }
+  else if (g_game_mode == LEVEL_UP_MODE)
+  {
+    strcpy(header_str, "Level ");
+    strcat_int(header_str, g_player->level);
+    strcat(header_str, " reached!");
+  }
+  else // MARKET_MODE, BUYING_MODE, or SELLING_MODE
+  {
+    strcpy(header_str, "Market - Gold: ");
+    strcat_int(header_str, g_player->inventory[GOLD]->n);
+  }
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
