@@ -12,6 +12,39 @@ Description: Function definitions for the 3D, first-person, fantasy RPG
 #include "pebble_quest.h"
 
 /******************************************************************************
+   Function: set_game_mode
+
+Description: Sets the current game mode according to a given mode value, then
+             shows the graphics window, scroll window, or menu window (with
+             reloaded data) accordingly.
+
+     Inputs: mode - Integer representing the desired game mode.
+
+    Outputs: None.
+******************************************************************************/
+void set_game_mode(const int16_t mode)
+{
+  g_game_mode = mode;
+  if (mode == ACTIVE_MODE)
+  {
+    show_window(g_graphics_window, NOT_ANIMATED);
+  }
+  else if (mode == SCROLL_MODE)
+  {
+    show_window(g_scroll_window, ANIMATED);
+  }
+  else
+  {
+    menu_layer_reload_data(g_menu_layer);
+    menu_layer_set_selected_index(g_menu_layer,
+                                  (MenuIndex) {0, 0},
+                                  MenuRowAlignCenter,
+                                  NOT_ANIMATED);
+    show_window(g_menu_window, NOT_ANIMATED);
+  }
+}
+
+/******************************************************************************
    Function: set_player_direction
 
 Description: Sets the player's orientation to a given direction and updates the
@@ -817,26 +850,25 @@ Description: Returns the value of a given item.
 ******************************************************************************/
 int16_t get_item_value(const int16_t item)
 {
-  switch(item)
+  if (item < FIRST_PEBBLE_INDEX)
   {
-    case HP_POTION:
-    case MP_POTION:
-    case ROBE:
-    case DAGGER:
-    case STAFF:
-      return CHEAP_ITEM_VALUE;
-    case LIGHT_ARMOR:
-    case SHIELD:
-    case SWORD:
-    case MACE:
-      return EXPENSIVE_ITEM_VALUE;
-    case HEAVY_ARMOR:
-    case AXE:
-    case FLAIL:
-    case BOW:
-      return VERY_EXPENSIVE_ITEM_VALUE;
-    default:
-      return PEBBLE_VALUE;
+    return CHEAP_ITEM_VALUE;
+  }
+  else if (item < FIRST_HEAVY_ITEM_INDEX)
+  {
+    return PEBBLE_VALUE;
+  }
+  else if (item < LIGHT_ARMOR)
+  {
+    return CHEAP_ITEM_VALUE;
+  }
+  else if (item < HEAVY_ARMOR)
+  {
+    return EXPENSIVE_ITEM_VALUE;
+  }
+  else
+  {
+    return VERY_EXPENSIVE_ITEM_VALUE;
   }
 }
 
@@ -1361,39 +1393,6 @@ void menu_select_callback(MenuLayer *menu_layer,
       break;
     case BUYING_MODE:
       break;
-  }
-}
-
-/******************************************************************************
-   Function: set_game_mode
-
-Description: Sets the current game mode according to a given mode value, then
-             shows the graphics window, scroll window, or menu window (with
-             reloaded data) accordingly.
-
-     Inputs: mode - Integer representing the desired game mode.
-
-    Outputs: None.
-******************************************************************************/
-void set_game_mode(const int16_t mode)
-{
-  g_game_mode = mode;
-  if (mode == ACTIVE_MODE)
-  {
-    show_window(g_graphics_window, NOT_ANIMATED);
-  }
-  else if (mode == SCROLL_MODE)
-  {
-    show_window(g_scroll_window, ANIMATED);
-  }
-  else
-  {
-    menu_layer_reload_data(g_menu_layer);
-    menu_layer_set_selected_index(g_menu_layer,
-                                  (MenuIndex) {0, 0},
-                                  MenuRowAlignCenter,
-                                  NOT_ANIMATED);
-    show_window(g_menu_window, NOT_ANIMATED);
   }
 }
 
@@ -2938,7 +2937,7 @@ Description: Concatenates the name of a given item onto a given string.
 ******************************************************************************/
 void strcat_item_name(char *dest_str, const int16_t item)
 {
-  if (item >= PEBBLE_OF_FIRE)
+  if (item >= FIRST_PEBBLE_INDEX)
   {
     strcat(dest_str, "Pebble of ");
     strcat_magic_type(dest_str, item);

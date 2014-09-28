@@ -122,7 +122,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_QUEST_TYPES       9
 
 // Location types:
-#define CAVE               0
+#define DUNGEON            0
 #define TUNNEL             1
 #define TOWN               2
 #define CASTLE             3
@@ -130,39 +130,39 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_LOCATION_TYPES 5
 
 // Cell types, including loot/item types:
-#define CLOSED_DOOR         0
-#define LOCKED_DOOR         1
-#define SOLID               2
-#define EMPTY               3
-#define CAPTIVE             4
-#define LOOT                5 // Plus item type value (see below).
+#define CLOSED_DOOR 0
+#define LOCKED_DOOR 1
+#define SOLID       2
+#define EMPTY       3
+#define CAPTIVE     4
+#define LOOT        5 // Plus item type value (see below).
 
 // Item types:
-#define GOLD                0
-#define KEY                 1
-#define ARTIFACT            2
-#define HP_POTION           3
-#define MP_POTION           4
-#define PEBBLE_OF_FIRE      5
-#define PEBBLE_OF_ICE       6
-#define PEBBLE_OF_LIGHTNING 7
-#define PEBBLE_OF_LIFE      8
-#define PEBBLE_OF_DEATH     9
-#define PEBBLE_OF_LIGHT     10
-#define PEBBLE_OF_DARKNESS  11
-#define ROBE                12
-#define LIGHT_ARMOR         13
-#define HEAVY_ARMOR         14
-#define SHIELD              15
-#define DAGGER              16
-#define SWORD               17
-#define AXE                 18
-#define STAFF               19
-#define MACE                20
-#define FLAIL               21
-#define BOW                 22
-
-#define FIRST_HEAVY_ITEM_INDEX ROBE
+#define GOLD                      0
+#define KEY                       1
+#define ARTIFACT                  2
+#define HP_POTION                 3
+#define MP_POTION                 4
+#define PEBBLE_OF_FIRE            5
+#define PEBBLE_OF_ICE             6
+#define PEBBLE_OF_LIGHTNING       7
+#define PEBBLE_OF_LIFE            8
+#define PEBBLE_OF_DEATH           9
+#define PEBBLE_OF_LIGHT           10
+#define PEBBLE_OF_DARKNESS        11
+#define ROBE                      12
+#define DAGGER                    13
+#define STAFF                     14
+#define LIGHT_ARMOR               15
+#define SHIELD                    16
+#define SWORD                     17
+#define MACE                      18
+#define HEAVY_ARMOR               19
+#define AXE                       20
+#define FLAIL                     21
+#define BOW                       22
+#define FIRST_PEBBLE_INDEX        PEBBLE_OF_FIRE
+#define FIRST_HEAVY_ITEM_INDEX    ROBE
 
 // Equip targets (i.e., places where an item may be equipped):
 #define BODY              0
