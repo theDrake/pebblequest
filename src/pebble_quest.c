@@ -3155,7 +3155,7 @@ void strcat_stat_name(char *dest_str, const int16_t stat)
     case MAGICAL_POWER:
       strcat(dest_str, "Mag. Power");
       break;
-    case MAGICAL_DEFENSE:
+    default: // case MAGICAL_DEFENSE:
       strcat(dest_str, "Mag. Defense");
       break;
   }
