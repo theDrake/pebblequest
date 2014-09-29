@@ -99,13 +99,17 @@ void move_player(const int16_t direction)
     // Shift the player's position:
     g_player->position = destination;
 
-    // Check for quest completion:
-    if (get_cell_type(destination) == CAPTIVE ||
+    // Check for loot:
+    if (get_cell_type(destination) > EMPTY)
+    {
+      set_game_mode(LOOT_MODE);
+    }
+    /*if (get_cell_type(destination) == CAPTIVE ||
         get_cell_type(destination) == ARTIFACT)
     {
       set_cell_type(destination, EMPTY);
       g_quest->completed = true;
-    }
+    }*/
     layer_mark_dirty(window_get_root_layer(g_graphics_window));
   }
 }
@@ -1053,7 +1057,7 @@ Description: Determines whether the cell at a given set of coordinates may be
 ******************************************************************************/
 bool occupiable(const GPoint cell)
 {
-  return get_cell_type(cell) <= EMPTY              &&
+  return get_cell_type(cell) >= EMPTY              &&
          !gpoint_equal(&g_player->position, &cell) &&
          get_npc_at(cell) == NULL;
 }
@@ -1536,7 +1540,7 @@ void draw_scene(Layer *layer, GContext *ctx)
     {
       continue;
     }
-    if (get_cell_type(cell) > SOLID)
+    if (get_cell_type(cell) >= EMPTY)
     {
       draw_cell_walls(ctx, cell, depth, STRAIGHT_AHEAD);
       draw_cell_contents(ctx, cell, depth, STRAIGHT_AHEAD);
@@ -1548,7 +1552,7 @@ void draw_scene(Layer *layer, GContext *ctx)
       cell_2 = get_cell_farther_away(cell,
                                 get_direction_to_the_left(g_player->direction),
                                 i);
-      if (get_cell_type(cell_2) > SOLID)
+      if (get_cell_type(cell_2) >= EMPTY)
       {
         draw_cell_walls(ctx, cell_2, depth, STRAIGHT_AHEAD - i);
         draw_cell_contents(ctx, cell_2, depth, STRAIGHT_AHEAD - i);
@@ -1556,7 +1560,7 @@ void draw_scene(Layer *layer, GContext *ctx)
       cell_2 = get_cell_farther_away(cell,
                                get_direction_to_the_right(g_player->direction),
                                i);
-      if (get_cell_type(cell_2) > SOLID)
+      if (get_cell_type(cell_2) >= EMPTY)
       {
         draw_cell_walls(ctx, cell_2, depth, STRAIGHT_AHEAD + i);
         draw_cell_contents(ctx, cell_2, depth, STRAIGHT_AHEAD + i);
@@ -1692,7 +1696,7 @@ void draw_cell_walls(GContext *ctx,
   }
   back_wall_drawn = left_wall_drawn = right_wall_drawn = false;
   cell_2 = get_cell_farther_away(cell, g_player->direction, 1);
-  if (get_cell_type(cell_2) >= SOLID)
+  if (get_cell_type(cell_2) <= SOLID)
   {
     draw_shaded_quad(ctx,
                      GPoint(left, top),
@@ -1746,7 +1750,7 @@ void draw_cell_walls(GContext *ctx,
     cell_2 = get_cell_farther_away(cell,
                                 get_direction_to_the_left(g_player->direction),
                                 1);
-    if (get_cell_type(cell_2) >= SOLID)
+    if (get_cell_type(cell_2) <= SOLID)
     {
       draw_shaded_quad(ctx,
                        GPoint(left, top - y_offset),
@@ -1797,7 +1801,7 @@ void draw_cell_walls(GContext *ctx,
     cell_2 = get_cell_farther_away(cell,
                                get_direction_to_the_right(g_player->direction),
                                1);
-    if (get_cell_type(cell_2) >= SOLID)
+    if (get_cell_type(cell_2) <= SOLID)
     {
       draw_shaded_quad(ctx,
                        GPoint(left, top),
@@ -1841,11 +1845,11 @@ void draw_cell_walls(GContext *ctx,
   if ((back_wall_drawn && (left_wall_drawn ||
        get_cell_type(get_cell_farther_away(cell_2,
                                 get_direction_to_the_left(g_player->direction),
-                                1)) > SOLID)) ||
+                                1)) >= EMPTY)) ||
       (left_wall_drawn &&
        get_cell_type(get_cell_farther_away(cell_2,
                                 get_direction_to_the_left(g_player->direction),
-                                1)) > SOLID))
+                                1)) >= EMPTY))
   {
     graphics_draw_line(ctx,
                        g_back_wall_coords[depth][position][TOP_LEFT],
@@ -1855,11 +1859,11 @@ void draw_cell_walls(GContext *ctx,
   if ((back_wall_drawn && (right_wall_drawn ||
        get_cell_type(get_cell_farther_away(cell_2,
                                get_direction_to_the_right(g_player->direction),
-                               1)) > SOLID)) ||
+                               1)) >= EMPTY)) ||
       (right_wall_drawn &&
        get_cell_type(get_cell_farther_away(cell_2,
                                get_direction_to_the_right(g_player->direction),
-                               1)) > SOLID))
+                               1)) >= EMPTY))
   {
     graphics_draw_line(ctx,
                     g_back_wall_coords[depth][position][BOTTOM_RIGHT],
@@ -1892,7 +1896,7 @@ void draw_cell_contents(GContext *ctx,
   GPoint floor_center_point;
 
   // Check for a completely empty cell:
-  if (get_cell_type(cell) <= EMPTY && npc == NULL)
+  if (get_cell_type(cell) == EMPTY && npc == NULL)
   {
     return;
   }
@@ -1920,18 +1924,7 @@ void draw_cell_contents(GContext *ctx,
   // Draw the character (or a treasure chest for loot):
   if (npc == NULL)
   {
-    if (get_cell_type(cell) >= GOLD) // Loot!
-    {
-      graphics_context_set_fill_color(ctx, GColorWhite);
-      graphics_fill_rect(ctx,
-                         GRect(floor_center_point.x - drawing_unit * 2,
-                               floor_center_point.y - drawing_unit * 4,
-                               drawing_unit * 4,
-                               drawing_unit * 4),
-                         drawing_unit / 2,
-                         GCornersTop);
-    }
-    else if (get_cell_type(cell) == CAPTIVE)
+    if (get_cell_type(cell) == CAPTIVE)
     {
       // Legs:
       graphics_fill_rect(ctx,
@@ -2033,6 +2026,17 @@ void draw_cell_contents(GContext *ctx,
                            GPoint(floor_center_point.x + drawing_unit / 4,
                                   floor_center_point.y - (drawing_unit * 9)),
                            drawing_unit / 6);
+    }
+    else if (get_cell_type(cell) > EMPTY) // Loot!
+    {
+      graphics_context_set_fill_color(ctx, GColorWhite);
+      graphics_fill_rect(ctx,
+                         GRect(floor_center_point.x - drawing_unit * 2,
+                               floor_center_point.y - drawing_unit * 4,
+                               drawing_unit * 4,
+                               drawing_unit * 4),
+                         drawing_unit / 2,
+                         GCornersTop);
     }
   }
   else if (npc->type == ORC)
@@ -2813,7 +2817,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 
       // Check for a damaged NPC:
       cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
-      while (get_cell_type(cell) > SOLID)
+      while (get_cell_type(cell) >= EMPTY)
       {
         npc = get_npc_at(cell);
         if (npc != NULL)
@@ -3587,26 +3591,26 @@ void init_quest(const int16_t type)
 {
   int16_t i;
 
-  g_quest->type             = type;
-  g_quest->reward           = DEFAULT_QUEST_REWARD;
+  g_quest->type   = type;
+  g_quest->reward = DEFAULT_QUEST_REWARD;
   if (type == ASSASSINATE)
   {
     g_quest->reward *= 2;
   }
-  g_quest->primary_npc_type = GOBLIN;
-  g_quest->num_npcs         = rand() % (MAX_NPCS_PER_QUEST - MIN_NPCS_PER_QUEST
-                                        + 1) + MIN_NPCS_PER_QUEST;
+  g_quest->completed        = false;
   g_quest->kills            = 0;
   g_quest->npcs             = NULL;
-  g_quest->completed        = false;
+  g_quest->primary_npc_type = GOBLIN;
+  g_quest->num_npcs         = 5 * (rand() % 5 + 2); // 10-30 enemies.
   init_quest_location();
 
   // Move and orient the player, restore health and energy, etc.:
   set_player_direction(get_opposite_direction(g_quest->entrance_direction));
-  g_player->position              = g_quest->starting_point;
-  g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
-  g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
-  g_player->inventory[KEY]->n     = 0;
+  g_player->position               = g_quest->starting_point;
+  g_player->stats[CURRENT_HEALTH]  = g_player->stats[MAX_HEALTH];
+  g_player->stats[CURRENT_ENERGY]  = g_player->stats[MAX_ENERGY];
+  g_player->inventory[KEY]->n      = 0;
+  g_player->inventory[ARTIFACT]->n = 0;
   for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
   {
     g_player->status_effects[i] = 0;
