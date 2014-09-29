@@ -3130,24 +3130,36 @@ Description: Concatenates the name of a given stat onto a given string.
 ******************************************************************************/
 void strcat_stat_name(char *dest_str, const int16_t stat)
 {
-  if (stat == STRENGTH)
-    strcat(dest_str, "Strength");
-  else if (stat == AGILITY)
-    strcat(dest_str, "Agility");
-  else if (stat == INTELLECT)
-    strcat(dest_str, "Intellect");
-  else if (stat == MAX_HEALTH)
-    strcat(dest_str, "Health");
-  else if (stat == MAX_ENERGY)
-    strcat(dest_str, "Energy");
-  else if (stat == PHYSICAL_POWER)
-    strcat(dest_str, "Phys. Power");
-  else if (stat == PHYSICAL_DEFENSE)
-    strcat(dest_str, "Phys. Defense");
-  else if (stat == MAGICAL_POWER)
-    strcat(dest_str, "Mag. Power");
-  else if (stat == MAGICAL_DEFENSE)
-    strcat(dest_str, "Mag. Defense");
+  switch(stat)
+  {
+    case STRENGTH:
+      strcat(dest_str, "Strength");
+      break;
+    case AGILITY:
+      strcat(dest_str, "Agility");
+      break;
+    case INTELLECT:
+      strcat(dest_str, "Intellect");
+      break;
+    case MAX_HP:
+      strcat(dest_str, "HP");
+      break;
+    case MAX_MP:
+      strcat(dest_str, "MP");
+      break;
+    case PHYSICAL_POWER:
+      strcat(dest_str, "Phys. Power");
+      break;
+    case PHYSICAL_DEFENSE:
+      strcat(dest_str, "Phys. Defense");
+      break;
+    case MAGICAL_POWER:
+      strcat(dest_str, "Mag. Power");
+      break;
+    case MAGICAL_DEFENSE:
+      strcat(dest_str, "Mag. Defense");
+      break;
+  }
   strcat(dest_str, " ");
 }
 
