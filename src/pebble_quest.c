@@ -845,32 +845,39 @@ int16_t get_boosted_stat_value(const int16_t stat_index,
 
 Description: Returns the value of a given item.
 
-     Inputs: item - Integer representing the item of interest.
+     Inputs: item_index - Index value for the item of interest in the player's
+                          inventory.
 
     Outputs: The item's value.
 ******************************************************************************/
-int16_t get_item_value(const int16_t item)
+int16_t get_item_value(const int16_t item_index)
 {
-  if (item < FIRST_PEBBLE_INDEX)
+  int16_t i, item_value = CHEAP_ITEM_VALUE;
+
+  if (item_index >= FIRST_PEBBLE_INDEX && item_index < FIRST_HEAVY_ITEM_INDEX)
   {
-    return CHEAP_ITEM_VALUE;
+    item_value = PEBBLE_VALUE;
   }
-  else if (item < FIRST_HEAVY_ITEM_INDEX)
+  else if (item_index >= FIRST_HEAVY_ITEM_INDEX)
   {
-    return PEBBLE_VALUE;
+    if (g_player->inventory[item_index]->n >= LIGHT_ARMOR)
+    {
+      item_value = EXPENSIVE_ITEM_VALUE;
+    }
+    else if (g_player->inventory[item_index]->n >= HEAVY_ARMOR)
+    {
+      item_value = VERY_EXPENSIVE_ITEM_VALUE;
+    }
+    for (i = 0; i < MAX_INFUSED_PEBBLES; ++i)
+    {
+      if (g_player->inventory[item_index]->infused_pebbles[i] > 0)
+      {
+        item_value += PEBBLE_VALUE;
+      }
+    }
   }
-  else if (item < LIGHT_ARMOR)
-  {
-    return CHEAP_ITEM_VALUE;
-  }
-  else if (item < HEAVY_ARMOR)
-  {
-    return EXPENSIVE_ITEM_VALUE;
-  }
-  else
-  {
-    return VERY_EXPENSIVE_ITEM_VALUE;
-  }
+
+  return item_value;
 }
 
 /******************************************************************************
@@ -1192,108 +1199,90 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
-  int16_t magic_type;
+  int16_t item_index;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
 
-  switch (g_game_mode)
+  if (g_game_mode == MAIN_MENU_MODE)
   {
-    case SHOW_STATS_MODE:
-    case LEVEL_UP_MODE:
-      strcat_stat_name(title_str, cell_index->row);
-      strcat_stat_value(title_str, cell_index->row);
-      if (g_game_mode == LEVEL_UP_MODE)
-      {
-        strcat(title_str, "->");
-        strcat_int(title_str, get_boosted_stat_value(cell_index->row, 1));
-      }
-      break;
-    case MAIN_MENU_MODE:
-      switch (cell_index->row)
-      {
-        case 0:
-          strcat(title_str, g_quest == NULL ? "New Quest" : "Continue");
-          break;
-        case 1:
-          strcat(title_str, "Character Stats");
-          strcat(subtitle_str, "Strength, Agility...");
-          break;
-        case 2:
-          strcat(title_str, "Inventory");
-          strcat(subtitle_str, "Use/equip items.");
-          break;
-        default: // case 3:
-          strcat(title_str, "Marketplace");
-          strcat(subtitle_str, g_quest == NULL ? "Buy/sell items." :
-                                                 "Not during quests!");
-          break;
-      }
-      break;
-    case INVENTORY_MODE:
-    case SELLING_MODE:
-    case PEBBLE_INFUSION_MODE:
-    case REPLACE_ITEM_MODE:
-      if (cell_index->row < FIRST_HEAVY_ITEM_INDEX)
-      {
-        strcat_item_name(title_str, cell_index->row);
-        strcat(title_str, " (");
-        strcat_int(title_str, g_player->inventory[cell_index->row]->n);
-        strcat(title_str, ")");
-        if (g_game_mode == SELLING_MODE)
-        {
-          strcat(subtitle_str, "Sell for ");
-          strcat_int(subtitle_str, get_item_value(cell_index->row) / 2);
-          strcat(subtitle_str, " gold?");
-        }
-      }
-      else // Heavy items:
-      {
-        strcat_item_name(title_str, g_player->inventory[cell_index->row]->n);
-        magic_type = g_player->inventory[cell_index->row]->infused_pebbles[0];
-        if (magic_type > 0)
-        {
-          if (g_player->inventory[cell_index->row]->infused_pebbles[1] > 0)
-          {
-            magic_type *=
-              g_player->inventory[cell_index->row]->infused_pebbles[1];
-          }
-          strcat(title_str, " of ");
-          strcat_magic_type(subtitle_str, magic_type);
-        }
-      }
-      break;
-    case EQUIP_OPTIONS_MODE:
-    case PEBBLE_OPTIONS_MODE:
-      switch (cell_index->row)
-      {
-        strcat(subtitle_str, "Current: ");
-        case 0:
-          strcat(title_str, "Equip to Right Hand");
-          break;
-        case 1:
-          strcat(title_str, "Equip to Left Hand");
-          break;
-        default: // Only used in PEBBLE_OPTIONS_MODE.
-          strcat(title_str, "Infuse into Item");
-          strcpy(subtitle_str, "This is permanent!");
-          break;
-      }
-      break;
-    case LOOT_MODE:
-      break;
-    case MARKET_MODE:
-      switch (cell_index->row)
-      {
-        case 0:
-          strcat(title_str, "Buy");
-          break;
-        default:
-          strcat(title_str, "Sell");
-          break;
-      }
-      break;
-    case BUYING_MODE:
-      break;
+    switch (cell_index->row)
+    {
+      case 0:
+        strcat(title_str, g_quest == NULL ? "New Quest" : "Continue");
+        break;
+      case 1:
+        strcat(title_str, "Character Stats");
+        strcat(subtitle_str, "Strength, Agility...");
+        break;
+      case 2:
+        strcat(title_str, "Inventory");
+        strcat(subtitle_str, "Use/equip items.");
+        break;
+      default: // case 3:
+        strcat(title_str, "Marketplace");
+        strcat(subtitle_str, g_quest == NULL ? "Buy/sell items." :
+                                               "Not during quests!");
+        break;
+    }
+  }
+  else if (g_game_mode == SHOW_STATS_MODE || g_game_mode == LEVEL_UP_MODE)
+  {
+    strcat_stat_name(title_str, cell_index->row);
+    strcat_stat_value(title_str, cell_index->row);
+    if (g_game_mode == LEVEL_UP_MODE)
+    {
+      strcat(title_str, "->");
+      strcat_int(title_str, get_boosted_stat_value(cell_index->row, 1));
+    }
+  }
+  else if (g_game_mode == EQUIP_OPTIONS_MODE ||
+           g_game_mode == PEBBLE_OPTIONS_MODE)
+  {
+    switch (cell_index->row)
+    {
+      strcat(subtitle_str, "Current: ");
+      case 0:
+        strcat(title_str, "Equip to Right Hand");
+        break;
+      case 1:
+        strcat(title_str, "Equip to Left Hand");
+        break;
+      default: // Only used in PEBBLE_OPTIONS_MODE.
+        strcat(title_str, "Infuse into Item");
+        strcpy(subtitle_str, "This is permanent!");
+        break;
+    }
+  }
+  else if (g_game_mode == LOOT_MODE)
+  {
+    strcat_item_name(get_cell_type(g_player->position));
+  }
+  else if (g_game_mode == MARKET_MODE)
+  {
+    switch (cell_index->row)
+    {
+      case 0:
+        strcat(title_str, "Buy");
+        break;
+      default:
+        strcat(title_str, "Sell");
+        break;
+    }
+  }
+  else if (g_game_mode == BUYING_MODE)
+  {
+    
+  }
+  else // INVENTORY_MODE, SELLING_MODE, PEBBLE_INFUSION_MODE, REPLACE_ITEM_MODE
+  {
+    item_index = get_nth_item_index(cell_index->row);
+    strcat_item_name(title_str, item_index);
+    if (g_game_mode == SELLING_MODE)
+    {
+      strcat(subtitle_str, "Sell for ");
+      strcat_int(subtitle_str, get_item_value(item_index) / 2);
+      strcat(subtitle_str, " gold?");
+    }
   }
 
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
@@ -2931,24 +2920,27 @@ void app_focus_handler(const bool in_focus)
 
 Description: Concatenates the name of a given item onto a given string.
 
-     Inputs: dest_str - Pointer to the destination string.
-             item     - Integer representing the item of interest.
+     Inputs: dest_str   - Pointer to the destination string.
+             item_index - Index value for the item of interest in the player's
+                          inventory.
 
     Outputs: None.
 ******************************************************************************/
-void strcat_item_name(char *dest_str, const int16_t item)
+void strcat_item_name(char *dest_str, const int16_t item_index)
 {
-  if (item >= FIRST_PEBBLE_INDEX)
+  int16_t magic_type;
+
+  if (item_index >= FIRST_PEBBLE_INDEX)
   {
     strcat(dest_str, "Pebble of ");
-    strcat_magic_type(dest_str, item);
+    strcat_magic_type(dest_str, item_index);
   }
-  else
+  else if (item_index < FIRST_HEAVY_ITEM_INDEX)
   {
-    switch(item)
+    switch(item_index)
     {
       case GOLD:
-        strcat(dest_str, "Bag of Gold");
+        strcat(dest_str, "Gold");
         break;
       case KEY:
         strcat(dest_str, "Key");
@@ -2962,6 +2954,15 @@ void strcat_item_name(char *dest_str, const int16_t item)
       case ENERGY_POTION:
         strcat(dest_str, "Energy Potion");
         break;
+    }
+    strcat(title_str, " (");
+    strcat_int(title_str, g_player->inventory[item_index]->n);
+    strcat(title_str, ")");
+  }
+  else // item_index >= FIRST_HEAVY_ITEM_INDEX
+  {
+    switch (g_player->inventory[item_index]->n)
+    {
       case ROBE:
         strcat(dest_str, "Robe");
         break;
@@ -2992,6 +2993,16 @@ void strcat_item_name(char *dest_str, const int16_t item)
       case BOW:
         strcat(dest_str, "Bow");
         break;
+    }
+    magic_type = g_player->inventory[item_index]->infused_pebbles[0];
+    if (magic_type > 0)
+    {
+      strcat(title_str, " of ");
+      if (g_player->inventory[item_index]->infused_pebbles[1] > 0)
+      {
+        magic_type *= g_player->inventory[item_index]->infused_pebbles[1];
+      }
+      strcat_magic_type(subtitle_str, magic_type);
     }
   }
 }

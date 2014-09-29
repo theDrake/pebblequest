@@ -23,8 +23,8 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define SCROLL_HEIGHT_OFFSET            10 // Ensures descenders (e.g., 'y') are fully visible.
 #define SCROLL_FONT                     fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 #define MENU_HEADER_STR_LEN             23
-#define MENU_TITLE_STR_LEN              13
-#define MENU_SUBTITLE_STR_LEN           21
+#define MENU_TITLE_STR_LEN              25
+#define MENU_SUBTITLE_STR_LEN           20
 #define SCREEN_WIDTH                    144
 #define SCREEN_HEIGHT                   168
 #define SCREEN_CENTER_POINT_X           (SCREEN_WIDTH / 2)
@@ -354,7 +354,7 @@ int16_t get_direction_to_the_right(const int16_t reference_direction);
 int16_t get_opposite_direction(const int16_t direction);
 int16_t get_boosted_stat_value(const int16_t stat_index,
                                const int16_t boost_amount);
-int16_t get_item_value(const int16_t item_type);
+int16_t get_item_value(const int16_t item_index);
 int16_t get_inventory_size(void);
 int16_t get_heavy_inventory_size(void);
 int16_t get_cell_type(const GPoint cell);
@@ -426,7 +426,7 @@ void graphics_click_config_provider(void *context);
 void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
 void scroll_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
-void strcat_item_name(char *dest_str, const int16_t item);
+void strcat_item_name(char *dest_str, const int16_t item_index);
 void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
 void strcat_stat_value(char *dest_str, const int16_t stat);
