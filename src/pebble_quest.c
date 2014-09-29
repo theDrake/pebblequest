@@ -3148,7 +3148,6 @@ void strcat_stat_name(char *dest_str, const int16_t stat)
     strcat(dest_str, "Mag. Power");
   else if (stat == MAGICAL_DEFENSE)
     strcat(dest_str, "Mag. Defense");
-  }
   strcat(dest_str, " ");
 }
 
