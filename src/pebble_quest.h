@@ -355,6 +355,7 @@ int16_t get_opposite_direction(const int16_t direction);
 int16_t get_boosted_stat_value(const int16_t stat_index,
                                const int16_t boost_amount);
 int16_t get_item_value(const int16_t item_index);
+int16_t get_nth_item_index(const int16_t n);
 int16_t get_inventory_size(void);
 int16_t get_heavy_inventory_size(void);
 int16_t get_cell_type(const GPoint cell);

@@ -881,6 +881,35 @@ int16_t get_item_value(const int16_t item_index)
 }
 
 /******************************************************************************
+   Function: get_nth_item_index
+
+Description: Returns the index value for the nth item type within the player's
+             inventory.
+
+     Inputs: n - Integer indicating the item of interest (1st, 2nd, 3rd, etc.).
+
+    Outputs: The nth item's index value.
+******************************************************************************/
+int16_t get_nth_item_index(const int16_t n)
+{
+  int16_t i, item_count = 0;
+
+  for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
+  {
+    if (g_player->inventory[i]->n > 0)
+    {
+      item_count++;
+      if (item_count == n)
+      {
+        break;
+      }
+    }
+  }
+
+  return i;
+}
+
+/******************************************************************************
    Function: get_inventory_size
 
 Description: Returns the number of non-heavy item types, plus the number of
@@ -1199,7 +1228,7 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
-  int16_t item_index;
+  int16_t item_index, magic_type;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
 
@@ -1255,7 +1284,7 @@ static void menu_draw_row_callback(GContext *ctx,
   }
   else if (g_game_mode == LOOT_MODE)
   {
-    strcat_item_name(get_cell_type(g_player->position));
+    strcat_item_name(title_str, get_cell_type(g_player->position));
   }
   else if (g_game_mode == MARKET_MODE)
   {
@@ -1277,6 +1306,25 @@ static void menu_draw_row_callback(GContext *ctx,
   {
     item_index = get_nth_item_index(cell_index->row);
     strcat_item_name(title_str, item_index);
+    if (item_index < FIRST_HEAVY_ITEM_INDEX)
+    {
+      strcat(title_str, " (");
+      strcat_int(title_str, g_player->inventory[item_index]->n);
+      strcat(title_str, ")");
+    }
+    else
+    {
+      magic_type = g_player->inventory[item_index]->infused_pebbles[0];
+      if (magic_type > 0)
+      {
+        strcat(title_str, " of ");
+        if (g_player->inventory[item_index]->infused_pebbles[1] > 0)
+        {
+          magic_type *= g_player->inventory[item_index]->infused_pebbles[1];
+        }
+        strcat_magic_type(title_str, magic_type);
+      }
+    }
     if (g_game_mode == SELLING_MODE)
     {
       strcat(subtitle_str, "Sell for ");
@@ -2955,9 +3003,6 @@ void strcat_item_name(char *dest_str, const int16_t item_index)
         strcat(dest_str, "Energy Potion");
         break;
     }
-    strcat(title_str, " (");
-    strcat_int(title_str, g_player->inventory[item_index]->n);
-    strcat(title_str, ")");
   }
   else // item_index >= FIRST_HEAVY_ITEM_INDEX
   {
@@ -2993,16 +3038,6 @@ void strcat_item_name(char *dest_str, const int16_t item_index)
       case BOW:
         strcat(dest_str, "Bow");
         break;
-    }
-    magic_type = g_player->inventory[item_index]->infused_pebbles[0];
-    if (magic_type > 0)
-    {
-      strcat(title_str, " of ");
-      if (g_player->inventory[item_index]->infused_pebbles[1] > 0)
-      {
-        magic_type *= g_player->inventory[item_index]->infused_pebbles[1];
-      }
-      strcat_magic_type(subtitle_str, magic_type);
     }
   }
 }
