@@ -3141,11 +3141,11 @@ void strcat_stat_name(char *dest_str, const int16_t stat)
     case INTELLECT:
       strcat(dest_str, "Intellect");
       break;
-    case MAX_HP:
-      strcat(dest_str, "HP");
+    case MAX_HEALTH:
+      strcat(dest_str, "Health");
       break;
-    case MAX_MP:
-      strcat(dest_str, "MP");
+    case MAX_ENERGY:
+      strcat(dest_str, "Energy");
       break;
     case PHYSICAL_POWER:
       strcat(dest_str, "Phys. Power");
