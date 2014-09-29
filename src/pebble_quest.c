@@ -2976,8 +2976,6 @@ Description: Concatenates the name of a given item onto a given string.
 ******************************************************************************/
 void strcat_item_name(char *dest_str, const int16_t item_index)
 {
-  int16_t magic_type;
-
   if (item_index >= FIRST_PEBBLE_INDEX)
   {
     strcat(dest_str, "Pebble of ");
