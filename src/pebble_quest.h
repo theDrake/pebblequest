@@ -76,21 +76,21 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define DEFAULT_MAGICAL_POWER           10
 #define DEFAULT_MAGICAL_DEFENSE         10
 #define DEFAULT_SPEED                   30
-#define DEFAULT_MAX_HP                  30
-#define DEFAULT_MAX_MP                  30
+#define DEFAULT_MAX_HEALTH              30
+#define DEFAULT_MAX_ENERGY              30
 #define DEFAULT_STAT_BOOST              5
 #define RANDOM_GOLD_AMOUNT              (rand() % 20 + 1)
 #define DEFAULT_QUEST_REWARD            (25 * (rand() % 10 + 1))
 #define NUM_PLAYER_ANIMATIONS           2 // No. of steps in the player's attack animation.
-#define HP_RECOVERY_RATE                1 // HP per second.
-#define MP_RECOVERY_RATE                1 // MP per second.
+#define HEALTH_RECOVERY_RATE            1 // Health per second.
+#define ENERGY_RECOVERY_RATE            1 // Energy per second.
 #define MIN_DAMAGE                      2
-#define MP_LOSS_PER_SPELL               -2
+#define MIN_ENERGY_LOSS_PER_ACTION      -2
 #define STORAGE_KEY                     841
 #define MAX_HEAVY_ITEMS                 6
 #define NUM_HEAVY_ITEM_TYPES            11 // ROBE, SHIELD, and armor/weapons.
 #define NUM_SPECIAL_ITEM_TYPES          3  // GOLD, KEY, and ARTIFACT.
-#define NUM_POTION_TYPES                2  // HP_POTION and MP_POTION.
+#define NUM_POTION_TYPES                2  // HEALTH_POTION and ENERGY_POTION.
 #define NUM_PEBBLE_TYPES                7
 #define CHEAP_ITEM_VALUE                50
 #define EXPENSIVE_ITEM_VALUE            100
@@ -141,8 +141,8 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define GOLD                      0
 #define KEY                       1
 #define ARTIFACT                  2
-#define HP_POTION                 3
-#define MP_POTION                 4
+#define HEALTH_POTION             3
+#define ENERGY_POTION             4
 #define PEBBLE_OF_FIRE            5
 #define PEBBLE_OF_ICE             6
 #define PEBBLE_OF_LIGHTNING       7
@@ -195,14 +195,14 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define STRENGTH            0
 #define AGILITY             1
 #define INTELLECT           2
-#define MAX_HP              3
-#define MAX_MP              4
+#define MAX_HEALTH          3
+#define MAX_ENERGY          4
 #define PHYSICAL_POWER      5
 #define PHYSICAL_DEFENSE    6
 #define MAGICAL_POWER       7
 #define MAGICAL_DEFENSE     8
-#define CURRENT_HP          9
-#define CURRENT_MP          10
+#define CURRENT_HEALTH      9
+#define CURRENT_ENERGY      10
 #define NUM_CHARACTER_STATS 11
 
 // Status effects:
@@ -214,25 +214,6 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define STUNNED            5
 #define BLEEDING           6
 #define NUM_STATUS_EFFECTS 7
-
-// Perks:
-#define DUAL_WIELDING_WEAPONS 0
-#define DUAL_WIELDING_PEBBLES 1
-#define FAST_RECOVERY_HP      2
-#define FAST_RECOVERY_MP      3
-#define SUPER_STRENGTH        4
-#define SUPER_AGILITY         5
-#define SUPER_INTELLECT       6
-#define GLADIATOR             7
-#define DEFENDER              8
-#define MARKSMAN              9
-#define NINJA                 10
-#define MAGUS                 11
-#define HEALER                12
-#define DESTROYER             13
-#define SPELL_RESISTANCE      14
-#define SPELL_ABSORPTION      15
-#define NUM_PERKS             16
 
 // Scroll types:
 #define MAIN_QUEST_SCROLL_1 0
@@ -356,7 +337,7 @@ void determine_npc_behavior(npc_t *npc);
 void damage_player(int16_t damage);
 void damage_npc(npc_t *npc, const int16_t damage);
 bool adjust_item_quantity(const int16_t item, const int16_t amount);
-void adjust_player_current_hp(const int16_t amount);
+void adjust_player_current_health(const int16_t amount);
 void remove_npc(npc_t *npc);
 void adjust_player_current_mp(const int16_t amount);
 void end_quest(void);

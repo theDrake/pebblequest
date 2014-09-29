@@ -220,14 +220,15 @@ void damage_player(int16_t damage)
     damage = MIN_DAMAGE;
   }
   vibes_short_pulse();
-  adjust_player_current_hp(damage * -1);
+  adjust_player_current_health(damage * -1);
 }
 
 /******************************************************************************
    Function: damage_npc
 
 Description: Damages a given NPC according to a given damage value. If this
-             reduces the NPC's HP to zero or below, the NPC's death is handled.
+             reduces the NPC's health to zero or below, the NPC's death is
+             handled.
 
      Inputs: npc    - Pointer to the NPC to be damaged.
              damage - Amount of damage.
@@ -236,8 +237,8 @@ Description: Damages a given NPC according to a given damage value. If this
 ******************************************************************************/
 void damage_npc(npc_t *npc, const int16_t damage)
 {
-  npc->stats[CURRENT_HP] -= damage;
-  if (npc->stats[CURRENT_HP] <= 0)
+  npc->stats[CURRENT_HEALTH] -= damage;
+  if (npc->stats[CURRENT_HEALTH] <= 0)
   {
     g_quest->kills++;
     if (g_quest->type == MAIN_QUEST_CONCLUSION &&
@@ -282,25 +283,25 @@ bool adjust_item_quantity(const int16_t item, const int16_t amount)
 }
 
 /******************************************************************************
-   Function: adjust_player_current_hp
+   Function: adjust_player_current_health
 
-Description: Adjusts the player's current hit points by a given amount, which
-             may be positive or negative. Hit points may not be increased above
-             the player's max. hit points nor reduced below zero. If reduced to
-             zero, the player character's death is handled.
+Description: Adjusts the player's current health by a given amount, which may
+             be positive or negative. Health may not be increased above the
+             player's max. health nor reduced below zero. If reduced to zero,
+             the player character's death is handled.
 
      Inputs: amount - Adjustment amount (which may be positive or negative).
 
     Outputs: None.
 ******************************************************************************/
-void adjust_player_current_hp(const int16_t amount)
+void adjust_player_current_health(const int16_t amount)
 {
-  g_player->stats[CURRENT_HP] += amount;
-  if (g_player->stats[CURRENT_HP] > g_player->stats[MAX_HP])
+  g_player->stats[CURRENT_HEALTH] += amount;
+  if (g_player->stats[CURRENT_HEALTH] > g_player->stats[MAX_HEALTH])
   {
-    g_player->stats[CURRENT_HP] = g_player->stats[MAX_HP];
+    g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
   }
-  else if (g_player->stats[CURRENT_HP] <= 0)
+  else if (g_player->stats[CURRENT_HEALTH] <= 0)
   {
     //show_window(g_menu_layer_window, NOT_ANIMATED);
     show_scroll(DEATH_SCROLL);
@@ -355,22 +356,22 @@ void remove_npc(npc_t *npc)
 }
 
 /******************************************************************************
-   Function: adjust_player_current_mp
+   Function: adjust_player_current_energy
 
-Description: Adjusts the player's current MP by a given amount, which may be
-             positive or negative. MP may not be increased above the player's
-             max. MP value nor reduced below zero.
+Description: Adjusts the player's current energy by a given amount, which may
+             be positive or negative. Energy may not be increased above the
+             player's max. energy value nor reduced below zero.
 
      Inputs: amount - Adjustment amount (which may be positive or negative).
 
     Outputs: None.
 ******************************************************************************/
-void adjust_player_current_mp(const int16_t amount)
+void adjust_player_current_energy(const int16_t amount)
 {
-  g_player->stats[CURRENT_MP] += amount;
-  if (g_player->stats[CURRENT_MP] > g_player->stats[MAX_MP])
+  g_player->stats[CURRENT_ENERGY] += amount;
+  if (g_player->stats[CURRENT_ENERGY] > g_player->stats[MAX_ENERGY])
   {
-    g_player->stats[CURRENT_MP] = g_player->stats[MAX_MP];
+    g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
   }
 }
 
@@ -2320,20 +2321,20 @@ Description: Draws the lower status bar.
 ******************************************************************************/
 void draw_status_bar(GContext *ctx)
 {
-  // HP meter:
+  // Health meter:
   draw_status_meter(ctx,
                     GPoint (STATUS_METER_PADDING,
                             GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-                    (float) g_player->stats[CURRENT_HP] /
-                      g_player->stats[MAX_HP]);
+                    (float) g_player->stats[CURRENT_HEALTH] /
+                      g_player->stats[MAX_HEALTH]);
 
-  // MP meter:
+  // Energy meter:
   draw_status_meter(ctx,
                     GPoint (SCREEN_CENTER_POINT_X + STATUS_METER_PADDING +
                               COMPASS_RADIUS + 1,
                             GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-                    (float) g_player->stats[CURRENT_MP] /
-                      g_player->stats[MAX_MP]);
+                    (float) g_player->stats[CURRENT_ENERGY] /
+                      g_player->stats[MAX_ENERGY]);
 
   // Compass:
   graphics_fill_circle(ctx,
@@ -2762,13 +2763,13 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 
   if (g_game_mode == ACTIVE_MODE)
   {
-    // If a Pebble is equipped (and the player has enough MP), cast a spell:
+    // If a Pebble is equipped, cast a spell:
     if (g_player->equipped_item_indices[RIGHT_HAND] < FIRST_HEAVY_ITEM_INDEX &&
-        g_player->stats[CURRENT_MP] >= MP_LOSS_PER_SPELL)
+        g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
     {
       // Cast the spell:
       flash_screen();
-      adjust_player_current_mp(MP_LOSS_PER_SPELL);
+      adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
       g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
                                           player_timer_callback,
                                           NULL);
@@ -2883,7 +2884,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     while (npc_pointer != NULL)
     {
       determine_npc_behavior(npc_pointer);
-      if (g_player->stats[CURRENT_HP] <= 0)
+      if (g_player->stats[CURRENT_HEALTH] <= 0)
       {
         return;
       }
@@ -2900,8 +2901,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Handle player stat recovery:
-    adjust_player_current_hp(HP_RECOVERY_RATE);
-    adjust_player_current_mp(MP_RECOVERY_RATE);
+    adjust_player_current_health(HEALTH_RECOVERY_RATE);
+    adjust_player_current_energy(ENERGY_RECOVERY_RATE);
 
     layer_mark_dirty(window_get_root_layer(g_graphics_window));
   }
@@ -2955,11 +2956,11 @@ void strcat_item_name(char *dest_str, const int16_t item)
       case ARTIFACT:
         strcat(dest_str, "Artifact");
         break;
-      case HP_POTION:
+      case HEALTH_POTION:
         strcat(dest_str, "Healing Potion");
         break;
-      case MP_POTION:
-        strcat(dest_str, "Magic Potion");
+      case ENERGY_POTION:
+        strcat(dest_str, "Energy Potion");
         break;
       case ROBE:
         strcat(dest_str, "Robe");
@@ -3129,35 +3130,24 @@ Description: Concatenates the name of a given stat onto a given string.
 ******************************************************************************/
 void strcat_stat_name(char *dest_str, const int16_t stat)
 {
-  switch(stat)
-  {
-    case STRENGTH:
-      strcat(dest_str, "Strength");
-      break;
-    case AGILITY:
-      strcat(dest_str, "Agility");
-      break;
-    case INTELLECT:
-      strcat(dest_str, "Intellect");
-      break;
-    case MAX_HP:
-      strcat(dest_str, "HP");
-      break;
-    case MAX_MP:
-      strcat(dest_str, "MP");
-      break;
-    case PHYSICAL_POWER:
-      strcat(dest_str, "Phys. Power");
-      break;
-    case PHYSICAL_DEFENSE:
-      strcat(dest_str, "Phys. Defense");
-      break;
-    case MAGICAL_POWER:
-      strcat(dest_str, "Mag. Power");
-      break;
-    default: // case MAGICAL_DEFENSE:
-      strcat(dest_str, "Mag. Defense");
-      break;
+  if (stat == STRENGTH)
+    strcat(dest_str, "Strength");
+  else if (stat == AGILITY)
+    strcat(dest_str, "Agility");
+  else if (stat == INTELLECT)
+    strcat(dest_str, "Intellect");
+  else if (stat == MAX_HEALTH)
+    strcat(dest_str, "Health");
+  else if (stat == MAX_ENERGY)
+    strcat(dest_str, "Energy");
+  else if (stat == PHYSICAL_POWER)
+    strcat(dest_str, "Phys. Power");
+  else if (stat == PHYSICAL_DEFENSE)
+    strcat(dest_str, "Phys. Defense");
+  else if (stat == MAGICAL_POWER)
+    strcat(dest_str, "Mag. Power");
+  else if (stat == MAGICAL_DEFENSE)
+    strcat(dest_str, "Mag. Defense");
   }
   strcat(dest_str, " ");
 }
@@ -3166,9 +3156,9 @@ void strcat_stat_name(char *dest_str, const int16_t stat)
    Function: strcat_stat_value
 
 Description: Concatenates the value of a given stat onto a given string. (This
-             function was created because of the anomalous cases of MAX_HP and
-             MAX_MP, wherein the current HP/MP and a "slash" are also
-             concatenated.)
+             function was created because of the anomalous cases of MAX_HEALTH
+             and MAX_ENERGY, wherein the current health/energy and a "slash"
+             are also concatenated.)
 
      Inputs: dest_str - Pointer to the destination string.
              stat     - Integer representing the stat of interest.
@@ -3177,9 +3167,10 @@ Description: Concatenates the value of a given stat onto a given string. (This
 ******************************************************************************/
 void strcat_stat_value(char *dest_str, const int16_t stat)
 {
-  if (stat == MAX_HP || stat == MAX_MP)
+  if (stat == MAX_HEALTH || stat == MAX_ENERGY)
   {
-    strcat_int(dest_str, g_player->stats[stat + (CURRENT_HP - MAX_HP)]);
+    strcat_int(dest_str,
+               g_player->stats[stat + (CURRENT_HEALTH - MAX_HEALTH)]);
     strcat(dest_str, "/");
   }
   strcat_int(dest_str, g_player->stats[stat]);
@@ -3259,14 +3250,14 @@ Description: Assigns values to the minor stats of a given stats array according
 ******************************************************************************/
 void assign_minor_stats(int16_t *stats_array)
 {
-  stats_array[MAX_HP]           = stats_array[STRENGTH * 10];
-  stats_array[MAX_MP]           = stats_array[INTELLECT * 10];
+  stats_array[MAX_HEALTH]       = stats_array[STRENGTH * 10];
+  stats_array[MAX_ENERGY]       = stats_array[INTELLECT * 10];
   stats_array[PHYSICAL_POWER]   = stats_array[STRENGTH * 2] +
                                     stats_array[AGILITY];
   stats_array[PHYSICAL_DEFENSE] = stats_array[STRENGTH] +
-                                  stats_array[AGILITY * 2];
+                                    stats_array[AGILITY * 2];
   stats_array[MAGICAL_POWER]    = stats_array[INTELLECT * 2] +
-                                  stats_array[AGILITY];
+                                    stats_array[AGILITY];
   stats_array[MAGICAL_DEFENSE]  = stats_array[INTELLECT] +
                                     stats_array[AGILITY * 2];
 }
@@ -3555,12 +3546,12 @@ void init_quest(const int16_t type)
   g_quest->completed        = false;
   init_quest_location();
 
-  // Move and orient the player, restore his/her HP and MP, etc.:
+  // Move and orient the player, restore health and energy, etc.:
   set_player_direction(get_opposite_direction(g_quest->entrance_direction));
-  g_player->position          = g_quest->starting_point;
-  g_player->stats[CURRENT_HP] = g_player->stats[MAX_HP];
-  g_player->stats[CURRENT_MP] = g_player->stats[MAX_MP];
-  g_player->inventory[KEY]->n = 0;
+  g_player->position              = g_quest->starting_point;
+  g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
+  g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
+  g_player->inventory[KEY]->n     = 0;
   for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
   {
     g_player->status_effects[i] = 0;
