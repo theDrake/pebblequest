@@ -104,8 +104,7 @@ void move_player(const int16_t direction)
     {
       set_game_mode(LOOT_MODE);
     }
-    /*if (get_cell_type(destination) == CAPTIVE ||
-        get_cell_type(destination) == ARTIFACT)
+    /*if (get_cell_type(destination) == QUEST_ITEM)
     {
       set_cell_type(destination, EMPTY);
       g_quest->completed = true;
@@ -1098,7 +1097,7 @@ void show_scroll(const int16_t scroll)
 
   switch (scroll)
   {
-    strcpy(scroll_str, "Adventurer,\n\n  ");
+    strcpy(scroll_str, "Adventurer,\n\n ");
     //strcpy(scroll_str, "Hero of the Realm,\n\n  ");
     case MAIN_QUEST_SCROLL_1:
       strcat(scroll_str,
@@ -1117,12 +1116,15 @@ void show_scroll(const int16_t scroll)
       break;
     case FAILURE_SCROLL:
       strcat(scroll_str, "Alas, thou hast failed.");
+      deinit_quest();
       break;
     case VICTORY_SCROLL:
       strcat(scroll_str, "Thou art victorious!");
+      deinit_quest();
       break;
     default: // case DEATH_SCROLL:
       strcat(scroll_str, "Alas, thou hast perished.");
+      deinit_quest();
       break;
   }
   text_layer_set_text(g_scroll_text_layer, scroll_str);
@@ -1924,7 +1926,7 @@ void draw_cell_contents(GContext *ctx,
   // Draw the character (or a treasure chest for loot):
   if (npc == NULL)
   {
-    if (get_cell_type(cell) == CAPTIVE)
+    if (get_cell_type(cell) == QUEST_ITEM && g_quest->type == RESCUE)
     {
       // Legs:
       graphics_fill_rect(ctx,
@@ -2995,8 +2997,9 @@ void strcat_item_name(char *dest_str, const int16_t item_index)
       case KEY:
         strcat(dest_str, "Key");
         break;
-      case ARTIFACT:
-        strcat(dest_str, "Artifact");
+      case QUEST_ITEM:
+        g_quest->type == RESCUE ? strcat(dest_str, "Captive") :
+                                  strcat(dest_str, "Artifact");
         break;
       case HEALTH_POTION:
         strcat(dest_str, "Healing Potion");
@@ -3604,17 +3607,9 @@ void init_quest(const int16_t type)
   g_quest->num_npcs         = 5 * (rand() % 5 + 2); // 10-30 enemies.
   init_quest_location();
 
-  // Move and orient the player, restore health and energy, etc.:
+  // Move and orient the player:
+  g_player->position = g_quest->starting_point;
   set_player_direction(get_opposite_direction(g_quest->entrance_direction));
-  g_player->position                 = g_quest->starting_point;
-  g_player->stats[CURRENT_HEALTH]    = g_player->stats[MAX_HEALTH];
-  g_player->stats[CURRENT_ENERGY]    = g_player->stats[MAX_ENERGY];
-  g_player->inventory[KEY]->n        = 0;
-  g_player->inventory[QUEST_ITEM]->n = 0;
-  for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
-  {
-    g_player->status_effects[i] = 0;
-  }
 }
 
 /******************************************************************************
@@ -3708,13 +3703,9 @@ void init_quest_location(void)
   {
     add_new_npc(ARCHMAGE, g_quest->ending_point);
   }
-  else if (g_quest->type == RECOVER_ITEM)
+  else if (g_quest->type == RECOVER_ITEM || g_quest->type == RESCUE)
   {
-    set_cell_type(g_quest->ending_point, ARTIFACT);
-  }
-  else if (g_quest->type == RESCUE)
-  {
-    set_cell_type(g_quest->ending_point, CAPTIVE);
+    set_cell_type(g_quest->ending_point, QUEST_ITEM);
   }
 }
 
@@ -3722,6 +3713,8 @@ void init_quest_location(void)
    Function: deinit_quest
 
 Description: Deinitializes the global quest struct, freeing associated memory.
+             Also resets relevant player struct data members, including health,
+             energy, status effects, keys, and quest items.
 
      Inputs: None.
 
@@ -3731,6 +3724,17 @@ void deinit_quest(void)
 {
   if (g_quest != NULL)
   {
+    // Reset relevant player data:
+    g_player->inventory[QUEST_ITEM]->n = 0;
+    g_player->inventory[KEY]->n        = 0;
+    g_player->stats[CURRENT_HEALTH]    = g_player->stats[MAX_HEALTH];
+    g_player->stats[CURRENT_ENERGY]    = g_player->stats[MAX_ENERGY];
+    for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
+    {
+      g_player->status_effects[i] = 0;
+    }
+
+    // Remove NPCs and the quest struct itself from memory:
     while (g_quest->npcs != NULL)
     {
       remove_npc(g_quest->npcs);
