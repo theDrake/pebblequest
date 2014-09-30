@@ -121,34 +121,33 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define CLOSED_DOOR -3
 #define LOCKED_DOOR -4
 
-// Item-related constants (including "CAPTIVE" for convenience):
+// Item-related constants:
 #define GOLD                      0
-#define CAPTIVE                   1
-#define ARTIFACT                  2
-#define KEY                       3
-#define HEALTH_POTION             4
-#define ENERGY_POTION             5
-#define PEBBLE_OF_FIRE            6
-#define PEBBLE_OF_ICE             7
-#define PEBBLE_OF_LIGHTNING       8
-#define PEBBLE_OF_LIFE            9
-#define PEBBLE_OF_DEATH           10
-#define PEBBLE_OF_LIGHT           11
-#define PEBBLE_OF_DARKNESS        12
-#define ROBE                      13
-#define DAGGER                    14
-#define STAFF                     15
-#define LIGHT_ARMOR               16
-#define SHIELD                    17
-#define SWORD                     18
-#define MACE                      19
-#define HEAVY_ARMOR               20
-#define AXE                       21
-#define FLAIL                     22
-#define BOW                       23
+#define QUEST_ITEM                1 // Artifacts, captives, etc.
+#define KEY                       2
+#define HEALTH_POTION             3
+#define ENERGY_POTION             4
+#define PEBBLE_OF_FIRE            5
+#define PEBBLE_OF_ICE             6
+#define PEBBLE_OF_LIGHTNING       7
+#define PEBBLE_OF_LIFE            8
+#define PEBBLE_OF_DEATH           9
+#define PEBBLE_OF_LIGHT           10
+#define PEBBLE_OF_DARKNESS        11
+#define ROBE                      12
+#define DAGGER                    13
+#define STAFF                     14
+#define LIGHT_ARMOR               15
+#define SHIELD                    16
+#define SWORD                     17
+#define MACE                      18
+#define HEAVY_ARMOR               19
+#define AXE                       20
+#define FLAIL                     21
+#define BOW                       22
 #define FIRST_PEBBLE_INDEX        PEBBLE_OF_FIRE
 #define FIRST_HEAVY_ITEM_INDEX    ROBE
-#define NUM_SPECIAL_ITEM_TYPES    4  // GOLD, CAPTIVE, ARTIFACT, and KEY.
+#define NUM_SPECIAL_ITEM_TYPES    3  // GOLD, QUEST_ITEM, and KEY.
 #define NUM_POTION_TYPES          2  // HEALTH_POTION and ENERGY_POTION.
 #define NUM_PEBBLE_TYPES          7
 #define NUM_HEAVY_ITEM_TYPES      11 // ROBE, SHIELD, and armor/weapons.

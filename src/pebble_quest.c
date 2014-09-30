@@ -3606,11 +3606,11 @@ void init_quest(const int16_t type)
 
   // Move and orient the player, restore health and energy, etc.:
   set_player_direction(get_opposite_direction(g_quest->entrance_direction));
-  g_player->position               = g_quest->starting_point;
-  g_player->stats[CURRENT_HEALTH]  = g_player->stats[MAX_HEALTH];
-  g_player->stats[CURRENT_ENERGY]  = g_player->stats[MAX_ENERGY];
-  g_player->inventory[KEY]->n      = 0;
-  g_player->inventory[ARTIFACT]->n = 0;
+  g_player->position                 = g_quest->starting_point;
+  g_player->stats[CURRENT_HEALTH]    = g_player->stats[MAX_HEALTH];
+  g_player->stats[CURRENT_ENERGY]    = g_player->stats[MAX_ENERGY];
+  g_player->inventory[KEY]->n        = 0;
+  g_player->inventory[QUEST_ITEM]->n = 0;
   for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
   {
     g_player->status_effects[i] = 0;
