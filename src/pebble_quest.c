@@ -3592,19 +3592,13 @@ Description: Initializes the global quest struct according to a given quest
 ******************************************************************************/
 void init_quest(const int16_t type)
 {
-  int16_t i;
-
-  g_quest->type   = type;
-  g_quest->reward = DEFAULT_QUEST_REWARD;
-  if (type == ASSASSINATE)
-  {
-    g_quest->reward *= 2;
-  }
+  g_quest->type             = type;
   g_quest->completed        = false;
   g_quest->kills            = 0;
   g_quest->npcs             = NULL;
   g_quest->primary_npc_type = GOBLIN;
-  g_quest->num_npcs         = 5 * (rand() % 5 + 2); // 10-30 enemies.
+  g_quest->num_npcs         = 5 * (rand() % 5 + 2);   // 10-30 enemies.
+  g_quest->reward           = 10 * g_quest->num_npcs; // 100-300 gold.
   init_quest_location();
 
   // Move and orient the player:
@@ -3722,6 +3716,8 @@ Description: Deinitializes the global quest struct, freeing associated memory.
 ******************************************************************************/
 void deinit_quest(void)
 {
+  int16_t i;
+
   if (g_quest != NULL)
   {
     // Reset relevant player data:
