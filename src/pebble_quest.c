@@ -31,7 +31,7 @@ void set_game_mode(const int16_t mode)
   }
   else if (mode == SCROLL_MODE)
   {
-    show_window(g_scroll_window, ANIMATED);
+    show_scroll(g_current_scroll);
   }
   else
   {
@@ -844,24 +844,48 @@ int16_t get_boosted_stat_value(const int16_t stat_index,
 }
 
 /******************************************************************************
-   Function: get_item_value
+   Function: get_buying_price
 
-Description: Returns the value of a given item.
+Description: Returns the price the player must pay to buy a given item.
 
-     Inputs: item_index - Index value for the item of interest in the player's
+     Inputs: item_type - Integer representing the item of interest.
+
+    Outputs: The item's buying price.
+******************************************************************************/
+int16_t get_buying_price(const int16_t item_type)
+{
+  if (item_type < LIGHT_ARMOR) // Includes Pebbles, but they can't be bought.
+  {
+    return CHEAP_ITEM_VALUE;
+  }
+  else if (item_type < HEAVY_ARMOR)
+  {
+    return EXPENSIVE_ITEM_VALUE;
+  }
+
+  return VERY_EXPENSIVE_ITEM_VALUE;
+}
+
+/******************************************************************************
+   Function: get_selling_price
+
+Description: Returns the amount of gold the player will get for selling a given
+             item, equal to half its "true value."
+
+     Inputs: item_index - Index value of the item within the player's
                           inventory.
 
-    Outputs: The item's value.
+    Outputs: The item's selling price.
 ******************************************************************************/
-int16_t get_item_value(const int16_t item_index)
+int16_t get_selling_price(const int16_t item_index)
 {
   int16_t i, item_value = CHEAP_ITEM_VALUE;
 
-  if (item_index >= FIRST_PEBBLE_INDEX && item_index < FIRST_HEAVY_ITEM_INDEX)
+  if (item_index >= FIRST_PEBBLE && item_index < FIRST_HEAVY_ITEM)
   {
     item_value = PEBBLE_VALUE;
   }
-  else if (item_index >= FIRST_HEAVY_ITEM_INDEX)
+  else if (item_index >= FIRST_HEAVY_ITEM)
   {
     if (g_player->inventory[item_index]->n >= LIGHT_ARMOR)
     {
@@ -880,7 +904,7 @@ int16_t get_item_value(const int16_t item_index)
     }
   }
 
-  return item_value;
+  return item_value / 2;
 }
 
 /******************************************************************************
@@ -889,15 +913,18 @@ int16_t get_item_value(const int16_t item_index)
 Description: Returns the index value for the nth item type within the player's
              inventory.
 
-     Inputs: n - Integer indicating the item of interest (1st, 2nd, 3rd, etc.).
+     Inputs: n              - Integer indicating the item of interest (1st,
+                              2nd, 3rd, etc.).
+             starting_index - Index at which to begin searching in the player's
+                              inventory array (zero or FIRST_HEAVY_ITEM).
 
     Outputs: The nth item's index value.
 ******************************************************************************/
-int16_t get_nth_item_index(const int16_t n)
+int16_t get_nth_item_index(const int16_t n, const int16_t starting_index)
 {
   int16_t i, item_count = 0;
 
-  for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
+  for (i = starting_index; i < PLAYER_INVENTORY_SIZE; ++i)
   {
     if (g_player->inventory[i]->n > 0)
     {
@@ -913,9 +940,51 @@ int16_t get_nth_item_index(const int16_t n)
 }
 
 /******************************************************************************
+   Function: get_item_type_from_inventory_index
+
+Description: Given an inventory index value, returns the associated item type.
+
+     Inputs: index - Index value of the item in the player's inventory.
+
+    Outputs: Item type associated with the given inventory index value.
+******************************************************************************/
+int16_t get_item_type_from_inventory_index(const int16_t index)
+{
+  if (index < FIRST_HEAVY_ITEM)
+  {
+    return index;
+  }
+
+  return g_player->inventory[index]->n;
+}
+
+/******************************************************************************
+   Function: get_item_type_from_market_index
+
+Description: Given a market menu index value, returns the associated item type.
+
+     Inputs: index - Index value of the item in the market's "buying" menu.
+
+    Outputs: Item type associated with the given market index value.
+******************************************************************************/
+int16_t get_item_type_from_market_index(const int16_t index)
+{
+  if (index == 0)
+  {
+    return HEALTH_POTION;
+  }
+  else if (index == 1)
+  {
+    return ENERGY_POTION;
+  }
+
+  return index + (FIRST_HEAVY_ITEM - NUM_POTION_TYPES);
+}
+
+/******************************************************************************
    Function: get_inventory_size
 
-Description: Returns the number of non-heavy item types, plus the number of
+Description: Returns the number of light item types, plus the number of
              individual heavy items, currently in the player's inventory. (Used
              to determine how many rows to display in relevant menus.)
 
@@ -927,7 +996,7 @@ int16_t get_inventory_size(void)
 {
   int16_t i, inventory_size = 0;
 
-  for (i = 0; i < FIRST_HEAVY_ITEM_INDEX; ++i)
+  for (i = 0; i < FIRST_HEAVY_ITEM; ++i)
   {
     if (g_player->inventory[i]->n > 0)
     {
@@ -941,8 +1010,8 @@ int16_t get_inventory_size(void)
 /******************************************************************************
    Function: get_heavy_inventory_size
 
-Description: Returns the number of heavy items currently in the player's
-             inventory.
+Description: Returns the number of individual heavy items (i.e., not just types
+             of items) currently in the player's inventory.
 
      Inputs: None.
 
@@ -952,7 +1021,7 @@ int16_t get_heavy_inventory_size(void)
 {
   int16_t i, num_heavy_items = 0;
 
-  for (i = FIRST_HEAVY_ITEM_INDEX; i < PLAYER_INVENTORY_SIZE; ++i)
+  for (i = FIRST_HEAVY_ITEM; i < PLAYER_INVENTORY_SIZE; ++i)
   {
     if (g_player->inventory[i]->n > 0)
     {
@@ -961,6 +1030,38 @@ int16_t get_heavy_inventory_size(void)
   }
 
   return num_heavy_items;
+}
+
+/******************************************************************************
+   Function: get_num_owned
+
+Description: Returns the quantity of a given item type in the player's current
+             inventory.
+
+     Inputs: item_type - Integer representing the item of interest.
+
+    Outputs: The number of the given item currently in the player's inventory.
+******************************************************************************/
+int16_t get_num_owned(const int16_t item_type)
+{
+  int16_t i, count;
+
+  // Light items:
+  if (item_type < FIRST_HEAVY_ITEM)
+  {
+    return g_player->inventory[item_type]->n;
+  }
+
+  // Heavy items:
+  for (i = FIRST_HEAVY_ITEM; i < PLAYER_INVENTORY_SIZE; ++i)
+  {
+    if (g_player->inventory[i]->n == item_type)
+    {
+      count++;
+    }
+  }
+
+  return count;
 }
 
 /******************************************************************************
@@ -1099,20 +1200,41 @@ void show_scroll(const int16_t scroll)
   {
     strcpy(scroll_str, "Adventurer,\n\n ");
     //strcpy(scroll_str, "Hero of the Realm,\n\n  ");
-    case MAIN_QUEST_SCROLL_1:
+    case MAIN_QUEST_1:
       strcat(scroll_str,
 "Seek ye the fabled Pebbles of Power, remnants of the sundered Elderstone, for the good of the Realm. The Archmage hath scried the location of a cave where thy search may begin. May the Gods be with thee!\n\n--King Lannus");
       break;
-    case MAIN_QUEST_SCROLL_2:
+    case MAIN_QUEST_2:
       strcat(scroll_str,
 "Thy skill in finding and recovering Pebbles of Power is astounding! Bring them to me that I may attempt to reunite them, to forge anew a shard of the legendary Elderstone.\n\n--Archmage Dreyan");
       break;
-    case MAIN_QUEST_SCROLL_3:
+    case MAIN_QUEST_3:
       strcat(scroll_str,
 "Thou hast revealed the Archmage's treachery and bravely defeated him, saving the Realm from a fate most dire! I name thee Hero of the Realm and offer my wealth to assist thee in thy future adventures.\n\n--King Lannus");
       break;
-    case RANDOM_QUEST_SCROLL:
-      strcat(scroll_str, "Go do stuff!");
+    case FIND_PEBBLE:
+      strcat(scroll_str, "Find a Pebble...");
+      break;
+    case FIND_ITEM:
+      strcat(scroll_str, "Find an artifact...");
+      break;
+    case RECOVER_ITEM:
+      strcat(scroll_str, "Find my stuff!");
+      break;
+    case ESCORT:
+      strcat(scroll_str, "Escort me to...");
+      break;
+    case RESCUE:
+      strcat(scroll_str, "Please rescue my grandson!");
+      break;
+    case ASSASSINATE:
+      strcat(scroll_str, "Kill their leader.");
+      break;
+    case EXTERMINATE:
+      strcat(scroll_str, "Wipe them out. All of them.");
+      break;
+    case ESCAPE:
+      strcat(scroll_str, "Escape!");
       break;
     case FAILURE_SCROLL:
       strcat(scroll_str, "Alas, thou hast failed.");
@@ -1123,7 +1245,7 @@ void show_scroll(const int16_t scroll)
       deinit_quest();
       break;
     default: // case DEATH_SCROLL:
-      strcat(scroll_str, "Alas, thou hast perished.");
+      strcat(scroll_str, "Alas, our hero hath perished.");
       deinit_quest();
       break;
   }
@@ -1234,7 +1356,7 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
-  int16_t item_index, magic_type;
+  int16_t i, magic_type;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
 
@@ -1306,37 +1428,29 @@ static void menu_draw_row_callback(GContext *ctx,
   }
   else if (g_game_mode == BUYING_MODE)
   {
-    
+    i = get_item_type_from_market_index(cell_index->row);
+    strcat_item_name(title_str, i);
+    strcat(title_str, " (");
+    strcat_int(title_str, get_buying_price(i));
+    strcat(title_str, " gold)");
+    strcat_int(subtitle_str, get_num_owned(i));
+    strcat(subtitle_str, " in inventory.");
   }
-  else // INVENTORY_MODE, SELLING_MODE, PEBBLE_INFUSION_MODE, REPLACE_ITEM_MODE
+  else if (g_game_mode == INVENTORY_MODE || g_game_mode == SELLING_MODE)
   {
-    item_index = get_nth_item_index(cell_index->row);
-    strcat_item_name(title_str, item_index);
-    if (item_index < FIRST_HEAVY_ITEM_INDEX)
-    {
-      strcat(title_str, " (");
-      strcat_int(title_str, g_player->inventory[item_index]->n);
-      strcat(title_str, ")");
-    }
-    else
-    {
-      magic_type = g_player->inventory[item_index]->infused_pebbles[0];
-      if (magic_type > 0)
-      {
-        strcat(title_str, " of ");
-        if (g_player->inventory[item_index]->infused_pebbles[1] > 0)
-        {
-          magic_type *= g_player->inventory[item_index]->infused_pebbles[1];
-        }
-        strcat_magic_type(title_str, magic_type);
-      }
-    }
+    i = get_nth_item_index(cell_index->row, 0);
+    strcat_inventory_item_name(title_str, i);
     if (g_game_mode == SELLING_MODE)
     {
       strcat(subtitle_str, "Sell for ");
-      strcat_int(subtitle_str, get_item_value(item_index) / 2);
+      strcat_int(subtitle_str, get_selling_price(i));
       strcat(subtitle_str, " gold?");
     }
+  }
+  else // PEBBLE_INFUSION_MODE or REPLACE_ITEM_MODE
+  {
+    i = get_nth_item_index(cell_index->row, FIRST_HEAVY_ITEM);
+    strcat_inventory_item_name(title_str, i);
   }
 
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
@@ -1357,86 +1471,112 @@ void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data)
 {
-  switch (g_game_mode)
+  int16_t i;
+
+  if (g_game_mode == MAIN_MENU_MODE)
   {
-    case SHOW_STATS_MODE:
-    case LEVEL_UP_MODE:
-      if (g_player->stats[cell_index->row] < MAX_INT_VALUE)
-      {
-        g_player->stats[cell_index->row] =
-          get_boosted_stat_value(cell_index->row, 1);
-        set_game_mode(ACTIVE_MODE);
-      }
-      break;
-    case MAIN_MENU_MODE:
-      switch (cell_index->row)
-      {
-        case 0: // New Quest / Continue
-          if (g_quest == NULL)
+    switch (cell_index->row)
+    {
+      case 0: // New Quest / Continue
+        if (g_quest == NULL)
+        {
+          g_quest = malloc(sizeof(quest_t));
+          if (g_player->num_pebbles_found == 0)
           {
-            g_quest = malloc(sizeof(quest_t));
-            init_quest(rand() % NUM_QUEST_TYPES);
-            show_scroll(g_quest->type);
+            init_quest(MAIN_QUEST_1);
+          }
+          else if (g_player->num_pebbles_found == NUM_PEBBLE_TYPES - 1)
+          {
+            init_quest(MAIN_QUEST_2);
+          }
+          else if (g_player->num_pebbles_found == NUM_PEBBLE_TYPES)
+          {
+            init_quest(MAIN_QUEST_3);
           }
           else
           {
-            set_game_mode(ACTIVE_MODE);
+            init_quest(rand() % NUM_RANDOM_QUEST_TYPES);
           }
-          break;
-        case 1: // Character Stats
-          set_game_mode(SHOW_STATS_MODE);
-          break;
-        case 2: // Inventory
-          set_game_mode(INVENTORY_MODE);
-          break;
-        default: // Marketplace
-          if (g_quest == NULL)
-          {
-            set_game_mode(MARKET_MODE);
-          }
-          break;
-      }
-      break;
-    case INVENTORY_MODE:
-    case SELLING_MODE:
-    case PEBBLE_INFUSION_MODE:
-    case REPLACE_ITEM_MODE:
-      if (cell_index->row < FIRST_HEAVY_ITEM_INDEX)
-      {
-        
-      }
-      else // Heavy items:
-      {
-        
-      }
-      break;
-    case EQUIP_OPTIONS_MODE:
-    case PEBBLE_OPTIONS_MODE:
-      switch (cell_index->row)
-      {
-        case 0: // Equip to Right Hand
-          break;
-        case 1: // Equip to Left Hand
-          break;
-        default: // Infuse into Item (only used in PEBBLE_OPTIONS_MODE)
-          break;
-      }
-      break;
-    case LOOT_MODE:
-      break;
-    case MARKET_MODE:
-      switch (cell_index->row)
-      {
-        case 0: // Buy
-          set_game_mode(BUYING_MODE);
-          break;
-        default: // Sell
-          set_game_mode(SELLING_MODE);
-          break;
-      }
-      break;
-    case BUYING_MODE:
-      break;
+          g_current_scroll = g_quest->type;
+          set_game_mode(SCROLL_MODE);
+        }
+        else
+        {
+          set_game_mode(ACTIVE_MODE);
+        }
+        break;
+      case 1: // Character Stats
+        set_game_mode(SHOW_STATS_MODE);
+        break;
+      case 2: // Inventory
+        set_game_mode(INVENTORY_MODE);
+        break;
+      default: // Marketplace
+        if (g_quest == NULL)
+        {
+          set_game_mode(MARKET_MODE);
+        }
+        break;
+    }
+  }
+  else if (g_game_mode == LEVEL_UP_MODE)
+  {
+    if (g_player->stats[cell_index->row] < MAX_INT_VALUE)
+    {
+      g_player->stats[cell_index->row] =
+        get_boosted_stat_value(cell_index->row, 1);
+      set_game_mode(ACTIVE_MODE);
+    }
+  }
+  else if (g_game_mode == LOOT_MODE)
+  {
+    add_item_to_inventory(get_cell_type(g_player->position));
+    set_cell_type(g_player->position, EMPTY);
+  }
+  else if (g_game_mode == EQUIP_OPTIONS_MODE ||
+           g_game_mode == PEBBLE_OPTIONS_MODE)
+  {
+    switch (cell_index->row)
+    {
+      case 0: // Equip to Right Hand
+        break;
+      case 1: // Equip to Left Hand
+        break;
+      default: // Infuse into Item (only used in PEBBLE_OPTIONS_MODE)
+        break;
+    }
+  }
+  else if (g_game_mode == MARKET_MODE)
+  {
+    switch (cell_index->row)
+    {
+      case 0: // Buy
+        set_game_mode(BUYING_MODE);
+        break;
+      default: // Sell
+        set_game_mode(SELLING_MODE);
+        break;
+    }
+  }
+  else if (g_game_mode == BUYING_MODE)
+  {
+    i = get_market_item_type_from_index(cell_index->row);
+    if (adjust_item_quantity(GOLD, get_buying_price(i)))
+    {
+      add_item_to_inventory(i);
+    }
+  }
+  else if (g_game_mode == SELLING_MODE)
+  {
+    i = get_nth_item_index(cell_index->row, 0);
+    adjust_item_quantity(GOLD, get_selling_price(i));
+    remove_item_from_inventory(i);
+  }
+  else if (g_game_mode == PEBBLE_INFUSION_MODE)
+  {
+  }
+  else if (g_game_mode == REPLACE_ITEM_MODE)
+  {
   }
 }
 
@@ -1490,7 +1630,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   }
   else if (g_game_mode == BUYING_MODE)
   {
-    return MERCHANT_INVENTORY_SIZE;
+    return MARKET_BUYING_MENU_SIZE;
   }
   else if (g_game_mode == LOOT_MODE)
   {
@@ -2691,6 +2831,7 @@ Description: Called when the graphics window appears.
 ******************************************************************************/
 static void graphics_window_appear(Window *window)
 {
+  g_game_mode             = ACTIVE_MODE;
   g_player_animation_mode = 0;
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
 }
@@ -2705,7 +2846,12 @@ Description: Called when the graphics window disappears.
     Outputs: None.
 ******************************************************************************/
 static void graphics_window_disappear(Window *window)
-{}
+{
+  if (g_game_mode == ACTIVE_MODE)
+  {
+    g_game_mode = MAIN_MENU_MODE;
+  }
+}
 
 /******************************************************************************
    Function: graphics_up_single_repeating_click
@@ -2800,6 +2946,7 @@ Description: The graphics window's single repeating click handler for the
 void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                                             void *context)
 {
+  int16_t damage;
   GPoint cell;
   npc_t *npc;
   //Window *window = (Window *) context;
@@ -2807,28 +2954,39 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
   if (g_game_mode == ACTIVE_MODE)
   {
     // If a Pebble is equipped, cast a spell:
-    if (g_player->equipped_item_indices[RIGHT_HAND] < FIRST_HEAVY_ITEM_INDEX &&
+    if (g_player->equipped_item_indices[RIGHT_HAND] < FIRST_HEAVY_ITEM &&
         g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
     {
-      // Cast the spell:
       flash_screen();
       adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
-      g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
+      /*g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
                                           player_timer_callback,
-                                          NULL);
+                                          NULL);*/
+      damage = g_player->stats[MAGICAL_POWER] - npc->stats[MAGICAL_DEFENSE];
+    }
 
-      // Check for a damaged NPC:
-      cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
-      while (get_cell_type(cell) >= EMPTY)
+    // Otherwise, the player is attacking with a physical weapon:
+    else
+    {
+      flash_screen();
+      adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
+      /*g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
+                                          player_timer_callback,
+                                          NULL);*/
+      damage = g_player->stats[PHYSICAL_POWER] - npc->stats[PHYSICAL_DEFENSE];
+    }
+
+    // Check for a damaged NPC:
+    cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
+    while (get_cell_type(cell) >= EMPTY)
+    {
+      npc = get_npc_at(cell);
+      if (npc != NULL)
       {
-        npc = get_npc_at(cell);
-        if (npc != NULL)
-        {
-          damage_npc(npc, g_player->stats[PHYSICAL_POWER]);
-          return;
-        }
-        cell = get_cell_farther_away(cell, g_player->direction, 1);
+        damage_npc(npc, damage);
+        return;
       }
+      cell = get_cell_farther_away(cell, g_player->direction, 1);
     }
 
     layer_mark_dirty(window_get_root_layer(g_graphics_window));
@@ -2974,20 +3132,19 @@ void app_focus_handler(const bool in_focus)
 
 Description: Concatenates the name of a given item onto a given string.
 
-     Inputs: dest_str   - Pointer to the destination string.
-             item_index - Index value for the item of interest in the player's
-                          inventory.
+     Inputs: dest_str  - Pointer to the destination string.
+             item_type - Integer representing the item of interest.
 
     Outputs: None.
 ******************************************************************************/
-void strcat_item_name(char *dest_str, const int16_t item_index)
+void strcat_item_name(char *dest_str, const int16_t item_type)
 {
-  if (item_index >= FIRST_PEBBLE_INDEX)
+  if (item_type >= FIRST_PEBBLE && item_type < FIRST_HEAVY_ITEM)
   {
     strcat(dest_str, "Pebble of ");
     strcat_magic_type(dest_str, item_index);
   }
-  else if (item_index < FIRST_HEAVY_ITEM_INDEX)
+  else
   {
     switch(item_index)
     {
@@ -3007,12 +3164,6 @@ void strcat_item_name(char *dest_str, const int16_t item_index)
       case ENERGY_POTION:
         strcat(dest_str, "Energy Potion");
         break;
-    }
-  }
-  else // item_index >= FIRST_HEAVY_ITEM_INDEX
-  {
-    switch (g_player->inventory[item_index]->n)
-    {
       case ROBE:
         strcat(dest_str, "Robe");
         break;
@@ -3043,6 +3194,45 @@ void strcat_item_name(char *dest_str, const int16_t item_index)
       case BOW:
         strcat(dest_str, "Bow");
         break;
+    }
+  }
+}
+
+/******************************************************************************
+   Function: strcat_inventory_item_name
+
+Description: Concatenates the name of the item at a given inventory index onto
+             a given string.
+
+     Inputs: dest_str   - Pointer to the destination string.
+             item_index - Index value for the item of interest in the player's
+                          inventory.
+
+    Outputs: None.
+******************************************************************************/
+void strcat_inventory_item_name(char *dest_str, const int16_t item_index)
+{
+  int16_t item_type = get_item_type_from_inventory_index(item_index),
+          magic_type;
+
+  strcat_item_name(dest_str, item_type);
+  if (item_type < FIRST_HEAVY_ITEM)
+  {
+    strcat(dest_str, " (");
+    strcat_int(dest_str, g_player->inventory[item_index]->n);
+    strcat(dest_str, ")");
+  }
+  else // Heavy items:
+  {
+    magic_type = g_player->inventory[item_index]->infused_pebbles[0];
+    if (magic_type > 0)
+    {
+      strcat(dest_str, " of ");
+      if (g_player->inventory[item_index]->infused_pebbles[1] > 0)
+      {
+        magic_type *= g_player->inventory[item_index]->infused_pebbles[1];
+      }
+      strcat_magic_type(dest_str, magic_type);
     }
   }
 }
@@ -3340,13 +3530,13 @@ void add_item_to_inventory(const int16_t type)
 {
   int16_t i;
 
-  if (type < FIRST_HEAVY_ITEM_INDEX)
+  if (type < FIRST_HEAVY_ITEM)
   {
     g_player->inventory[type]->n++;
   }
   else
   {
-    for (i = FIRST_HEAVY_ITEM_INDEX; i < PLAYER_INVENTORY_SIZE; ++i)
+    for (i = FIRST_HEAVY_ITEM; i < PLAYER_INVENTORY_SIZE; ++i)
     {
       if (g_player->inventory[i]->n == 0)
       {
@@ -3410,9 +3600,9 @@ void init_player(void)
     init_item(g_player->inventory[i], 0); // "Empty," even for heavy items.
   }
   add_item_to_inventory(ROBE);
-  equip(FIRST_HEAVY_ITEM_INDEX, BODY);
+  equip(FIRST_HEAVY_ITEM, BODY);
   add_item_to_inventory(DAGGER);
-  equip(FIRST_HEAVY_ITEM_INDEX + 1, RIGHT_HAND);
+  equip(FIRST_HEAVY_ITEM + 1, RIGHT_HAND);
 }
 
 /******************************************************************************
@@ -3755,6 +3945,9 @@ void init_scroll(void)
   g_scroll_scroll_layer = scroll_layer_create(FULL_SCREEN_FRAME);
   scroll_layer_set_click_config_onto_window(g_scroll_scroll_layer,
                                             g_scroll_window);
+  window_set_click_config_provider(g_scroll_window,
+                                   (ClickConfigProvider)
+                                     scroll_click_config_provider);
   layer_add_child(window_get_root_layer(g_scroll_window),
                   scroll_layer_get_layer(g_scroll_scroll_layer));
   g_scroll_text_layer = text_layer_create(SCROLL_TEXT_LAYER_FRAME);

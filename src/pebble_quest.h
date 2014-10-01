@@ -18,7 +18,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Constants
 ******************************************************************************/
 
-#define SCROLL_STR_LEN                  250
+#define SCROLL_STR_LEN                  240
 #define SCROLL_TEXT_LAYER_FRAME         GRect(3, 0, SCREEN_WIDTH - 6, SCROLL_STR_LEN * 4)
 #define SCROLL_HEIGHT_OFFSET            10 // Ensures descenders (e.g., 'y') are fully visible.
 #define SCROLL_FONT                     fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
@@ -95,17 +95,22 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Enumerations (replaced with #defines to save memory)
 ******************************************************************************/
 
-// Quest types:
-#define FIND_PEBBLE           0 // Find one of the legendary Pebbles of Power!
-#define FIND_ITEM             1 // Find a valuable item for someone.
-#define RECOVER_ITEM          2 // Find a lost object (or gold) for someone.
-#define ESCORT                3 // Lead people safely from point A to point B.
-#define RESCUE                4 // Find people and get them to safety.
-#define ASSASSINATE           5 // Kill a specific enemy.
-#define EXTERMINATE           6 // Kill all enemies.
-#define ESCAPE                7 // You've been captured. Get out alive!
-#define MAIN_QUEST_CONCLUSION 8 // Defeat the traitorous Archmage.
-#define NUM_QUEST_TYPES       9
+// Game modes:
+#define ACTIVE_MODE          0
+#define SCROLL_MODE          1
+#define MAIN_MENU_MODE       2
+#define INVENTORY_MODE       3
+#define EQUIP_OPTIONS_MODE   4
+#define PEBBLE_OPTIONS_MODE  5
+#define PEBBLE_INFUSION_MODE 6
+#define MARKET_MODE          7
+#define BUYING_MODE          8
+#define SELLING_MODE         9
+#define LOOT_MODE            10
+#define REPLACE_ITEM_MODE    11
+#define SHOW_STATS_MODE      12
+#define LEVEL_UP_MODE        13
+#define NUM_GAME_MODES       14
 
 // Location types:
 #define DUNGEON            0
@@ -114,6 +119,26 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define CASTLE             3
 #define TOWER              4
 #define NUM_LOCATION_TYPES 5
+
+// Quest types:
+#define FIND_PEBBLE            0  // Find a legendary Pebble of Power!
+#define FIND_ITEM              1  // Find a valuable item.
+#define RECOVER_ITEM           2  // Find a lost object (or gold).
+#define ESCORT                 3  // Lead someone from point A to point B.
+#define RESCUE                 4  // Find captives and get them to safety.
+#define ASSASSINATE            5  // Kill a specific enemy.
+#define EXTERMINATE            6  // Kill all enemies.
+#define ESCAPE                 7  // You've been captured. Get out alive!
+#define MAIN_QUEST_1           8  // Find your first Pebble.
+#define MAIN_QUEST_2           9  // Find your seventh Pebble.
+#define MAIN_QUEST_3           10 // Answer the Archmage's summons.
+#define NUM_RANDOM_QUEST_TYPES 7
+
+// Scroll types (quest scrolls are handled by quest type values):
+#define FAILURE_SCROLL   NUM_RANDOM_QUEST_TYPES
+#define VICTORY_SCROLL   8
+#define DEATH_SCROLL     9
+#define NUM_SCROLL_TYPES 10
 
 // Cell types (for loot, an item type value is used):
 #define EMPTY       -1
@@ -145,15 +170,15 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define AXE                       20
 #define FLAIL                     21
 #define BOW                       22
-#define FIRST_PEBBLE_INDEX        PEBBLE_OF_FIRE
-#define FIRST_HEAVY_ITEM_INDEX    ROBE
+#define FIRST_PEBBLE              PEBBLE_OF_FIRE
+#define FIRST_HEAVY_ITEM          ROBE
 #define NUM_SPECIAL_ITEM_TYPES    3  // GOLD, QUEST_ITEM, and KEY.
 #define NUM_POTION_TYPES          2  // HEALTH_POTION and ENERGY_POTION.
 #define NUM_PEBBLE_TYPES          7
 #define NUM_HEAVY_ITEM_TYPES      11 // ROBE, SHIELD, and armor/weapons.
 #define MAX_HEAVY_ITEMS           6  // Player may not carry more than this.
 #define PLAYER_INVENTORY_SIZE     (NUM_SPECIAL_ITEM_TYPES + NUM_PEBBLE_TYPES + NUM_POTION_TYPES + MAX_HEAVY_ITEMS)
-#define MERCHANT_INVENTORY_SIZE   (NUM_POTION_TYPES + NUM_HEAVY_ITEM_TYPES)
+#define MARKET_BUYING_MENU_SIZE   (NUM_POTION_TYPES + NUM_HEAVY_ITEM_TYPES)
 #define MAX_INFUSED_PEBBLES       2
 #define CHEAP_ITEM_VALUE          50
 #define EXPENSIVE_ITEM_VALUE      100
@@ -210,33 +235,6 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define STUNNED            5
 #define BLEEDING           6
 #define NUM_STATUS_EFFECTS 7
-
-// Scroll types:
-#define MAIN_QUEST_SCROLL_1 0
-#define MAIN_QUEST_SCROLL_2 1
-#define MAIN_QUEST_SCROLL_3 2
-#define RANDOM_QUEST_SCROLL 3
-#define FAILURE_SCROLL      4
-#define VICTORY_SCROLL      5
-#define DEATH_SCROLL        6
-#define NUM_SCROLL_TYPES    7
-
-// Game modes:
-#define ACTIVE_MODE          0
-#define SCROLL_MODE          1
-#define MAIN_MENU_MODE       2
-#define INVENTORY_MODE       3
-#define EQUIP_OPTIONS_MODE   4
-#define PEBBLE_OPTIONS_MODE  5
-#define PEBBLE_INFUSION_MODE 6
-#define MARKET_MODE          7
-#define BUYING_MODE          8
-#define SELLING_MODE         9
-#define LOOT_MODE            10
-#define REPLACE_ITEM_MODE    11
-#define SHOW_STATS_MODE      12
-#define LEVEL_UP_MODE        13
-#define NUM_GAME_MODES       14
 
 // Directions:
 #define NORTH          0
@@ -350,10 +348,14 @@ int16_t get_direction_to_the_right(const int16_t reference_direction);
 int16_t get_opposite_direction(const int16_t direction);
 int16_t get_boosted_stat_value(const int16_t stat_index,
                                const int16_t boost_amount);
-int16_t get_item_value(const int16_t item_index);
-int16_t get_nth_item_index(const int16_t n);
+int16_t get_buying_price(const int16_t item_type);
+int16_t get_selling_price(const int16_t item_index);
+int16_t get_nth_item_index(const int16_t n, const int16_t starting_index);
+int16_t get_item_type_from_inventory_index(const int16_t index);
+int16_t get_item_type_from_market_index(const int16_t index);
 int16_t get_inventory_size(void);
 int16_t get_heavy_inventory_size(void);
+int16_t get_num_owned(const int16_t item_type);
 int16_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int16_t type);
 npc_t *get_npc_at(const GPoint cell);
@@ -423,7 +425,8 @@ void graphics_click_config_provider(void *context);
 void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
 void scroll_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
-void strcat_item_name(char *dest_str, const int16_t item_index);
+void strcat_item_name(char *dest_str, const int16_t item_type);
+void strcat_inventory_item_name(char *dest_str, const int16_t item_index);
 void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
 void strcat_stat_value(char *dest_str, const int16_t stat);
