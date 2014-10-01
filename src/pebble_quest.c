@@ -244,8 +244,7 @@ void damage_npc(npc_t *npc, const int16_t damage)
   if (npc->stats[CURRENT_HEALTH] <= 0)
   {
     g_quest->kills++;
-    if (g_quest->type == MAIN_QUEST_CONCLUSION &&
-        npc->type     == ARCHMAGE)
+    if (g_quest->type == MAIN_QUEST_3 && npc->type == ARCHMAGE)
     {
       g_quest->completed = true;
     }
@@ -1356,7 +1355,6 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
-  int16_t i, magic_type;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
 
@@ -1560,7 +1558,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else if (g_game_mode == BUYING_MODE)
   {
-    i = get_market_item_type_from_index(cell_index->row);
+    i = get_item_type_from_market_index(cell_index->row);
     if (adjust_item_quantity(GOLD, get_buying_price(i)))
     {
       add_item_to_inventory(i);
@@ -2837,23 +2835,6 @@ static void graphics_window_appear(Window *window)
 }
 
 /******************************************************************************
-   Function: graphics_window_disappear
-
-Description: Called when the graphics window disappears.
-
-     Inputs: window - Pointer to the graphics window.
-
-    Outputs: None.
-******************************************************************************/
-static void graphics_window_disappear(Window *window)
-{
-  if (g_game_mode == ACTIVE_MODE)
-  {
-    g_game_mode = MAIN_MENU_MODE;
-  }
-}
-
-/******************************************************************************
    Function: graphics_up_single_repeating_click
 
 Description: The graphics window's single repeating click handler for the "up"
@@ -2959,20 +2940,17 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     {
       flash_screen();
       adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
-      /*g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
-                                          player_timer_callback,
-                                          NULL);*/
       damage = g_player->stats[MAGICAL_POWER] - npc->stats[MAGICAL_DEFENSE];
     }
 
     // Otherwise, the player is attacking with a physical weapon:
     else
     {
-      flash_screen();
+      flash_screen(); // Remove later.
       adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
-      /*g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
+      g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
                                           player_timer_callback,
-                                          NULL);*/
+                                          NULL);
       damage = g_player->stats[PHYSICAL_POWER] - npc->stats[PHYSICAL_DEFENSE];
     }
 
@@ -3121,7 +3099,7 @@ Description: Handles PebbleQuest going out of, or coming back into, focus
 ******************************************************************************/
 void app_focus_handler(const bool in_focus)
 {
-  if (!in_focus)
+  if (!in_focus && g_game_mode == ACTIVE_MODE)
   {
     set_game_mode(MAIN_MENU_MODE);
   }
@@ -3146,7 +3124,7 @@ void strcat_item_name(char *dest_str, const int16_t item_type)
   }
   else
   {
-    switch(item_index)
+    switch(item_type)
     {
       case GOLD:
         strcat(dest_str, "Gold");
@@ -3551,6 +3529,27 @@ void add_item_to_inventory(const int16_t type)
 }
 
 /******************************************************************************
+   Function: remove_item_from_inventory
+
+Description: Removes an item at a given inventory index.
+
+     Inputs: index - Index of the item of interest in the player's inventory.
+
+    Outputs: None.
+******************************************************************************/
+void remove_item_from_inventory(const int16_t index)
+{
+  if (index >= FIRST_HEAVY_ITEM)
+  {
+    g_player->inventory[i]->n = 0;
+  }
+  else
+  {
+    g_player->inventory[i]->n--;
+  }
+}
+
+/******************************************************************************
    Function: equip
 
 Description: Equips the item at a given inventory index to a given equip
@@ -3883,7 +3882,7 @@ void init_quest_location(void)
   set_cell_type(builder_position, EMPTY);
 
   // Finally, add special NPCs/objects, if applicable:
-  if (g_quest->type == MAIN_QUEST_CONCLUSION)
+  if (g_quest->type == MAIN_QUEST_3)
   {
     add_new_npc(ARCHMAGE, g_quest->ending_point);
   }
@@ -3992,7 +3991,6 @@ void init_graphics(void)
   window_set_window_handlers(g_graphics_window, (WindowHandlers)
   {
     .appear    = graphics_window_appear,
-    .disappear = graphics_window_disappear,
   });
   window_set_click_config_provider(g_graphics_window,
                                    (ClickConfigProvider)
@@ -4088,6 +4086,7 @@ void init(void)
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
   set_game_mode(MAIN_MENU_MODE);
+  app_focus_service_subscribe(app_focus_handler);
 
   // Check for saved data and initialize the player struct:
   g_player = malloc(sizeof(player_t));

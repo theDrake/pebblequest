@@ -132,13 +132,14 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MAIN_QUEST_1           8  // Find your first Pebble.
 #define MAIN_QUEST_2           9  // Find your seventh Pebble.
 #define MAIN_QUEST_3           10 // Answer the Archmage's summons.
+#define NUM_QUEST_TYPES        11
 #define NUM_RANDOM_QUEST_TYPES 7
 
 // Scroll types (quest scrolls are handled by quest type values):
-#define FAILURE_SCROLL   NUM_RANDOM_QUEST_TYPES
-#define VICTORY_SCROLL   8
-#define DEATH_SCROLL     9
-#define NUM_SCROLL_TYPES 10
+#define FAILURE_SCROLL   NUM_QUEST_TYPES
+#define VICTORY_SCROLL   (NUM_QUEST_TYPES + 1)
+#define DEATH_SCROLL     (NUM_QUEST_TYPES + 2)
+#define NUM_SCROLL_TYPES (NUM_QUEST_TYPES + 3)
 
 // Cell types (for loot, an item type value is used):
 #define EMPTY       -1
@@ -412,7 +413,6 @@ void flash_screen(void);
 static void flash_timer_callback(void *data);
 static void player_timer_callback(void *data);
 static void graphics_window_appear(Window *window);
-static void graphics_window_disappear(Window *window);
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
                                         void *context);
 void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context);
@@ -433,6 +433,7 @@ void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
 void assign_minor_stats(int16_t *stats_array);
 void add_item_to_inventory(const int16_t type);
+void remove_item_from_inventory(const int16_t index);
 void equip(const int16_t item_index, const int16_t equip_target);
 void init_player(void);
 void deinit_player(void);
