@@ -1043,7 +1043,7 @@ Description: Returns the quantity of a given item type in the player's current
 ******************************************************************************/
 int16_t get_num_owned(const int16_t item_type)
 {
-  int16_t i, count;
+  int16_t i, count = 0;
 
   // Light items:
   if (item_type < FIRST_HEAVY_ITEM)
@@ -2935,37 +2935,49 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 
   if (g_game_mode == ACTIVE_MODE)
   {
+    // Check for a targeted NPC:
+    cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
+    while (get_cell_type(cell) >= EMPTY)
+    {
+      npc = get_npc_at(cell);
+
+      // If we've found an NPC or the attack isn't ranged, we're done:
+      if (npc != NULL ||
+          (g_player->equipped_item_indices[RIGHT_HAND] >= FIRST_HEAVY_ITEM &&
+           g_player->equipped_item_indices[RIGHT_HAND] != BOW))
+      {
+        break;
+      }
+      cell = get_cell_farther_away(cell, g_player->direction, 1);
+    }
+
     // If a Pebble is equipped, cast a spell:
     if (g_player->equipped_item_indices[RIGHT_HAND] < FIRST_HEAVY_ITEM &&
         g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
     {
       flash_screen();
       adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
-      damage = g_player->stats[MAGICAL_POWER] - npc->stats[MAGICAL_DEFENSE];
+      if (npc != NULL)
+      {
+        damage_npc(npc,
+                   g_player->stats[MAGICAL_POWER] -
+                     npc->stats[MAGICAL_DEFENSE]);
+      }
     }
 
     // Otherwise, the player is attacking with a physical weapon:
     else
     {
-      flash_screen(); // Remove later.
       adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
       g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
                                           player_timer_callback,
                                           NULL);
-      damage = g_player->stats[PHYSICAL_POWER] - npc->stats[PHYSICAL_DEFENSE];
-    }
-
-    // Check for a damaged NPC:
-    cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
-    while (get_cell_type(cell) >= EMPTY)
-    {
-      npc = get_npc_at(cell);
       if (npc != NULL)
       {
-        damage_npc(npc, damage);
-        return;
+        damage_npc(npc,
+                   g_player->stats[PHYSICAL_POWER] -
+                     npc->stats[PHYSICAL_DEFENSE]);
       }
-      cell = get_cell_farther_away(cell, g_player->direction, 1);
     }
 
     layer_mark_dirty(window_get_root_layer(g_graphics_window));
