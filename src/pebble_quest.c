@@ -1355,6 +1355,7 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
+  int16_t i;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
 
@@ -3120,7 +3121,7 @@ void strcat_item_name(char *dest_str, const int16_t item_type)
   if (item_type >= FIRST_PEBBLE && item_type < FIRST_HEAVY_ITEM)
   {
     strcat(dest_str, "Pebble of ");
-    strcat_magic_type(dest_str, item_index);
+    strcat_magic_type(dest_str, item_type);
   }
   else
   {
@@ -3500,17 +3501,17 @@ Description: Adds an item of a given type to the player's inventory. If it's a
              no more room for heavy items, the "replace item" menu will be
              shown.
 
-     Inputs: type - The type of item to be added.
+     Inputs: item_type - The type of item to be added.
 
     Outputs: None.
 ******************************************************************************/
-void add_item_to_inventory(const int16_t type)
+void add_item_to_inventory(const int16_t item_type)
 {
   int16_t i;
 
-  if (type < FIRST_HEAVY_ITEM)
+  if (item_type < FIRST_HEAVY_ITEM)
   {
-    g_player->inventory[type]->n++;
+    g_player->inventory[item_type]->n++;
   }
   else
   {
@@ -3518,7 +3519,7 @@ void add_item_to_inventory(const int16_t type)
     {
       if (g_player->inventory[i]->n == 0)
       {
-        init_item(g_player->inventory[i], type);
+        init_item(g_player->inventory[i], item_type);
       }
       else if (i == PLAYER_INVENTORY_SIZE - 1)
       {
@@ -3533,19 +3534,19 @@ void add_item_to_inventory(const int16_t type)
 
 Description: Removes an item at a given inventory index.
 
-     Inputs: index - Index of the item of interest in the player's inventory.
+     Inputs: item_index - Index of the item in the player's inventory.
 
     Outputs: None.
 ******************************************************************************/
-void remove_item_from_inventory(const int16_t index)
+void remove_item_from_inventory(const int16_t item_index)
 {
-  if (index >= FIRST_HEAVY_ITEM)
+  if (item_index >= FIRST_HEAVY_ITEM)
   {
-    g_player->inventory[i]->n = 0;
+    g_player->inventory[item_index]->n = 0;
   }
   else
   {
-    g_player->inventory[i]->n--;
+    g_player->inventory[item_index]->n--;
   }
 }
 
