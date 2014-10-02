@@ -1079,7 +1079,7 @@ int16_t get_cell_type(const GPoint cell)
     return SOLID;
   }
 
-  return g_quest->cells[cell.x][cell.y];
+  return g_quest->map[cell.x][cell.y];
 }
 
 /******************************************************************************
@@ -1095,7 +1095,7 @@ Description: Sets the cell at a given set of coordinates to a given type.
 ******************************************************************************/
 void set_cell_type(GPoint cell, const int16_t type)
 {
-  g_quest->cells[cell.x][cell.y] = type;
+  g_quest->map[cell.x][cell.y] = type;
 }
 
 /******************************************************************************
@@ -1128,7 +1128,7 @@ npc_t *get_npc_at(const GPoint cell)
    Function: out_of_bounds
 
 Description: Determines whether a given set of cell coordinates lies outside
-             the current location boundaries.
+             the current map boundaries.
 
      Inputs: cell - Coordinates of the cell of interest.
 
@@ -1136,19 +1136,18 @@ Description: Determines whether a given set of cell coordinates lies outside
 ******************************************************************************/
 bool out_of_bounds(const GPoint cell)
 {
-  return cell.x < 0               ||
-         cell.x >= LOCATION_WIDTH ||
-         cell.y < 0               ||
-         cell.y >= LOCATION_HEIGHT;
+  return cell.x < 0          ||
+         cell.x >= MAP_WIDTH ||
+         cell.y < 0          ||
+         cell.y >= MAP_HEIGHT;
 }
 
 /******************************************************************************
    Function: occupiable
 
 Description: Determines whether the cell at a given set of coordinates may be
-             occupied by a game character (i.e., it's within the location's
-             boundaries, non-solid, not already occupied by another character,
-             etc.).
+             occupied by a game character (i.e., it's within map boundaries,
+             non-solid, not already occupied by another character, etc.).
 
      Inputs: cell - Coordinates of the cell of interest.
 
@@ -2928,7 +2927,6 @@ Description: The graphics window's single repeating click handler for the
 void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                                             void *context)
 {
-  int16_t damage;
   GPoint cell;
   npc_t *npc;
   //Window *window = (Window *) context;
@@ -3599,13 +3597,12 @@ void init_player(void)
 {
   int i;
 
-  g_player->level                = 1;
-  g_player->exp_points           = 0;
-  g_player->num_quests_completed = 0;
-  g_player->num_pebbles_found    = 0;
-  g_player->stats[STRENGTH]      = DEFAULT_BASE_STAT_VALUE;
-  g_player->stats[AGILITY]       = DEFAULT_BASE_STAT_VALUE;
-  g_player->stats[INTELLECT]     = DEFAULT_BASE_STAT_VALUE;
+  g_player->level             = 1;
+  g_player->exp_points        = 0;
+  g_player->num_pebbles_found = 0;
+  g_player->stats[STRENGTH]   = DEFAULT_BASE_STAT_VALUE;
+  g_player->stats[AGILITY]    = DEFAULT_BASE_STAT_VALUE;
+  g_player->stats[INTELLECT]  = DEFAULT_BASE_STAT_VALUE;
   assign_minor_stats(g_player->stats);
   for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
   {
@@ -3801,7 +3798,7 @@ void init_quest(const int16_t type)
   g_quest->primary_npc_type = GOBLIN;
   g_quest->num_npcs         = 5 * (rand() % 5 + 2);   // 10-30 enemies.
   g_quest->reward           = 10 * g_quest->num_npcs; // 100-300 gold.
-  init_quest_location();
+  init_quest_map();
 
   // Move and orient the player:
   g_player->position = g_quest->starting_point;
@@ -3809,26 +3806,25 @@ void init_quest(const int16_t type)
 }
 
 /******************************************************************************
-   Function: init_quest_location
+   Function: init_quest_map
 
-Description: Initializes the current quest's location (i.e., its 2D "cells"
-             array).
+Description: Initializes the current quest's map (i.e., its 2D array of cells).
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void init_quest_location(void)
+void init_quest_map(void)
 {
   int16_t i, j, builder_direction;
   GPoint builder_position;
 
   // First, set each cell to solid:
-  for (i = 0; i < LOCATION_WIDTH; ++i)
+  for (i = 0; i < MAP_WIDTH; ++i)
   {
-    for (j = 0; j < LOCATION_HEIGHT; ++j)
+    for (j = 0; j < MAP_HEIGHT; ++j)
     {
-      g_quest->cells[i][j] = SOLID;
+      g_quest->map[i][j] = SOLID;
     }
   }
 
@@ -3868,13 +3864,13 @@ void init_quest_location(void)
         }
         break;
       case SOUTH:
-        if (builder_position.y < LOCATION_HEIGHT - 1)
+        if (builder_position.y < MAP_HEIGHT - 1)
         {
           builder_position.y++;
         }
         break;
       case EAST:
-        if (builder_position.x < LOCATION_WIDTH - 1)
+        if (builder_position.x < MAP_WIDTH - 1)
         {
           builder_position.x++;
         }

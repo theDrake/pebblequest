@@ -15,87 +15,9 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #include <pebble.h>
 
 /******************************************************************************
-  Constants
+  Game Mode Constants
 ******************************************************************************/
 
-#define SCROLL_STR_LEN                  240
-#define SCROLL_TEXT_LAYER_FRAME         GRect(3, 0, SCREEN_WIDTH - 6, SCROLL_STR_LEN * 4)
-#define SCROLL_HEIGHT_OFFSET            10 // Ensures descenders (e.g., 'y') are fully visible.
-#define SCROLL_FONT                     fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
-#define MENU_HEADER_STR_LEN             23
-#define MENU_TITLE_STR_LEN              25
-#define MENU_SUBTITLE_STR_LEN           20
-#define SCREEN_WIDTH                    144
-#define SCREEN_HEIGHT                   168
-#define SCREEN_CENTER_POINT_X           (SCREEN_WIDTH / 2)
-#define SCREEN_CENTER_POINT_Y           (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
-#define SCREEN_CENTER_POINT             GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
-#define STATUS_BAR_HEIGHT               16 // Applies to top and bottom status bars.
-#define FULL_SCREEN_FRAME               GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
-#define STATUS_BAR_FRAME                GRect(0, GRAPHICS_FRAME_HEIGHT, GRAPHICS_FRAME_WIDTH, STATUS_BAR_HEIGHT)
-#define STATUS_BAR_FONT                 fonts_get_system_font(FONT_KEY_GOTHIC_14)
-#define COMPASS_RADIUS                  5
-#define STATUS_METER_PADDING            4
-#define STATUS_METER_WIDTH              (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
-#define STATUS_METER_HEIGHT             (STATUS_BAR_HEIGHT - STATUS_METER_PADDING * 2)
-#define NO_CORNER_RADIUS                0
-#define SMALL_CORNER_RADIUS             3
-#define NINETY_DEGREES                  (TRIG_MAX_ANGLE / 4)
-#define DEFAULT_ROTATION_RATE           (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event
-#define MULTI_CLICK_MIN                 2
-#define MULTI_CLICK_MAX                 2 // We only care about double-clicks.
-#define MULTI_CLICK_TIMEOUT             0 // milliseconds
-#define LAST_CLICK_ONLY                 true
-#define PLAYER_TIMER_DURATION           20  // milliseconds
-#define FLASH_TIMER_DURATION            20  // milliseconds
-#define MIN_ACTION_REPEAT_INTERVAL      200 // milliseconds per action
-#define MAX_INT_VALUE                   9999
-#define MAX_INT_DIGITS                  4
-#define FIRST_WALL_OFFSET               STATUS_BAR_HEIGHT
-#define MIN_WALL_HEIGHT                 STATUS_BAR_HEIGHT
-#define GRAPHICS_FRAME_WIDTH            SCREEN_WIDTH
-#define GRAPHICS_FRAME_HEIGHT           (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
-#define GRAPHICS_FRAME                  GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
-#define LOCATION_WIDTH                  15
-#define LOCATION_HEIGHT                 LOCATION_WIDTH
-#define MAX_VISIBILITY_DEPTH            6 // Helps determine no. of cells visible in a given line of sight.
-#define MIN_VISIBILITY_DEPTH            2 // Min. no. of cells visible in a given line of sight.
-#define DEFAULT_VISIBILITY_DEPTH        (MAX_VISIBILITY_DEPTH + MIN_VISIBILITY_DEPTH) / 2 + (MAX_VISIBILITY_DEPTH + MIN_VISIBILITY_DEPTH) % 2;
-#define STRAIGHT_AHEAD                  (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
-#define TOP_LEFT                        0                          // Index value for "g_back_wall_coords".
-#define BOTTOM_RIGHT                    1                          // Index value for "g_back_wall_coords".
-#define RANDOM_POINT_NORTH              GPoint(rand() % LOCATION_WIDTH, 0)
-#define RANDOM_POINT_SOUTH              GPoint(rand() % LOCATION_WIDTH, LOCATION_HEIGHT - 1)
-#define RANDOM_POINT_EAST               GPoint(LOCATION_WIDTH - 1, rand() % LOCATION_HEIGHT)
-#define RANDOM_POINT_WEST               GPoint(0, rand() % LOCATION_HEIGHT)
-#define MAIN_MENU_NUM_ROWS              4
-#define AD_HOC_MENU_NUM_ROWS            4
-#define DEFAULT_BASE_STAT_VALUE         1
-#define DEFAULT_PHYSICAL_POWER          10
-#define DEFAULT_PHYSICAL_DEFENSE        10
-#define DEFAULT_MAGICAL_POWER           10
-#define DEFAULT_MAGICAL_DEFENSE         10
-#define DEFAULT_SPEED                   30
-#define DEFAULT_MAX_HEALTH              30
-#define DEFAULT_MAX_ENERGY              30
-#define DEFAULT_STAT_BOOST              5
-#define RANDOM_GOLD_AMOUNT              (rand() % 20 + 1)
-#define DEFAULT_QUEST_REWARD            (25 * (rand() % 10 + 1))
-#define NUM_PLAYER_ANIMATIONS           2 // No. of steps in the player's attack animation.
-#define HEALTH_RECOVERY_RATE            1 // Health per second.
-#define ENERGY_RECOVERY_RATE            1 // Energy per second.
-#define MIN_DAMAGE                      2
-#define MIN_ENERGY_LOSS_PER_ACTION      -2
-#define STORAGE_KEY                     841
-#define MAX_NPCS_AT_ONE_TIME            2
-#define ANIMATED                        true
-#define NOT_ANIMATED                    false
-
-/******************************************************************************
-  Enumerations (replaced with #defines to save memory)
-******************************************************************************/
-
-// Game modes:
 #define ACTIVE_MODE          0
 #define SCROLL_MODE          1
 #define MAIN_MENU_MODE       2
@@ -112,85 +34,25 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define LEVEL_UP_MODE        13
 #define NUM_GAME_MODES       14
 
-// Location types:
-#define DUNGEON            0
-#define TUNNEL             1
-#define TOWN               2
-#define CASTLE             3
-#define TOWER              4
-#define NUM_LOCATION_TYPES 5
+/******************************************************************************
+  Player- and NPC-related Constants
+******************************************************************************/
 
-// Quest types:
-#define FIND_PEBBLE            0  // Find a legendary Pebble of Power!
-#define FIND_ITEM              1  // Find a valuable item.
-#define RECOVER_ITEM           2  // Find a lost object (or gold).
-#define ESCORT                 3  // Lead someone from point A to point B.
-#define RESCUE                 4  // Find captives and get them to safety.
-#define ASSASSINATE            5  // Kill a specific enemy.
-#define EXTERMINATE            6  // Kill all enemies.
-#define ESCAPE                 7  // You've been captured. Get out alive!
-#define MAIN_QUEST_1           8  // Find your first Pebble.
-#define MAIN_QUEST_2           9  // Find your seventh Pebble.
-#define MAIN_QUEST_3           10 // Answer the Archmage's summons.
-#define NUM_QUEST_TYPES        11
-#define NUM_RANDOM_QUEST_TYPES 7
-
-// Scroll types (quest scrolls are handled by quest type values):
-#define FAILURE_SCROLL   NUM_QUEST_TYPES
-#define VICTORY_SCROLL   (NUM_QUEST_TYPES + 1)
-#define DEATH_SCROLL     (NUM_QUEST_TYPES + 2)
-#define NUM_SCROLL_TYPES (NUM_QUEST_TYPES + 3)
-
-// Cell types (for loot, an item type value is used):
-#define EMPTY       -1
-#define SOLID       -2
-#define CLOSED_DOOR -3
-#define LOCKED_DOOR -4
-
-// Item-related constants:
-#define GOLD                      0
-#define QUEST_ITEM                1 // Artifacts, captives, etc.
-#define KEY                       2
-#define HEALTH_POTION             3
-#define ENERGY_POTION             4
-#define PEBBLE_OF_FIRE            5
-#define PEBBLE_OF_ICE             6
-#define PEBBLE_OF_LIGHTNING       7
-#define PEBBLE_OF_LIFE            8
-#define PEBBLE_OF_DEATH           9
-#define PEBBLE_OF_LIGHT           10
-#define PEBBLE_OF_DARKNESS        11
-#define ROBE                      12
-#define DAGGER                    13
-#define STAFF                     14
-#define LIGHT_ARMOR               15
-#define SHIELD                    16
-#define SWORD                     17
-#define MACE                      18
-#define HEAVY_ARMOR               19
-#define AXE                       20
-#define FLAIL                     21
-#define BOW                       22
-#define FIRST_PEBBLE              PEBBLE_OF_FIRE
-#define FIRST_HEAVY_ITEM          ROBE
-#define NUM_SPECIAL_ITEM_TYPES    3  // GOLD, QUEST_ITEM, and KEY.
-#define NUM_POTION_TYPES          2  // HEALTH_POTION and ENERGY_POTION.
-#define NUM_PEBBLE_TYPES          7
-#define NUM_HEAVY_ITEM_TYPES      11 // ROBE, SHIELD, and armor/weapons.
-#define MAX_HEAVY_ITEMS           6  // Player may not carry more than this.
-#define PLAYER_INVENTORY_SIZE     (NUM_SPECIAL_ITEM_TYPES + NUM_PEBBLE_TYPES + NUM_POTION_TYPES + MAX_HEAVY_ITEMS)
-#define MARKET_BUYING_MENU_SIZE   (NUM_POTION_TYPES + NUM_HEAVY_ITEM_TYPES)
-#define MAX_INFUSED_PEBBLES       2
-#define CHEAP_ITEM_VALUE          50
-#define EXPENSIVE_ITEM_VALUE      100
-#define VERY_EXPENSIVE_ITEM_VALUE 150
-#define PEBBLE_VALUE              200
-
-// Equip targets (i.e., places where an item may be equipped):
-#define BODY              0
-#define RIGHT_HAND        1
-#define LEFT_HAND         2
-#define NUM_EQUIP_TARGETS 3
+#define DEFAULT_BASE_STAT_VALUE         1
+#define DEFAULT_PHYSICAL_POWER          10
+#define DEFAULT_PHYSICAL_DEFENSE        10
+#define DEFAULT_MAGICAL_POWER           10
+#define DEFAULT_MAGICAL_DEFENSE         10
+#define DEFAULT_SPEED                   30
+#define DEFAULT_MAX_HEALTH              30
+#define DEFAULT_MAX_ENERGY              30
+#define DEFAULT_STAT_BOOST              5
+#define NUM_PLAYER_ANIMATIONS           2 // No. of steps in the player's attack animation.
+#define HEALTH_RECOVERY_RATE            1 // Health per second.
+#define ENERGY_RECOVERY_RATE            1 // Energy per second.
+#define MIN_DAMAGE                      2
+#define MIN_ENERGY_LOSS_PER_ACTION      -2
+#define MAX_NPCS_AT_ONE_TIME            2
 
 // NPC types:
 #define ARCHMAGE        0
@@ -237,12 +99,187 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define BLEEDING           6
 #define NUM_STATUS_EFFECTS 7
 
+/******************************************************************************
+  Quest- and Map-related Constants
+******************************************************************************/
+
+// Quest types:
+#define FIND_PEBBLE            0  // Find a legendary Pebble of Power!
+#define FIND_ITEM              1  // Find a valuable item.
+#define RECOVER_ITEM           2  // Find a lost object (or gold).
+#define ESCORT                 3  // Lead someone from point A to point B.
+#define RESCUE                 4  // Find captives and get them to safety.
+#define ASSASSINATE            5  // Kill a specific enemy.
+#define EXTERMINATE            6  // Kill all enemies.
+#define ESCAPE                 7  // You've been captured. Get out alive!
+#define MAIN_QUEST_1           8  // Find your first Pebble.
+#define MAIN_QUEST_2           9  // Find your seventh Pebble.
+#define MAIN_QUEST_3           10 // Answer the Archmage's summons.
+#define NUM_QUEST_TYPES        11
+#define NUM_RANDOM_QUEST_TYPES 7
+
+// Location types:
+#define DUNGEON            0
+#define TUNNEL             1
+#define TOWN               2
+#define CASTLE             3
+#define TOWER              4
+#define NUM_LOCATION_TYPES 5
+
+// Cell types (for loot, an item type value is used):
+#define EMPTY       -1
+#define SOLID       -2
+#define CLOSED_DOOR -3
+#define LOCKED_DOOR -4
+
 // Directions:
 #define NORTH          0
 #define SOUTH          1
 #define EAST           2
 #define WEST           3
 #define NUM_DIRECTIONS 4
+
+// Other:
+#define DEFAULT_QUEST_REWARD (25 * (rand() % 10 + 1))
+#define MAP_WIDTH            15
+#define MAP_HEIGHT           MAP_WIDTH
+#define RANDOM_POINT_NORTH   GPoint(rand() % MAP_WIDTH, 0)
+#define RANDOM_POINT_SOUTH   GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
+#define RANDOM_POINT_EAST    GPoint(MAP_WIDTH - 1, rand() % MAP_HEIGHT)
+#define RANDOM_POINT_WEST    GPoint(0, rand() % MAP_HEIGHT)
+
+/******************************************************************************
+  Scroll-related Constants
+******************************************************************************/
+
+#define SCROLL_STR_LEN          240
+#define SCROLL_TEXT_LAYER_FRAME GRect(3, 0, SCREEN_WIDTH - 6, SCROLL_STR_LEN * 4)
+#define SCROLL_HEIGHT_OFFSET    10 // Ensures descenders (e.g., 'y') are fully visible.
+#define SCROLL_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
+
+// Scroll types (quest scrolls are handled by quest type values):
+#define FAILURE_SCROLL   NUM_QUEST_TYPES
+#define VICTORY_SCROLL   (NUM_QUEST_TYPES + 1)
+#define DEATH_SCROLL     (NUM_QUEST_TYPES + 2)
+#define NUM_SCROLL_TYPES (NUM_QUEST_TYPES + 3)
+
+/******************************************************************************
+  Item-related Constants
+******************************************************************************/
+
+#define GOLD                      0
+#define QUEST_ITEM                1 // Artifacts, captives, etc.
+#define KEY                       2
+#define HEALTH_POTION             3
+#define ENERGY_POTION             4
+#define PEBBLE_OF_FIRE            5
+#define PEBBLE_OF_ICE             6
+#define PEBBLE_OF_LIGHTNING       7
+#define PEBBLE_OF_LIFE            8
+#define PEBBLE_OF_DEATH           9
+#define PEBBLE_OF_LIGHT           10
+#define PEBBLE_OF_DARKNESS        11
+#define ROBE                      12
+#define DAGGER                    13
+#define STAFF                     14
+#define LIGHT_ARMOR               15
+#define SHIELD                    16
+#define SWORD                     17
+#define MACE                      18
+#define HEAVY_ARMOR               19
+#define AXE                       20
+#define FLAIL                     21
+#define BOW                       22
+#define FIRST_PEBBLE              PEBBLE_OF_FIRE
+#define FIRST_HEAVY_ITEM          ROBE
+#define NUM_SPECIAL_ITEM_TYPES    3  // GOLD, QUEST_ITEM, and KEY.
+#define NUM_POTION_TYPES          2  // HEALTH_POTION and ENERGY_POTION.
+#define NUM_PEBBLE_TYPES          7
+#define NUM_HEAVY_ITEM_TYPES      11 // ROBE, SHIELD, and armor/weapons.
+#define MAX_HEAVY_ITEMS           6  // Player may not carry more than this.
+#define PLAYER_INVENTORY_SIZE     (NUM_SPECIAL_ITEM_TYPES + NUM_PEBBLE_TYPES + NUM_POTION_TYPES + MAX_HEAVY_ITEMS)
+#define MARKET_BUYING_MENU_SIZE   (NUM_POTION_TYPES + NUM_HEAVY_ITEM_TYPES)
+#define MAX_INFUSED_PEBBLES       2
+#define CHEAP_ITEM_VALUE          50
+#define EXPENSIVE_ITEM_VALUE      100
+#define VERY_EXPENSIVE_ITEM_VALUE 150
+#define PEBBLE_VALUE              200
+#define RANDOM_GOLD_AMOUNT        (rand() % 20 + 1)
+
+// Equip targets (i.e., places where an item may be equipped):
+#define BODY              0
+#define RIGHT_HAND        1
+#define LEFT_HAND         2
+#define NUM_EQUIP_TARGETS 3
+
+/******************************************************************************
+  Graphics-related Constants
+******************************************************************************/
+
+#define SCREEN_WIDTH             144
+#define SCREEN_HEIGHT            168
+#define SCREEN_CENTER_POINT_X    (SCREEN_WIDTH / 2)
+#define SCREEN_CENTER_POINT_Y    (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
+#define SCREEN_CENTER_POINT      GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
+#define STATUS_BAR_HEIGHT        16 // Applies to top and bottom status bars.
+#define FULL_SCREEN_FRAME        GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
+#define STATUS_BAR_FRAME         GRect(0, GRAPHICS_FRAME_HEIGHT, GRAPHICS_FRAME_WIDTH, STATUS_BAR_HEIGHT)
+#define STATUS_BAR_FONT          fonts_get_system_font(FONT_KEY_GOTHIC_14)
+#define STATUS_METER_PADDING     4
+#define STATUS_METER_WIDTH       (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
+#define STATUS_METER_HEIGHT      (STATUS_BAR_HEIGHT - STATUS_METER_PADDING * 2)
+#define FIRST_WALL_OFFSET        STATUS_BAR_HEIGHT
+#define MIN_WALL_HEIGHT          STATUS_BAR_HEIGHT
+#define GRAPHICS_FRAME_WIDTH     SCREEN_WIDTH
+#define GRAPHICS_FRAME_HEIGHT    (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
+#define GRAPHICS_FRAME           GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
+#define MAX_VISIBILITY_DEPTH     6 // Helps determine no. of cells visible in a given line of sight.
+#define MIN_VISIBILITY_DEPTH     2 // Min. no. of cells visible in a given line of sight.
+#define DEFAULT_VISIBILITY_DEPTH (MAX_VISIBILITY_DEPTH + MIN_VISIBILITY_DEPTH) / 2 + (MAX_VISIBILITY_DEPTH + MIN_VISIBILITY_DEPTH) % 2;
+#define STRAIGHT_AHEAD           (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
+#define TOP_LEFT                 0                          // Index value for "g_back_wall_coords".
+#define BOTTOM_RIGHT             1                          // Index value for "g_back_wall_coords".
+#define COMPASS_RADIUS           5
+#define NO_CORNER_RADIUS         0
+#define SMALL_CORNER_RADIUS      3
+#define NINETY_DEGREES           (TRIG_MAX_ANGLE / 4)
+#define DEFAULT_ROTATION_RATE    (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event
+
+/******************************************************************************
+  Menu-related Constants
+******************************************************************************/
+
+#define MENU_HEADER_STR_LEN   23
+#define MENU_TITLE_STR_LEN    25
+#define MENU_SUBTITLE_STR_LEN 20
+#define MAIN_MENU_NUM_ROWS    4
+
+/******************************************************************************
+  Button-related Constants
+******************************************************************************/
+
+#define MULTI_CLICK_MIN            2
+#define MULTI_CLICK_MAX            2   // We only care about double-clicks.
+#define MULTI_CLICK_TIMEOUT        0   // milliseconds
+#define MIN_ACTION_REPEAT_INTERVAL 200 // milliseconds per action
+#define LAST_CLICK_ONLY            true
+
+/******************************************************************************
+  Timer-related Constants
+******************************************************************************/
+
+#define PLAYER_TIMER_DURATION 20 // milliseconds
+#define FLASH_TIMER_DURATION  20 // milliseconds
+
+/******************************************************************************
+  General Constants
+******************************************************************************/
+
+#define MAX_INT_VALUE  9999
+#define MAX_INT_DIGITS 4
+#define STORAGE_KEY    841
+#define ANIMATED       true
+#define NOT_ANIMATED   false
 
 /******************************************************************************
   Structures
@@ -268,7 +305,6 @@ typedef struct PlayerCharacter {
           status_effects[NUM_STATUS_EFFECTS],
           level,
           exp_points,
-          num_quests_completed,
           num_pebbles_found,
           equipped_item_indices[NUM_EQUIP_TARGETS];
   item_t *inventory[PLAYER_INVENTORY_SIZE];
@@ -280,7 +316,7 @@ typedef struct Quest {
           primary_npc_type,
           num_npcs,
           kills,
-          cells[LOCATION_WIDTH][LOCATION_HEIGHT],
+          map[MAP_WIDTH][MAP_HEIGHT],
           entrance_direction,
           exit_direction;
   GPoint starting_point,
@@ -441,7 +477,7 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position);
 void init_item(item_t *item, const int16_t n);
 void init_wall_coords(void);
 void init_quest(const int16_t type);
-void init_quest_location(void);
+void init_quest_map(void);
 void deinit_quest(void);
 void init_scroll(void);
 void deinit_scroll(void);
