@@ -22,17 +22,13 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define SCROLL_MODE          1
 #define MAIN_MENU_MODE       2
 #define INVENTORY_MODE       3
-#define EQUIP_OPTIONS_MODE   4
-#define PEBBLE_OPTIONS_MODE  5
-#define PEBBLE_INFUSION_MODE 6
-#define MARKET_MODE          7
-#define BUYING_MODE          8
-#define SELLING_MODE         9
-#define LOOT_MODE            10
-#define REPLACE_ITEM_MODE    11
-#define SHOW_STATS_MODE      12
-#define LEVEL_UP_MODE        13
-#define NUM_GAME_MODES       14
+#define PEBBLE_OPTIONS_MODE  4
+#define PEBBLE_INFUSION_MODE 5
+#define LOOT_MODE            6
+#define REPLACE_ITEM_MODE    7
+#define SHOW_STATS_MODE      8
+#define LEVEL_UP_MODE        9
+#define NUM_GAME_MODES       10
 
 /******************************************************************************
   Player- and NPC-related Constants
@@ -106,7 +102,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 // Quest types:
 #define FIND_PEBBLE            0  // Find a legendary Pebble of Power!
 #define FIND_ITEM              1  // Find a valuable item.
-#define RECOVER_ITEM           2  // Find a lost object (or gold).
+#define RECOVER_ITEM           2  // Find lost or stolen goods.
 #define ESCORT                 3  // Lead someone from point A to point B.
 #define RESCUE                 4  // Find captives and get them to safety.
 #define ASSASSINATE            5  // Kill a specific enemy.
@@ -140,7 +136,6 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_DIRECTIONS 4
 
 // Other:
-#define DEFAULT_QUEST_REWARD (25 * (rand() % 10 + 1))
 #define MAP_WIDTH            15
 #define MAP_HEIGHT           MAP_WIDTH
 #define RANDOM_POINT_NORTH   GPoint(rand() % MAP_WIDTH, 0)
@@ -164,47 +159,32 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_SCROLL_TYPES (NUM_QUEST_TYPES + 3)
 
 /******************************************************************************
-  Item-related Constants
+  Pebble- and Item-related Constants
 ******************************************************************************/
 
-#define GOLD                      0
-#define QUEST_ITEM                1 // Artifacts, captives, etc.
-#define KEY                       2
-#define HEALTH_POTION             3
-#define ENERGY_POTION             4
-#define PEBBLE_OF_FIRE            5
-#define PEBBLE_OF_ICE             6
-#define PEBBLE_OF_LIGHTNING       7
-#define PEBBLE_OF_LIFE            8
-#define PEBBLE_OF_DEATH           9
-#define PEBBLE_OF_LIGHT           10
-#define PEBBLE_OF_DARKNESS        11
-#define ROBE                      12
-#define DAGGER                    13
-#define STAFF                     14
-#define LIGHT_ARMOR               15
-#define SHIELD                    16
-#define SWORD                     17
-#define MACE                      18
-#define HEAVY_ARMOR               19
-#define AXE                       20
-#define FLAIL                     21
-#define BOW                       22
-#define FIRST_PEBBLE              PEBBLE_OF_FIRE
-#define FIRST_HEAVY_ITEM          ROBE
-#define NUM_SPECIAL_ITEM_TYPES    3  // GOLD, QUEST_ITEM, and KEY.
-#define NUM_POTION_TYPES          2  // HEALTH_POTION and ENERGY_POTION.
+#define NONE                      -1
+#define PEBBLE_OF_FIRE            0
+#define PEBBLE_OF_ICE             1
+#define PEBBLE_OF_LIGHTNING       2
+#define PEBBLE_OF_LIFE            3
+#define PEBBLE_OF_DEATH           4
+#define PEBBLE_OF_LIGHT           5
+#define PEBBLE_OF_DARKNESS        6
+#define ROBE                      7
+#define DAGGER                    8
+#define STAFF                     9
+#define LIGHT_ARMOR               10
+#define SHIELD                    11
+#define SWORD                     12
+#define MACE                      13
+#define HEAVY_ARMOR               14
+#define AXE                       15
+#define FLAIL                     16
+#define BOW                       17
 #define NUM_PEBBLE_TYPES          7
-#define NUM_HEAVY_ITEM_TYPES      11 // ROBE, SHIELD, and armor/weapons.
-#define MAX_HEAVY_ITEMS           6  // Player may not carry more than this.
-#define PLAYER_INVENTORY_SIZE     (NUM_SPECIAL_ITEM_TYPES + NUM_PEBBLE_TYPES + NUM_POTION_TYPES + MAX_HEAVY_ITEMS)
-#define MARKET_BUYING_MENU_SIZE   (NUM_POTION_TYPES + NUM_HEAVY_ITEM_TYPES)
-#define MAX_INFUSED_PEBBLES       2
-#define CHEAP_ITEM_VALUE          50
-#define EXPENSIVE_ITEM_VALUE      100
-#define VERY_EXPENSIVE_ITEM_VALUE 150
-#define PEBBLE_VALUE              200
-#define RANDOM_GOLD_AMOUNT        (rand() % 20 + 1)
+#define NUM_HEAVY_ITEM_TYPES      11 // Excludes Pebbles.
+#define FIRST_HEAVY_ITEM          ROBE
+#define MAX_HEAVY_ITEMS           5
 
 // Equip targets (i.e., places where an item may be equipped):
 #define BODY              0
@@ -252,7 +232,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MENU_HEADER_STR_LEN   23
 #define MENU_TITLE_STR_LEN    25
 #define MENU_SUBTITLE_STR_LEN 20
-#define MAIN_MENU_NUM_ROWS    4
+#define MAIN_MENU_NUM_ROWS    3
 
 /******************************************************************************
   Button-related Constants
@@ -285,10 +265,10 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Structures
 ******************************************************************************/
 
-typedef struct Item {
-  int16_t n, // "Type" for heavy items (0 == "none"), "quantity" for others.
-          infused_pebbles[MAX_INFUSED_PEBBLES];
-} __attribute__((__packed__)) item_t;
+typedef struct HeavyItem {
+  int16_t type, 
+          infused_pebble;
+} __attribute__((__packed__)) heavy_item_t;
 
 typedef struct NonPlayerCharacter {
   GPoint position;
@@ -303,22 +283,23 @@ typedef struct PlayerCharacter {
   int16_t direction,
           stats[NUM_CHARACTER_STATS],
           status_effects[NUM_STATUS_EFFECTS],
-          level,
-          exp_points,
+          pebbles[NUM_PEBBLE_TYPES],
+          equipped_pebble,
           num_pebbles_found,
-          equipped_item_indices[NUM_EQUIP_TARGETS];
-  item_t *inventory[PLAYER_INVENTORY_SIZE];
+          exp_points,
+          level;
+  heavy_item_t *heavy_items[MAX_HEAVY_ITEMS], // Clothing, armor, and weapons.
+               *equipped_heavy_items[NUM_EQUIP_TARGETS];
 } __attribute__((__packed__)) player_t;
 
 typedef struct Quest {
   int16_t type,
-          reward,
-          primary_npc_type,
-          num_npcs,
-          kills,
           map[MAP_WIDTH][MAP_HEIGHT],
           entrance_direction,
-          exit_direction;
+          exit_direction,
+          primary_npc_type,
+          num_npcs,
+          kills;
   GPoint starting_point,
          ending_point;
   npc_t *npcs;
@@ -367,9 +348,8 @@ void move_npc(npc_t *npc, const int16_t direction);
 void determine_npc_behavior(npc_t *npc);
 void damage_player(int16_t damage);
 void damage_npc(npc_t *npc, const int16_t damage);
-bool adjust_item_quantity(const int16_t item, const int16_t amount);
-void adjust_player_current_health(const int16_t amount);
 void remove_npc(npc_t *npc);
+void adjust_player_current_health(const int16_t amount);
 void adjust_player_current_mp(const int16_t amount);
 void end_quest(void);
 void add_new_npc(const int16_t npc_type, const GPoint position);
@@ -385,13 +365,10 @@ int16_t get_direction_to_the_right(const int16_t reference_direction);
 int16_t get_opposite_direction(const int16_t direction);
 int16_t get_boosted_stat_value(const int16_t stat_index,
                                const int16_t boost_amount);
-int16_t get_buying_price(const int16_t item_type);
-int16_t get_selling_price(const int16_t item_index);
-int16_t get_nth_item_index(const int16_t n, const int16_t starting_index);
-int16_t get_item_type_from_inventory_index(const int16_t index);
-int16_t get_item_type_from_market_index(const int16_t index);
-int16_t get_inventory_size(void);
-int16_t get_heavy_inventory_size(void);
+int16_t get_nth_item_type(const int16_t n);
+heavy_item_t *get_pointer_to_nth_item(const int16_t n);
+int16_t get_num_pebble_types_owned(void);
+int16_t get_num_heavy_items_owned(void);
 int16_t get_num_owned(const int16_t item_type);
 int16_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int16_t type);
@@ -462,7 +439,6 @@ void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
 void scroll_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
 void strcat_item_name(char *dest_str, const int16_t item_type);
-void strcat_inventory_item_name(char *dest_str, const int16_t item_index);
 void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
 void strcat_stat_value(char *dest_str, const int16_t stat);
@@ -474,7 +450,7 @@ void equip(const int16_t item_index, const int16_t equip_target);
 void init_player(void);
 void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
-void init_item(item_t *item, const int16_t n);
+void init_heavy_item(heavy_item_t *item, const int16_t n);
 void init_wall_coords(void);
 void init_quest(const int16_t type);
 void init_quest_map(void);

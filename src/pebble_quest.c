@@ -244,69 +244,12 @@ void damage_npc(npc_t *npc, const int16_t damage)
   if (npc->stats[CURRENT_HEALTH] <= 0)
   {
     g_quest->kills++;
+    //g_player->exp_points += get_exp_bonus(npc->type);
     if (g_quest->type == MAIN_QUEST_3 && npc->type == ARCHMAGE)
     {
       g_quest->completed = true;
     }
     remove_npc(npc);
-  }
-}
-
-/******************************************************************************
-   Function: adjust_item_quantity
-
-Description: Adjusts the quantity of a given item in the player's inventory by
-             a given amount, which may be positive or negative. (If the
-             adjustment would increase the item's quantity above MAX_INT_VALUE,
-             the quantity is set to MAX_INT_VALUE and "false" is returned. If
-             it would reduce the quantity below zero, no adjustment is made and
-             "false" is returned.)
-
-     Inputs: item   - Integer representing the item of interest.
-             amount - Adjustment amount (which may be positive or negative).
-
-    Outputs: "True" if the adjustment succeeds.
-******************************************************************************/
-bool adjust_item_quantity(const int16_t item, const int16_t amount)
-{
-  if (g_player->inventory[item]->n + amount < 0)
-  {
-    return false;
-  }
-  else if (g_player->inventory[item]->n + amount > MAX_INT_VALUE)
-  {
-    g_player->inventory[item]->n = MAX_INT_VALUE;
-
-    return false;
-  }
-  g_player->inventory[item]->n += amount;
-
-  return true;
-}
-
-/******************************************************************************
-   Function: adjust_player_current_health
-
-Description: Adjusts the player's current health by a given amount, which may
-             be positive or negative. Health may not be increased above the
-             player's max. health nor reduced below zero. If reduced to zero,
-             the player character's death is handled.
-
-     Inputs: amount - Adjustment amount (which may be positive or negative).
-
-    Outputs: None.
-******************************************************************************/
-void adjust_player_current_health(const int16_t amount)
-{
-  g_player->stats[CURRENT_HEALTH] += amount;
-  if (g_player->stats[CURRENT_HEALTH] > g_player->stats[MAX_HEALTH])
-  {
-    g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
-  }
-  else if (g_player->stats[CURRENT_HEALTH] <= 0)
-  {
-    //show_window(g_menu_layer_window, NOT_ANIMATED);
-    show_scroll(DEATH_SCROLL);
   }
 }
 
@@ -358,6 +301,32 @@ void remove_npc(npc_t *npc)
 }
 
 /******************************************************************************
+   Function: adjust_player_current_health
+
+Description: Adjusts the player's current health by a given amount, which may
+             be positive or negative. Health may not be increased above the
+             player's max. health nor reduced below zero. If reduced to zero,
+             the player character's death is handled.
+
+     Inputs: amount - Adjustment amount (which may be positive or negative).
+
+    Outputs: None.
+******************************************************************************/
+void adjust_player_current_health(const int16_t amount)
+{
+  g_player->stats[CURRENT_HEALTH] += amount;
+  if (g_player->stats[CURRENT_HEALTH] > g_player->stats[MAX_HEALTH])
+  {
+    g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
+  }
+  else if (g_player->stats[CURRENT_HEALTH] <= 0)
+  {
+    //show_window(g_menu_layer_window, NOT_ANIMATED);
+    show_scroll(DEATH_SCROLL);
+  }
+}
+
+/******************************************************************************
    Function: adjust_player_current_energy
 
 Description: Adjusts the player's current energy by a given amount, which may
@@ -404,7 +373,7 @@ Description: Adjusts the player's visibility depth by a given amount, which may
    Function: end_quest
 
 Description: Called when the player walks into the exit, ending the current
-             quest. Determines how much reward gold to bestow, etc.
+             quest.
 
      Inputs: None.
 
@@ -414,7 +383,6 @@ void end_quest(void)
 {
   if (g_quest->completed)
   {
-    adjust_item_quantity(GOLD, g_quest->reward);
     g_current_scroll = VICTORY_SCROLL;
   }
   else
@@ -843,95 +811,33 @@ int16_t get_boosted_stat_value(const int16_t stat_index,
 }
 
 /******************************************************************************
-   Function: get_buying_price
+   Function: get_nth_item_type
 
-Description: Returns the price the player must pay to buy a given item.
+Description: Returns the type of the nth item in the player's inventory.
 
-     Inputs: item_type - Integer representing the item of interest.
+     Inputs: n - Integer indicating the item of interest (1st, 2nd, 3rd, etc.).
 
-    Outputs: The item's buying price.
+    Outputs: The nth item's type.
 ******************************************************************************/
-int16_t get_buying_price(const int16_t item_type)
-{
-  if (item_type < LIGHT_ARMOR) // Includes Pebbles, but they can't be bought.
-  {
-    return CHEAP_ITEM_VALUE;
-  }
-  else if (item_type < HEAVY_ARMOR)
-  {
-    return EXPENSIVE_ITEM_VALUE;
-  }
-
-  return VERY_EXPENSIVE_ITEM_VALUE;
-}
-
-/******************************************************************************
-   Function: get_selling_price
-
-Description: Returns the amount of gold the player will get for selling a given
-             item, equal to half its "true value."
-
-     Inputs: item_index - Index value of the item within the player's
-                          inventory.
-
-    Outputs: The item's selling price.
-******************************************************************************/
-int16_t get_selling_price(const int16_t item_index)
-{
-  int16_t i, item_value = CHEAP_ITEM_VALUE;
-
-  if (item_index >= FIRST_PEBBLE && item_index < FIRST_HEAVY_ITEM)
-  {
-    item_value = PEBBLE_VALUE;
-  }
-  else if (item_index >= FIRST_HEAVY_ITEM)
-  {
-    if (g_player->inventory[item_index]->n >= LIGHT_ARMOR)
-    {
-      item_value = EXPENSIVE_ITEM_VALUE;
-    }
-    else if (g_player->inventory[item_index]->n >= HEAVY_ARMOR)
-    {
-      item_value = VERY_EXPENSIVE_ITEM_VALUE;
-    }
-    for (i = 0; i < MAX_INFUSED_PEBBLES; ++i)
-    {
-      if (g_player->inventory[item_index]->infused_pebbles[i] > 0)
-      {
-        item_value += PEBBLE_VALUE;
-      }
-    }
-  }
-
-  return item_value / 2;
-}
-
-/******************************************************************************
-   Function: get_nth_item_index
-
-Description: Returns the index value for the nth item type within the player's
-             inventory.
-
-     Inputs: n              - Integer indicating the item of interest (1st,
-                              2nd, 3rd, etc.).
-             starting_index - Index at which to begin searching in the player's
-                              inventory array (zero or FIRST_HEAVY_ITEM).
-
-    Outputs: The nth item's index value.
-******************************************************************************/
-int16_t get_nth_item_index(const int16_t n, const int16_t starting_index)
+int16_t get_nth_item_type(const int16_t n)
 {
   int16_t i, item_count = 0;
 
-  for (i = starting_index; i < PLAYER_INVENTORY_SIZE; ++i)
+  // Search Pebbles:
+  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {
-    if (g_player->inventory[i]->n > 0)
+    if (g_player->pebbles[i] > 0 && ++item_count == n)
     {
-      item_count++;
-      if (item_count == n)
-      {
-        break;
-      }
+      return i;
+    }
+  }
+
+  // Search heavy items:
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
+  {
+    if (g_player->heavy_items[i]->type != NONE && ++item_count == n)
+    {
+      break;
     }
   }
 
@@ -939,90 +845,70 @@ int16_t get_nth_item_index(const int16_t n, const int16_t starting_index)
 }
 
 /******************************************************************************
-   Function: get_item_type_from_inventory_index
+   Function: get_pointer_to_nth_item
 
-Description: Given an inventory index value, returns the associated item type.
+Description: Returns a pointer to the nth item in the player's inventory, which
+             is assumed to be a heavy item.
 
-     Inputs: index - Index value of the item in the player's inventory.
+     Inputs: n - Integer indicating the item of interest (1st, 2nd, 3rd, etc.).
 
-    Outputs: Item type associated with the given inventory index value.
+    Outputs: Pointer to the nth item (which should be a heavy item).
 ******************************************************************************/
-int16_t get_item_type_from_inventory_index(const int16_t index)
+heavy_item_t *get_pointer_to_nth_item(const int16_t n)
 {
-  if (index < FIRST_HEAVY_ITEM)
+  int16_t i, item_count = get_num_pebble_types_owned();
+
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    return index;
-  }
-
-  return g_player->inventory[index]->n;
-}
-
-/******************************************************************************
-   Function: get_item_type_from_market_index
-
-Description: Given a market menu index value, returns the associated item type.
-
-     Inputs: index - Index value of the item in the market's "buying" menu.
-
-    Outputs: Item type associated with the given market index value.
-******************************************************************************/
-int16_t get_item_type_from_market_index(const int16_t index)
-{
-  if (index == 0)
-  {
-    return HEALTH_POTION;
-  }
-  else if (index == 1)
-  {
-    return ENERGY_POTION;
-  }
-
-  return index + (FIRST_HEAVY_ITEM - NUM_POTION_TYPES);
-}
-
-/******************************************************************************
-   Function: get_inventory_size
-
-Description: Returns the number of light item types, plus the number of
-             individual heavy items, currently in the player's inventory. (Used
-             to determine how many rows to display in relevant menus.)
-
-     Inputs: None.
-
-    Outputs: Integer representing the "size" of the player's inventory.
-******************************************************************************/
-int16_t get_inventory_size(void)
-{
-  int16_t i, inventory_size = 0;
-
-  for (i = 0; i < FIRST_HEAVY_ITEM; ++i)
-  {
-    if (g_player->inventory[i]->n > 0)
+    if (g_player->heavy_items[i]->type != NONE && ++item_count == n)
     {
-      inventory_size++;
+      break;
     }
   }
 
-  return inventory_size + get_heavy_inventory_size();
+  return g_player->heavy_items[i];
 }
 
 /******************************************************************************
-   Function: get_heavy_inventory_size
+   Function: get_num_pebble_types_owned
 
-Description: Returns the number of individual heavy items (i.e., not just types
-             of items) currently in the player's inventory.
+Description: Returns the number of types of Pebbles in the player's inventory.
 
      Inputs: None.
 
-    Outputs: The number of heavy items in the player's inventory.
+    Outputs: Number of Pebble types owned by the player.
 ******************************************************************************/
-int16_t get_heavy_inventory_size(void)
+int16_t get_num_pebble_types_owned(void)
+{
+  int16_t i, num_pebble_types = 0;
+
+  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
+  {
+    if (g_player->pebbles[i] > 0)
+    {
+      num_pebble_types++;
+    }
+  }
+
+  return num_pebble_types;
+}
+
+/******************************************************************************
+   Function: get_num_heavy_items_owned
+
+Description: Returns the number of heavy items in the player's inventory.
+
+     Inputs: None.
+
+    Outputs: Number of heavy items owned by the player.
+******************************************************************************/
+int16_t get_num_heavy_items_owned(void)
 {
   int16_t i, num_heavy_items = 0;
 
-  for (i = FIRST_HEAVY_ITEM; i < PLAYER_INVENTORY_SIZE; ++i)
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    if (g_player->inventory[i]->n > 0)
+    if (g_player->heavy_items[i]->type != NONE)
     {
       num_heavy_items++;
     }
@@ -1323,16 +1209,11 @@ static void menu_draw_header_callback(GContext *ctx,
   {
     strcpy(header_str, "Loot");
   }
-  else if (g_game_mode == LEVEL_UP_MODE)
+  else // if (g_game_mode == LEVEL_UP_MODE)
   {
     strcpy(header_str, "Level ");
     strcat_int(header_str, g_player->level);
     strcat(header_str, " reached!");
-  }
-  else // MARKET_MODE, BUYING_MODE, or SELLING_MODE
-  {
-    strcpy(header_str, "Market - Gold: ");
-    strcat_int(header_str, g_player->inventory[GOLD]->n);
   }
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
@@ -1354,9 +1235,10 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
-  int16_t i;
+  int16_t n, item_type;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
+  heavy_item_t *item;
 
   if (g_game_mode == MAIN_MENU_MODE)
   {
@@ -1364,6 +1246,7 @@ static void menu_draw_row_callback(GContext *ctx,
     {
       case 0:
         strcat(title_str, g_quest == NULL ? "New Quest" : "Continue");
+        strcat(subtitle_str, "Enter the fray!");
         break;
       case 1:
         strcat(title_str, "Character Stats");
@@ -1371,12 +1254,7 @@ static void menu_draw_row_callback(GContext *ctx,
         break;
       case 2:
         strcat(title_str, "Inventory");
-        strcat(subtitle_str, "Use/equip items.");
-        break;
-      default: // case 3:
-        strcat(title_str, "Marketplace");
-        strcat(subtitle_str, g_quest == NULL ? "Buy/sell items." :
-                                               "Not during quests!");
+        strcat(subtitle_str, "Equip/infuse items.");
         break;
     }
   }
@@ -1390,21 +1268,15 @@ static void menu_draw_row_callback(GContext *ctx,
       strcat_int(title_str, get_boosted_stat_value(cell_index->row, 1));
     }
   }
-  else if (g_game_mode == EQUIP_OPTIONS_MODE ||
-           g_game_mode == PEBBLE_OPTIONS_MODE)
+  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
   {
     switch (cell_index->row)
     {
-      strcat(subtitle_str, "Current: ");
       case 0:
-        strcat(title_str, "Equip to Right Hand");
+        strcat(title_str, "Equip");
         break;
-      case 1:
-        strcat(title_str, "Equip to Left Hand");
-        break;
-      default: // Only used in PEBBLE_OPTIONS_MODE.
+      default:
         strcat(title_str, "Infuse into Item");
-        strcpy(subtitle_str, "This is permanent!");
         break;
     }
   }
@@ -1412,43 +1284,34 @@ static void menu_draw_row_callback(GContext *ctx,
   {
     strcat_item_name(title_str, get_cell_type(g_player->position));
   }
-  else if (g_game_mode == MARKET_MODE)
+  else // INVENTORY_MODE, PEBBLE_INFUSION_MODE, REPLACE_ITEM_MODE
   {
-    switch (cell_index->row)
+    n = cell_index->row + (g_game_mode == INVENTORY_MODE ? 0 :
+                           get_num_pebble_types_owned());
+    item_type = get_nth_item_type(n);
+    strcat_item_name(title_str, item_type);
+    if (item_type < FIRST_HEAVY_ITEM)
     {
-      case 0:
-        strcat(title_str, "Buy");
-        break;
-      default:
-        strcat(title_str, "Sell");
-        break;
+      strcat(title_str, " (");
+      strcat_int(title_str, g_player->pebbles[item_type]);
+      strcat(title_str, ")");
+      if (equipped_pebble == item_type)
+      {
+        strcat(subtitle_str, "Equipped");
+      }
     }
-  }
-  else if (g_game_mode == BUYING_MODE)
-  {
-    i = get_item_type_from_market_index(cell_index->row);
-    strcat_item_name(title_str, i);
-    strcat(title_str, " (");
-    strcat_int(title_str, get_buying_price(i));
-    strcat(title_str, " gold)");
-    strcat_int(subtitle_str, get_num_owned(i));
-    strcat(subtitle_str, " in inventory.");
-  }
-  else if (g_game_mode == INVENTORY_MODE || g_game_mode == SELLING_MODE)
-  {
-    i = get_nth_item_index(cell_index->row, 0);
-    strcat_inventory_item_name(title_str, i);
-    if (g_game_mode == SELLING_MODE)
+    else // Heavy items:
     {
-      strcat(subtitle_str, "Sell for ");
-      strcat_int(subtitle_str, get_selling_price(i));
-      strcat(subtitle_str, " gold?");
+      g_player->heavy_items[n];
+      if (item->infused_pebble != NONE)
+      {
+        strcat_magic_type(title_str, item->infused_pebble);
+      }
+      if (is_equipped(item))
+      {
+        strcat(subtitle_str, "Equipped");
+      }
     }
-  }
-  else // PEBBLE_INFUSION_MODE or REPLACE_ITEM_MODE
-  {
-    i = get_nth_item_index(cell_index->row, FIRST_HEAVY_ITEM);
-    strcat_inventory_item_name(title_str, i);
   }
 
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
@@ -1469,7 +1332,8 @@ void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data)
 {
-  int16_t i;
+  int16_t n, item_type;
+  heavy_item_t *item;
 
   if (g_game_mode == MAIN_MENU_MODE)
   {
@@ -1509,12 +1373,6 @@ void menu_select_callback(MenuLayer *menu_layer,
       case 2: // Inventory
         set_game_mode(INVENTORY_MODE);
         break;
-      default: // Marketplace
-        if (g_quest == NULL)
-        {
-          set_game_mode(MARKET_MODE);
-        }
-        break;
     }
   }
   else if (g_game_mode == LEVEL_UP_MODE)
@@ -1531,44 +1389,29 @@ void menu_select_callback(MenuLayer *menu_layer,
     add_item_to_inventory(get_cell_type(g_player->position));
     set_cell_type(g_player->position, EMPTY);
   }
-  else if (g_game_mode == EQUIP_OPTIONS_MODE ||
-           g_game_mode == PEBBLE_OPTIONS_MODE)
+  else if (g_game_mode == INVENTORY_MODE)
+  {
+    if (cell_index->row < FIRST_HEAVY_ITEM)
+    {
+      set_game_mode(PEBBLE_OPTIONS_MODE);
+    }
+    else
+    {
+      equip_heavy_item(cell_index->row - NUM_PEBBLE_TYPES);
+    }
+  }
+  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
   {
     switch (cell_index->row)
     {
-      case 0: // Equip to Right Hand
+      case 0: // Equip
+        g_player->equipped_heavy_items[RIGHT_HAND] = NULL;
+        g_player->equipped_pebble                  = g_current_selection;
         break;
-      case 1: // Equip to Left Hand
-        break;
-      default: // Infuse into Item (only used in PEBBLE_OPTIONS_MODE)
-        break;
-    }
-  }
-  else if (g_game_mode == MARKET_MODE)
-  {
-    switch (cell_index->row)
-    {
-      case 0: // Buy
-        set_game_mode(BUYING_MODE);
-        break;
-      default: // Sell
-        set_game_mode(SELLING_MODE);
+      default: // Infuse into Item
+        set_game_mode(PEBBLE_INFUSION_MODE);
         break;
     }
-  }
-  else if (g_game_mode == BUYING_MODE)
-  {
-    i = get_item_type_from_market_index(cell_index->row);
-    if (adjust_item_quantity(GOLD, get_buying_price(i)))
-    {
-      add_item_to_inventory(i);
-    }
-  }
-  else if (g_game_mode == SELLING_MODE)
-  {
-    i = get_nth_item_index(cell_index->row, 0);
-    adjust_item_quantity(GOLD, get_selling_price(i));
-    remove_item_from_inventory(i);
   }
   else if (g_game_mode == PEBBLE_INFUSION_MODE)
   {
@@ -1616,32 +1459,25 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   {
     return MAIN_MENU_NUM_ROWS;
   }
-  else if (g_game_mode == INVENTORY_MODE ||
-           g_game_mode == SELLING_MODE)
-  {
-    return get_inventory_size();
-  }
-  else if (g_game_mode == PEBBLE_INFUSION_MODE ||
-           g_game_mode == REPLACE_ITEM_MODE)
-  {
-    return get_heavy_inventory_size();
-  }
-  else if (g_game_mode == BUYING_MODE)
-  {
-    return MARKET_BUYING_MENU_SIZE;
-  }
   else if (g_game_mode == LOOT_MODE)
   {
     return 1;
   }
-  else if (g_game_mode == EQUIP_OPTIONS_MODE ||
-           g_game_mode == MARKET_MODE)
+  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
   {
     return 2;
   }
-  else // PEBBLE_OPTIONS_MODE or LEVEL_UP_MODE
+  else if (g_game_mode == LEVEL_UP_MODE)
   {
     return 3;
+  }
+  else if (g_game_mode == INVENTORY_MODE)
+  {
+    return get_num_pebble_types_owned() + get_num_heavy_items_owned();
+  }
+  else // PEBBLE_INFUSION_MODE || REPLACE_ITEM_MODE
+  {
+    return get_num_heavy_items_owned();
   }
 }
 
@@ -3128,39 +2964,33 @@ Description: Concatenates the name of a given item onto a given string.
 ******************************************************************************/
 void strcat_item_name(char *dest_str, const int16_t item_type)
 {
-  if (item_type >= FIRST_PEBBLE && item_type < FIRST_HEAVY_ITEM)
+  if (item_type < FIRST_HEAVY_ITEM)
   {
-    strcat(dest_str, "Pebble of ");
+    strcat(dest_str, "Pebble");
     strcat_magic_type(dest_str, item_type);
   }
   else
   {
     switch(item_type)
     {
-      case GOLD:
-        strcat(dest_str, "Gold");
-        break;
-      case KEY:
+      /*case KEY:
         strcat(dest_str, "Key");
         break;
       case QUEST_ITEM:
         g_quest->type == RESCUE ? strcat(dest_str, "Captive") :
                                   strcat(dest_str, "Artifact");
-        break;
-      case HEALTH_POTION:
-        strcat(dest_str, "Healing Potion");
-        break;
-      case ENERGY_POTION:
-        strcat(dest_str, "Energy Potion");
-        break;
+        break;*/
       case ROBE:
         strcat(dest_str, "Robe");
         break;
       case LIGHT_ARMOR:
-        strcat(dest_str, "Light Armor");
+        strcat(dest_str, "L. Armor");
         break;
       case HEAVY_ARMOR:
-        strcat(dest_str, "Heavy Armor");
+        strcat(dest_str, "H. Armor");
+        break;
+      case SHIELD:
+        strcat(dest_str, "Shield");
         break;
       case DAGGER:
         strcat(dest_str, "Dagger");
@@ -3188,45 +3018,6 @@ void strcat_item_name(char *dest_str, const int16_t item_type)
 }
 
 /******************************************************************************
-   Function: strcat_inventory_item_name
-
-Description: Concatenates the name of the item at a given inventory index onto
-             a given string.
-
-     Inputs: dest_str   - Pointer to the destination string.
-             item_index - Index value for the item of interest in the player's
-                          inventory.
-
-    Outputs: None.
-******************************************************************************/
-void strcat_inventory_item_name(char *dest_str, const int16_t item_index)
-{
-  int16_t item_type = get_item_type_from_inventory_index(item_index),
-          magic_type;
-
-  strcat_item_name(dest_str, item_type);
-  if (item_type < FIRST_HEAVY_ITEM)
-  {
-    strcat(dest_str, " (");
-    strcat_int(dest_str, g_player->inventory[item_index]->n);
-    strcat(dest_str, ")");
-  }
-  else // Heavy items:
-  {
-    magic_type = g_player->inventory[item_index]->infused_pebbles[0];
-    if (magic_type > 0)
-    {
-      strcat(dest_str, " of ");
-      if (g_player->inventory[item_index]->infused_pebbles[1] > 0)
-      {
-        magic_type *= g_player->inventory[item_index]->infused_pebbles[1];
-      }
-      strcat_magic_type(dest_str, magic_type);
-    }
-  }
-}
-
-/******************************************************************************
    Function: strcat_magic_type
 
 Description: Concatenates the name of a given magic type onto a given string.
@@ -3238,6 +3029,7 @@ Description: Concatenates the name of a given magic type onto a given string.
 ******************************************************************************/
 void strcat_magic_type(char *dest_str, const int16_t magic_type)
 {
+  strcat(dest_str, " of ");
   switch(magic_type)
   {
     case PEBBLE_OF_FIRE:
@@ -3260,90 +3052,6 @@ void strcat_magic_type(char *dest_str, const int16_t magic_type)
       break;
     case PEBBLE_OF_DARKNESS:
       strcat(dest_str, "Darkness");
-      break;
-    case PEBBLE_OF_FIRE * PEBBLE_OF_FIRE:
-      strcat(dest_str, "Flame");
-      break;
-    case PEBBLE_OF_ICE * PEBBLE_OF_ICE:
-      strcat(dest_str, "Frost");
-      break;
-    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_LIGHTNING:
-      strcat(dest_str, "Thunder");
-      break;
-    case PEBBLE_OF_LIFE * PEBBLE_OF_LIFE:
-      strcat(dest_str, "Vitality");
-      break;
-    case PEBBLE_OF_DEATH * PEBBLE_OF_DEATH:
-      strcat(dest_str, "Ruin");
-      break;
-    case PEBBLE_OF_LIGHT * PEBBLE_OF_LIGHT:
-      strcat(dest_str, "Holiness");
-      break;
-    case PEBBLE_OF_DARKNESS * PEBBLE_OF_DARKNESS:
-      strcat(dest_str, "the Void");
-      break;
-    case PEBBLE_OF_FIRE * PEBBLE_OF_ICE:
-      strcat(dest_str, "Iceflame");
-      break;
-    case PEBBLE_OF_FIRE * PEBBLE_OF_LIGHTNING:
-      strcat(dest_str, "Firebolt");
-      break;
-    case PEBBLE_OF_FIRE * PEBBLE_OF_LIFE:
-      strcat(dest_str, "Consuming");
-      break;
-    case PEBBLE_OF_FIRE * PEBBLE_OF_DEATH:
-      strcat(dest_str, "Hellfire");
-      break;
-    case PEBBLE_OF_FIRE * PEBBLE_OF_LIGHT:
-      strcat(dest_str, "Holy Flame");
-      break;
-    case PEBBLE_OF_FIRE * PEBBLE_OF_DARKNESS:
-      strcat(dest_str, "Dark Flame");
-      break;
-    case PEBBLE_OF_ICE * PEBBLE_OF_LIGHTNING:
-      strcat(dest_str, "Icebolt");
-      break;
-    case PEBBLE_OF_ICE * PEBBLE_OF_LIFE:
-      strcat(dest_str, "Draining");
-      break;
-    case PEBBLE_OF_ICE * PEBBLE_OF_DEATH:
-      strcat(dest_str, "Icy Death");
-      break;
-    case PEBBLE_OF_ICE * PEBBLE_OF_LIGHT:
-      strcat(dest_str, "Cold Light");
-      break;
-    case PEBBLE_OF_ICE * PEBBLE_OF_DARKNESS:
-      strcat(dest_str, "Freezing");
-      break;
-    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_LIFE:
-      strcat(dest_str, "Lifebolt");
-      break;
-    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_DEATH:
-      strcat(dest_str, "Deathbolt");
-      break;
-    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_LIGHT:
-      strcat(dest_str, "Sunlight");
-      break;
-    case PEBBLE_OF_LIGHTNING * PEBBLE_OF_DARKNESS:
-      strcat(dest_str, "Dark Lightning");
-      break;
-    case PEBBLE_OF_LIFE * PEBBLE_OF_DEATH:
-      strcat(dest_str, "Vampirism");
-      break;
-    case PEBBLE_OF_LIFE * PEBBLE_OF_LIGHT:
-      strcat(dest_str, "Vigor");
-      break;
-    case PEBBLE_OF_LIFE * PEBBLE_OF_DARKNESS:
-      strcat(dest_str, "Devouring");
-      break;
-    case PEBBLE_OF_DEATH * PEBBLE_OF_LIGHT:
-      strcat(dest_str, "Fury");
-      break;
-    case PEBBLE_OF_DEATH * PEBBLE_OF_DARKNESS:
-      strcat(dest_str, "Oblivion");
-      break;
-    case PEBBLE_OF_LIGHT * PEBBLE_OF_DARKNESS:
-      strcat(dest_str, "Moonlight");
       break;
   }
 }
@@ -3521,18 +3229,19 @@ void add_item_to_inventory(const int16_t item_type)
 
   if (item_type < FIRST_HEAVY_ITEM)
   {
-    g_player->inventory[item_type]->n++;
+    g_player->pebbles[item_type]++;
   }
   else
   {
     for (i = FIRST_HEAVY_ITEM; i < PLAYER_INVENTORY_SIZE; ++i)
     {
-      if (g_player->inventory[i]->n == 0)
+      if (g_player->inventory[i]->type == NONE)
       {
         init_item(g_player->inventory[i], item_type);
       }
       else if (i == PLAYER_INVENTORY_SIZE - 1)
       {
+        g_current_selection = item_type;
         set_game_mode(REPLACE_ITEM_MODE);
       }
     }
@@ -3600,18 +3309,27 @@ void init_player(void)
   g_player->level             = 1;
   g_player->exp_points        = 0;
   g_player->num_pebbles_found = 0;
+  g_player->equipped_pebble   = NONE;
   g_player->stats[STRENGTH]   = DEFAULT_BASE_STAT_VALUE;
   g_player->stats[AGILITY]    = DEFAULT_BASE_STAT_VALUE;
   g_player->stats[INTELLECT]  = DEFAULT_BASE_STAT_VALUE;
   assign_minor_stats(g_player->stats);
-  for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
+  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {
-    init_item(g_player->inventory[i], 0); // "Empty," even for heavy items.
+    g_player->pebbles[i] = 0;
   }
-  add_item_to_inventory(ROBE);
-  equip(FIRST_HEAVY_ITEM, BODY);
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
+  {
+    init_item(g_player->heavy_items[i], NONE);
+  }
+  for (i = 0; i < NUM_EQUIP_TARGETS; ++i)
+  {
+    g_player->equipped_heavy_items[i] = NULL;
+  }
   add_item_to_inventory(DAGGER);
-  equip(FIRST_HEAVY_ITEM + 1, RIGHT_HAND);
+  add_item_to_inventory(ROBE);
+  equip_heavy_item(0);
+  equip_heavy_item(1);
 }
 
 /******************************************************************************
@@ -3691,25 +3409,19 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
 }
 
 /******************************************************************************
-   Function: init_item
+   Function: init_heavy_item
 
-Description: Initializes a new item struct according to a given type.
+Description: Initializes a new heavy item struct according to a given type.
 
-     Inputs: item - Pointer to the item struct.
-             n    - An integer representing "type" for heavy items and
-                    "quantity" for non-heavy items.
+     Inputs: item - Pointer to the heavy item struct.
+             type - The type of heavy item to be initialized.
 
     Outputs: None.
 ******************************************************************************/
-void init_item(item_t *item, const int16_t n)
+void init_heavy_item(heavy_item_t *item, const int16_t type)
 {
-  int16_t i;
-
-  item->n = n;
-  for (i = 0; i < MAX_INFUSED_PEBBLES; ++i)
-  {
-    item->infused_pebbles[i] = 0; // Only important for heavy items.
-  }
+  item->type           = type;
+  item->infused_pebble = NONE;
 }
 
 /******************************************************************************
@@ -3796,8 +3508,8 @@ void init_quest(const int16_t type)
   g_quest->kills            = 0;
   g_quest->npcs             = NULL;
   g_quest->primary_npc_type = GOBLIN;
-  g_quest->num_npcs         = 5 * (rand() % 5 + 2);   // 10-30 enemies.
-  g_quest->reward           = 10 * g_quest->num_npcs; // 100-300 gold.
+  g_quest->num_npcs         = 5 * (rand() % 5 + 2);  // 10-30 enemies.
+  //g_quest->exp_reward       = 5 * g_quest->num_npcs; // 50-150 exp. points.
   init_quest_map();
 
   // Move and orient the player:
@@ -4099,19 +3811,19 @@ void init(void)
 
   // Check for saved data and initialize the player struct:
   g_player = malloc(sizeof(player_t));
-  for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    g_player->inventory[i] = malloc(sizeof(item_t));
+    g_player->heavy_items[i] = malloc(sizeof(item_t));
   }
-  if (persist_exists(STORAGE_KEY + PLAYER_INVENTORY_SIZE))
+  if (persist_exists(STORAGE_KEY))
   {
-    for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
+    for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
     {
       persist_read_data(STORAGE_KEY + i,
-                        g_player->inventory[i],
+                        g_player->heavy_items[i],
                         sizeof(item_t));
     }
-    persist_read_data(STORAGE_KEY + PLAYER_INVENTORY_SIZE,
+    persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS,
                       g_player,
                       sizeof(player_t));
   }
@@ -4134,13 +3846,13 @@ void deinit(void)
 {
   int16_t i;
 
-  for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
     persist_write_data(STORAGE_KEY + i,
-                       g_player->inventory[i],
+                       g_player->heavy_items[i],
                        sizeof(item_t));
   }
-  persist_write_data(STORAGE_KEY + PLAYER_INVENTORY_SIZE,
+  persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS,
                      g_player,
                      sizeof(player_t));
   deinit_scroll();
