@@ -918,38 +918,6 @@ int16_t get_num_heavy_items_owned(void)
 }
 
 /******************************************************************************
-   Function: get_num_owned
-
-Description: Returns the quantity of a given item type in the player's current
-             inventory.
-
-     Inputs: item_type - Integer representing the item of interest.
-
-    Outputs: The number of the given item currently in the player's inventory.
-******************************************************************************/
-int16_t get_num_owned(const int16_t item_type)
-{
-  int16_t i, count = 0;
-
-  // Light items:
-  if (item_type < FIRST_HEAVY_ITEM)
-  {
-    return g_player->inventory[item_type]->n;
-  }
-
-  // Heavy items:
-  for (i = FIRST_HEAVY_ITEM; i < PLAYER_INVENTORY_SIZE; ++i)
-  {
-    if (g_player->inventory[i]->n == item_type)
-    {
-      count++;
-    }
-  }
-
-  return count;
-}
-
-/******************************************************************************
    Function: get_cell_type
 
 Description: Returns the type of cell at a given set of coordinates.
@@ -1900,7 +1868,7 @@ void draw_cell_contents(GContext *ctx,
   // Draw the character (or a treasure chest for loot):
   if (npc == NULL)
   {
-    if (get_cell_type(cell) == QUEST_ITEM && g_quest->type == RESCUE)
+    if (get_cell_type(cell) == CAPTIVE)
     {
       // Legs:
       graphics_fill_rect(ctx,
@@ -2777,8 +2745,8 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 
       // If we've found an NPC or the attack isn't ranged, we're done:
       if (npc != NULL ||
-          (g_player->equipped_item_indices[RIGHT_HAND] >= FIRST_HEAVY_ITEM &&
-           g_player->equipped_item_indices[RIGHT_HAND] != BOW))
+          (g_player->equipped_pebble == NONE &&
+           g_player->equipped_heavy_items[RIGHT_HAND] != BOW))
       {
         break;
       }
@@ -2786,31 +2754,33 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     }
 
     // If a Pebble is equipped, cast a spell:
-    if (g_player->equipped_item_indices[RIGHT_HAND] < FIRST_HEAVY_ITEM &&
-        g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
+    if (g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
     {
-      flash_screen();
-      adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
-      if (npc != NULL)
+      if (g_player->equipped_pebble != NONE)
       {
-        damage_npc(npc,
-                   g_player->stats[MAGICAL_POWER] -
-                     npc->stats[MAGICAL_DEFENSE]);
+        flash_screen();
+        adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
+        if (npc != NULL)
+        {
+          damage_npc(npc,
+                     g_player->stats[MAGICAL_POWER] -
+                       npc->stats[MAGICAL_DEFENSE]);
+        }
       }
-    }
 
-    // Otherwise, the player is attacking with a physical weapon:
-    else
-    {
-      adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
-      g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
-                                          player_timer_callback,
-                                          NULL);
-      if (npc != NULL)
+      // Otherwise, the player is attacking with a physical weapon:
+      else if (g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
       {
-        damage_npc(npc,
-                   g_player->stats[PHYSICAL_POWER] -
-                     npc->stats[PHYSICAL_DEFENSE]);
+        adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
+        g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
+                                            player_timer_callback,
+                                            NULL);
+        if (npc != NULL)
+        {
+          damage_npc(npc,
+                     g_player->stats[PHYSICAL_POWER] -
+                       npc->stats[PHYSICAL_DEFENSE]);
+        }
       }
     }
 
@@ -3215,9 +3185,8 @@ void assign_minor_stats(int16_t *stats_array)
    Function: add_item_to_inventory
 
 Description: Adds an item of a given type to the player's inventory. If it's a
-             heavy item, a new "item_t" struct will be initialized. If there's
-             no more room for heavy items, the "replace item" menu will be
-             shown.
+             heavy item and there's no more room for heavy items, the "replace
+             item" menu will be shown.
 
      Inputs: item_type - The type of item to be added.
 
@@ -3233,63 +3202,70 @@ void add_item_to_inventory(const int16_t item_type)
   }
   else
   {
-    for (i = FIRST_HEAVY_ITEM; i < PLAYER_INVENTORY_SIZE; ++i)
+    for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
     {
-      if (g_player->inventory[i]->type == NONE)
+      if (g_player->heavy_items[i]->type == NONE)
       {
-        init_item(g_player->inventory[i], item_type);
-      }
-      else if (i == PLAYER_INVENTORY_SIZE - 1)
-      {
-        g_current_selection = item_type;
-        set_game_mode(REPLACE_ITEM_MODE);
+        init_heavy_item(g_player->heavy_items[i], item_type);
+
+        return;
       }
     }
+
+    // If we reach this point, the player's heavy item array is full:
+    g_current_selection = item_type;
+    set_game_mode(REPLACE_ITEM_MODE);
   }
 }
 
 /******************************************************************************
-   Function: remove_item_from_inventory
+   Function: equip_pebble
 
-Description: Removes an item at a given inventory index.
+Description: Equips a given Pebble in the player's right hand.
 
-     Inputs: item_index - Index of the item in the player's inventory.
+     Inputs: pebble_type - Type of Pebble to be equipped.
 
     Outputs: None.
 ******************************************************************************/
-void remove_item_from_inventory(const int16_t item_index)
+void equip_pebble(const int16_t pebble_type)
 {
-  if (item_index >= FIRST_HEAVY_ITEM)
-  {
-    g_player->inventory[item_index]->n = 0;
-  }
-  else
-  {
-    g_player->inventory[item_index]->n--;
-  }
+  // Unequip the currently-equipped weapon (if any):
+  g_player->equipped_heavy_items[RIGHT_HAND] = NULL;
+
+  // Equip the Pebble:
+  g_player->equipped_pebble = pebble_type;
 }
 
 /******************************************************************************
-   Function: equip
+   Function: equip_heavy_item
 
-Description: Equips the item at a given inventory index to a given equip
-             target, unequipping any previously equipped item in the process
-             and adjusting the player's stats accordingly.
+Description: Equips a given heavy item to its appropriate equip target.
 
-     Inputs: item_index   - Index of the item in the "inventory" array.
-             equip_target - Integer indicating where to equip the item.
+     Inputs: item - Pointer to the heavy item to be equipped.
 
     Outputs: None.
 ******************************************************************************/
-void equip(const int16_t item_index, const int16_t equip_target)
+void equip_heavy_item(heavy_item_t *const item)
 {
-  /*int16_t i;
+  int16_t equip_target = RIGHT_HAND;
 
-  if (g_player->equipped_items[equip_target] != NULL)
+  // Check for an unusual equip target:
+  if (item->type == SHIELD)
   {
+    equip_target = LEFT_HAND;
+  }
+  else if (item->type == ROBE        ||
+           item->type == LIGHT_ARMOR ||
+           item->type == HEAVY_ARMOR)
+  {
+    equip_target = BODY;
+  }
 
-  }*/
-  g_player->equipped_item_indices[equip_target] = item_index;
+  // Unequip the currently-equipped Pebble (if any):
+  g_player->equipped_pebble = NONE;
+
+  // Equip the heavy item:
+  g_player->equipped_heavy_items[equip_target] = item;
 }
 
 /******************************************************************************
@@ -3320,7 +3296,7 @@ void init_player(void)
   }
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    init_item(g_player->heavy_items[i], NONE);
+    init_heavy_item(g_player->heavy_items[i], NONE);
   }
   for (i = 0; i < NUM_EQUIP_TARGETS; ++i)
   {
@@ -3328,8 +3304,8 @@ void init_player(void)
   }
   add_item_to_inventory(DAGGER);
   add_item_to_inventory(ROBE);
-  equip_heavy_item(0);
-  equip_heavy_item(1);
+  equip_heavy_item(g_player->heavy_items[0]);
+  equip_heavy_item(g_player->heavy_items[1]);
 }
 
 /******************************************************************************
@@ -3348,9 +3324,9 @@ void deinit_player(void)
 
   if (g_player != NULL)
   {
-    for (i = 0; i < PLAYER_INVENTORY_SIZE; ++i)
+    for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
     {
-      free(g_player->inventory[i]);
+      free(g_player->heavy_items[i]);
     }
     free(g_player);
     g_player = NULL;
@@ -3607,10 +3583,10 @@ void init_quest_map(void)
   {
     add_new_npc(ARCHMAGE, g_quest->ending_point);
   }
-  else if (g_quest->type == RECOVER_ITEM || g_quest->type == RESCUE)
+  /*else if (g_quest->type == RECOVER_ITEM || g_quest->type == RESCUE)
   {
     set_cell_type(g_quest->ending_point, QUEST_ITEM);
-  }
+  }*/
 }
 
 /******************************************************************************
@@ -3631,8 +3607,8 @@ void deinit_quest(void)
   if (g_quest != NULL)
   {
     // Reset relevant player data:
-    g_player->inventory[QUEST_ITEM]->n = 0;
-    g_player->inventory[KEY]->n        = 0;
+    //g_player->inventory[QUEST_ITEM]->n = 0;
+    //g_player->inventory[KEY]->n        = 0;
     g_player->stats[CURRENT_HEALTH]    = g_player->stats[MAX_HEALTH];
     g_player->stats[CURRENT_ENERGY]    = g_player->stats[MAX_ENERGY];
     for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
@@ -3821,7 +3797,7 @@ void init(void)
     {
       persist_read_data(STORAGE_KEY + i,
                         g_player->heavy_items[i],
-                        sizeof(item_t));
+                        sizeof(heavy_item_t));
     }
     persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS,
                       g_player,
@@ -3850,7 +3826,7 @@ void deinit(void)
   {
     persist_write_data(STORAGE_KEY + i,
                        g_player->heavy_items[i],
-                       sizeof(item_t));
+                       sizeof(heavy_item_t));
   }
   persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS,
                      g_player,

@@ -123,10 +123,12 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_LOCATION_TYPES 5
 
 // Cell types (for loot, an item type value is used):
-#define EMPTY       -1
-#define SOLID       -2
-#define CLOSED_DOOR -3
-#define LOCKED_DOOR -4
+#define QUEST_ITEM  -1
+#define CAPTIVE     -2
+#define EMPTY       -3
+#define SOLID       -4
+#define CLOSED_DOOR -5
+#define LOCKED_DOOR -6
 
 // Directions:
 #define NORTH          0
@@ -324,6 +326,7 @@ GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [2];
 int16_t g_game_mode,
         g_current_scroll,
+        g_current_selection,
         g_player_animation_mode;
 GPath *g_compass_path;
 quest_t *g_quest;
@@ -369,7 +372,6 @@ int16_t get_nth_item_type(const int16_t n);
 heavy_item_t *get_pointer_to_nth_item(const int16_t n);
 int16_t get_num_pebble_types_owned(void);
 int16_t get_num_heavy_items_owned(void);
-int16_t get_num_owned(const int16_t item_type);
 int16_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int16_t type);
 npc_t *get_npc_at(const GPoint cell);
@@ -445,8 +447,8 @@ void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
 void assign_minor_stats(int16_t *stats_array);
 void add_item_to_inventory(const int16_t item_type);
-void remove_item_from_inventory(const int16_t item_index);
-void equip(const int16_t item_index, const int16_t equip_target);
+void equip_pebble(const int16_t pebble_type);
+void equip_heavy_item(heavy_item_t *const item);
 void init_player(void);
 void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
