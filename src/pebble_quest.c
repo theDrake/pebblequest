@@ -979,6 +979,30 @@ npc_t *get_npc_at(const GPoint cell)
 }
 
 /******************************************************************************
+   Function: is_equipped
+
+Description: Determines whether a given heavy item is currently equipped.
+
+     Inputs: item - Pointer to the item of interest.
+
+    Outputs: "True" if the item is currently equipped.
+******************************************************************************/
+bool is_equipped(const heavy_item_t *const item)
+{
+  int16_t i;
+
+  for (i = 0; i < NUM_EQUIP_TARGETS; ++i)
+  {
+    if (g_player->equipped_heavy_items[i] == item)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/******************************************************************************
    Function: out_of_bounds
 
 Description: Determines whether a given set of cell coordinates lies outside
@@ -1263,14 +1287,16 @@ static void menu_draw_row_callback(GContext *ctx,
       strcat(title_str, " (");
       strcat_int(title_str, g_player->pebbles[item_type]);
       strcat(title_str, ")");
-      if (equipped_pebble == item_type)
+      if (g_player->equipped_pebble == item_type)
       {
         strcat(subtitle_str, "Equipped");
       }
     }
     else // Heavy items:
     {
-      g_player->heavy_items[n];
+      n = cell_index->row - (g_game_mode == INVENTORY_MODE ? 0 :
+                             get_num_pebble_types_owned());
+      item = g_player->heavy_items[n];
       if (item->infused_pebble != NONE)
       {
         strcat_magic_type(title_str, item->infused_pebble);
@@ -1365,7 +1391,8 @@ void menu_select_callback(MenuLayer *menu_layer,
     }
     else
     {
-      equip_heavy_item(cell_index->row - NUM_PEBBLE_TYPES);
+      equip_heavy_item(g_player->heavy_items[cell_index->row -
+                                               NUM_PEBBLE_TYPES]);
     }
   }
   else if (g_game_mode == PEBBLE_OPTIONS_MODE)
@@ -2746,7 +2773,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       // If we've found an NPC or the attack isn't ranged, we're done:
       if (npc != NULL ||
           (g_player->equipped_pebble == NONE &&
-           g_player->equipped_heavy_items[RIGHT_HAND] != BOW))
+           g_player->equipped_heavy_items[RIGHT_HAND]->type != BOW))
       {
         break;
       }
@@ -3789,7 +3816,7 @@ void init(void)
   g_player = malloc(sizeof(player_t));
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    g_player->heavy_items[i] = malloc(sizeof(item_t));
+    g_player->heavy_items[i] = malloc(sizeof(heavy_item_t));
   }
   if (persist_exists(STORAGE_KEY))
   {

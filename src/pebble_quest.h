@@ -375,6 +375,7 @@ int16_t get_num_heavy_items_owned(void);
 int16_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int16_t type);
 npc_t *get_npc_at(const GPoint cell);
+bool is_equipped(const heavy_item_t *const item);
 bool out_of_bounds(const GPoint cell);
 bool occupiable(const GPoint cell);
 bool touching(const GPoint cell, const GPoint cell_2);
