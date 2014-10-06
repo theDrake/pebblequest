@@ -34,21 +34,21 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Player- and NPC-related Constants
 ******************************************************************************/
 
-#define DEFAULT_BASE_STAT_VALUE         1
-#define DEFAULT_PHYSICAL_POWER          10
-#define DEFAULT_PHYSICAL_DEFENSE        10
-#define DEFAULT_MAGICAL_POWER           10
-#define DEFAULT_MAGICAL_DEFENSE         10
-#define DEFAULT_SPEED                   30
-#define DEFAULT_MAX_HEALTH              30
-#define DEFAULT_MAX_ENERGY              30
-#define DEFAULT_STAT_BOOST              5
-#define NUM_PLAYER_ANIMATIONS           2 // No. of steps in the player's attack animation.
-#define HEALTH_RECOVERY_RATE            1 // Health per second.
-#define ENERGY_RECOVERY_RATE            1 // Energy per second.
-#define MIN_DAMAGE                      2
-#define MIN_ENERGY_LOSS_PER_ACTION      -2
-#define MAX_NPCS_AT_ONE_TIME            2
+#define DEFAULT_BASE_STAT_VALUE    1
+#define DEFAULT_PHYSICAL_POWER     10
+#define DEFAULT_PHYSICAL_DEFENSE   10
+#define DEFAULT_MAGICAL_POWER      10
+#define DEFAULT_MAGICAL_DEFENSE    10
+#define DEFAULT_SPEED              30
+#define DEFAULT_MAX_HEALTH         30
+#define DEFAULT_MAX_ENERGY         30
+#define DEFAULT_STAT_BOOST         5
+#define NUM_PLAYER_ANIMATIONS      2 // No. of steps in the player's attack animation.
+#define HEALTH_RECOVERY_RATE       1 // Health per second.
+#define ENERGY_RECOVERY_RATE       1 // Energy per second.
+#define MIN_DAMAGE                 2
+#define MIN_ENERGY_LOSS_PER_ACTION -2
+#define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
 #define ARCHMAGE        0
@@ -138,12 +138,12 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_DIRECTIONS 4
 
 // Other:
-#define MAP_WIDTH            15
-#define MAP_HEIGHT           MAP_WIDTH
-#define RANDOM_POINT_NORTH   GPoint(rand() % MAP_WIDTH, 0)
-#define RANDOM_POINT_SOUTH   GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
-#define RANDOM_POINT_EAST    GPoint(MAP_WIDTH - 1, rand() % MAP_HEIGHT)
-#define RANDOM_POINT_WEST    GPoint(0, rand() % MAP_HEIGHT)
+#define MAP_WIDTH          15
+#define MAP_HEIGHT         MAP_WIDTH
+#define RANDOM_POINT_NORTH GPoint(rand() % MAP_WIDTH, 0)
+#define RANDOM_POINT_SOUTH GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
+#define RANDOM_POINT_EAST  GPoint(MAP_WIDTH - 1, rand() % MAP_HEIGHT)
+#define RANDOM_POINT_WEST  GPoint(0, rand() % MAP_HEIGHT)
 
 /******************************************************************************
   Scroll-related Constants
@@ -164,29 +164,29 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Pebble- and Item-related Constants
 ******************************************************************************/
 
-#define NONE                      -1
-#define PEBBLE_OF_FIRE            0
-#define PEBBLE_OF_ICE             1
-#define PEBBLE_OF_LIGHTNING       2
-#define PEBBLE_OF_LIFE            3
-#define PEBBLE_OF_DEATH           4
-#define PEBBLE_OF_LIGHT           5
-#define PEBBLE_OF_DARKNESS        6
-#define DAGGER                    7
-#define STAFF                     8
-#define SWORD                     9
-#define MACE                      10
-#define AXE                       11
-#define FLAIL                     12
-#define BOW                       13
-#define SHIELD                    14
-#define ROBE                      15
-#define HEAVY_ARMOR               16
-#define LIGHT_ARMOR               17
-#define NUM_PEBBLE_TYPES          7
-#define NUM_HEAVY_ITEM_TYPES      11 // Excludes Pebbles.
-#define FIRST_HEAVY_ITEM          DAGGER
-#define MAX_HEAVY_ITEMS           5
+#define NONE                 -1
+#define PEBBLE_OF_FIRE       0
+#define PEBBLE_OF_ICE        1
+#define PEBBLE_OF_LIGHTNING  2
+#define PEBBLE_OF_LIFE       3
+#define PEBBLE_OF_DEATH      4
+#define PEBBLE_OF_LIGHT      5
+#define PEBBLE_OF_DARKNESS   6
+#define DAGGER               7
+#define STAFF                8
+#define SWORD                9
+#define MACE                 10
+#define AXE                  11
+#define FLAIL                12
+#define BOW                  13
+#define SHIELD               14
+#define ROBE                 15
+#define HEAVY_ARMOR          16
+#define LIGHT_ARMOR          17
+#define NUM_PEBBLE_TYPES     7
+#define NUM_HEAVY_ITEM_TYPES 11 // Excludes Pebbles.
+#define FIRST_HEAVY_ITEM     DAGGER
+#define MAX_HEAVY_ITEMS      5
 
 // Equip targets (i.e., places where an item may be equipped):
 #define BODY              0

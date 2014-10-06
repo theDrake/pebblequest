@@ -837,11 +837,11 @@ int16_t get_nth_item_type(const int16_t n)
   {
     if (g_player->heavy_items[i]->type != NONE && ++item_count == n)
     {
-      break;
+      return g_player->heavy_items[i]->type;
     }
   }
 
-  return i;
+  return NONE;
 }
 
 /******************************************************************************
@@ -2895,7 +2895,7 @@ Description: The scroll window's single-click handler for the "select" button.
 ******************************************************************************/
 void scroll_select_single_click(ClickRecognizerRef recognizer, void *context)
 {
-  window_stack_pop(ANIMATED);
+  window_stack_pop(NOT_ANIMATED);
 }
 
 /******************************************************************************
@@ -3835,7 +3835,7 @@ void init(void)
   {
     init_player();
   }
-  set_game_mode(MAIN_MENU_MODE);
+  show_window(g_menu_window, NOT_ANIMATED);
 }
 
 /******************************************************************************
