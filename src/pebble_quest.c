@@ -2913,6 +2913,57 @@ void scroll_click_config_provider(void *context)
 }
 
 /******************************************************************************
+   Function: menu_back_single_click
+
+Description: The menu window's single-click handler for the "back" button.
+
+     Inputs: recognizer - The click recognizer.
+             context    - Pointer to the associated context.
+
+    Outputs: None.
+******************************************************************************/
+void menu_back_single_click(ClickRecognizerRef recognizer, void *context)
+{
+  if (g_game_mode == MAIN_MENU_MODE)
+  {
+    window_stack_pop();
+  }
+  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
+  {
+    set_game_mode(INVENTORY_MODE);
+  }
+  else if (g_game_mode == PEBBLE_INFUSION_MODE)
+  {
+    set_game_mode(PEBBLE_OPTIONS_MODE);
+  }
+  else if ((g_game_mode == LOOT_MODE         ||
+            g_game_mode == REPLACE_ITEM_MODE ||
+            g_game_mode == LEVEL_UP_MODE) &&
+           g_quest != NULL)
+  {
+    set_game_mode(ACTIVE_MODE);
+  }
+  else // INVENTORY_MODE, SHOW_STATS_MODE, etc.
+  {
+    set_game_mode(MAIN_MENU_MODE);
+  }
+}
+
+/******************************************************************************
+   Function: menu_click_config_provider
+
+Description: Button-click configurations for the menu window.
+
+     Inputs: context - Pointer to the associated context.
+
+    Outputs: None.
+******************************************************************************/
+void menu_click_config_provider(void *context)
+{
+  window_single_click_subscribe(BUTTON_ID_BACK, menu_back_single_click);
+}
+
+/******************************************************************************
    Function: tick_handler
 
 Description: Handles changes to the game world every second while in active
@@ -3665,7 +3716,7 @@ Description: Initializes the scroll window.
 ******************************************************************************/
 void init_scroll(void)
 {
-  g_scroll_window = window_create();
+  g_scroll_window       = window_create();
   g_scroll_scroll_layer = scroll_layer_create(FULL_SCREEN_FRAME);
   scroll_layer_set_click_config_onto_window(g_scroll_scroll_layer,
                                             g_scroll_window);
@@ -3768,6 +3819,9 @@ void init_menu_window(void)
     .select_click      = menu_select_callback,
   });
   menu_layer_set_click_config_onto_window(g_menu_layer, g_menu_window);
+  window_set_click_config_provider(g_menu_window,
+                                   (ClickConfigProvider)
+                                     menu_click_config_provider);
   layer_add_child(window_get_root_layer(g_menu_window),
                   menu_layer_get_layer(g_menu_layer));
 }

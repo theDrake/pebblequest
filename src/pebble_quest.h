@@ -440,6 +440,8 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 void graphics_click_config_provider(void *context);
 void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
 void scroll_click_config_provider(void *context);
+void menu_back_single_click(ClickRecognizerRef recognizer, void *context);
+void menu_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
 void strcat_item_name(char *dest_str, const int16_t item_type);
 void strcat_magic_type(char *dest_str, const int16_t magic_type);
