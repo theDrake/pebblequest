@@ -1013,17 +1013,7 @@ Description: Determines whether a given heavy item is currently equipped.
 ******************************************************************************/
 bool is_equipped(const heavy_item_t *const item)
 {
-  int16_t i;
-
-  for (i = 0; i < NUM_EQUIP_TARGETS; ++i)
-  {
-    if (g_player->equipped_heavy_items[i] == item)
-    {
-      return true;
-    }
-  }
-
-  return false;
+  return g_player->equipped_heavy_items[get_equip_target(item->type)] == item;
 }
 
 /******************************************************************************
@@ -1251,7 +1241,7 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
-  int16_t n, item_type;
+  int16_t item_type;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
   heavy_item_t *item;
@@ -1449,13 +1439,13 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else // if (g_game_mode == REPLACE_ITEM_MODE)
   {
-    // Is the item being replaced currently equipped?
+    // Unequip the old item, unless the new item has the same equip target:
     equip_target =
       get_equip_target(g_player->heavy_items[cell_index->row]->type);
-    if (g_player-> g_player->equipped_heavy_items[equip_target] &&
+    if (g_player->equipped_heavy_items[equip_target] ==
+          g_player->heavy_items[cell_index->row] &&
         equip_target != get_equip_target(g_current_selection))
     {
-      // Unequip it, unless the new item has the same equip target:
       g_player->equipped_heavy_items[equip_target] = NULL;
     }
 
