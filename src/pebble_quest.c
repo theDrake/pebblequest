@@ -1003,20 +1003,6 @@ npc_t *get_npc_at(const GPoint cell)
 }
 
 /******************************************************************************
-   Function: is_equipped
-
-Description: Determines whether a given heavy item is currently equipped.
-
-     Inputs: item - Pointer to the item of interest.
-
-    Outputs: "True" if the item is currently equipped.
-******************************************************************************/
-bool is_equipped(const heavy_item_t *const item)
-{
-  return g_player->equipped_heavy_items[get_equip_target(item->type)] == item;
-}
-
-/******************************************************************************
    Function: out_of_bounds
 
 Description: Determines whether a given set of cell coordinates lies outside
@@ -1321,7 +1307,7 @@ static void menu_draw_row_callback(GContext *ctx,
       {
         strcat_magic_type(title_str, item->infused_pebble);
       }
-      if (is_equipped(item))
+      if (g_player->equipped_heavy_items[get_equip_target(item->type)] == item)
       {
         strcat(subtitle_str, "Equipped");
       }
@@ -3772,7 +3758,7 @@ Description: Initializes the menu window.
 void init_menu_window(void)
 {
   g_menu_window = window_create();
-  g_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
+  g_menu_layer  = menu_layer_create(FULL_SCREEN_FRAME);
   menu_layer_set_callbacks(g_menu_layer, NULL, (MenuLayerCallbacks)
   {
     .get_header_height = menu_get_header_height_callback,
@@ -3815,7 +3801,8 @@ void init(void)
   int16_t i;
 
   srand(time(NULL));
-  g_quest = NULL;
+  g_game_mode = MAIN_MENU_MODE;
+  g_quest     = NULL;
   init_menu_window();
   init_scroll();
   init_graphics();
@@ -3824,7 +3811,6 @@ void init(void)
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
-  set_game_mode(MAIN_MENU_MODE);
   app_focus_service_subscribe(app_focus_handler);
 
   // Check for saved data and initialize the player struct:
@@ -3849,6 +3835,7 @@ void init(void)
   {
     init_player();
   }
+  set_game_mode(MAIN_MENU_MODE);
 }
 
 /******************************************************************************
