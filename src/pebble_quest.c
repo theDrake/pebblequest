@@ -2926,7 +2926,7 @@ void menu_back_single_click(ClickRecognizerRef recognizer, void *context)
 {
   if (g_game_mode == MAIN_MENU_MODE)
   {
-    window_stack_pop();
+    window_stack_pop(ANIMATED);
   }
   else if (g_game_mode == PEBBLE_OPTIONS_MODE)
   {
