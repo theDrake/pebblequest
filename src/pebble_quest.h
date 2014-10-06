@@ -172,20 +172,20 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define PEBBLE_OF_DEATH           4
 #define PEBBLE_OF_LIGHT           5
 #define PEBBLE_OF_DARKNESS        6
-#define ROBE                      7
-#define DAGGER                    8
-#define STAFF                     9
-#define LIGHT_ARMOR               10
-#define SHIELD                    11
-#define SWORD                     12
-#define MACE                      13
-#define HEAVY_ARMOR               14
-#define AXE                       15
-#define FLAIL                     16
-#define BOW                       17
+#define DAGGER                    7
+#define STAFF                     8
+#define SWORD                     9
+#define MACE                      10
+#define AXE                       11
+#define FLAIL                     12
+#define BOW                       13
+#define SHIELD                    14
+#define ROBE                      15
+#define HEAVY_ARMOR               16
+#define LIGHT_ARMOR               17
 #define NUM_PEBBLE_TYPES          7
 #define NUM_HEAVY_ITEM_TYPES      11 // Excludes Pebbles.
-#define FIRST_HEAVY_ITEM          ROBE
+#define FIRST_HEAVY_ITEM          DAGGER
 #define MAX_HEAVY_ITEMS           5
 
 // Equip targets (i.e., places where an item may be equipped):
@@ -372,6 +372,7 @@ int16_t get_nth_item_type(const int16_t n);
 heavy_item_t *get_pointer_to_nth_item(const int16_t n);
 int16_t get_num_pebble_types_owned(void);
 int16_t get_num_heavy_items_owned(void);
+int16_t get_equip_target(const int16_t item_type);
 int16_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int16_t type);
 npc_t *get_npc_at(const GPoint cell);
@@ -448,7 +449,6 @@ void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
 void assign_minor_stats(int16_t *stats_array);
 void add_item_to_inventory(const int16_t item_type);
-void equip_pebble(const int16_t pebble_type);
 void equip_heavy_item(heavy_item_t *const item);
 void init_player(void);
 void deinit_player(void);

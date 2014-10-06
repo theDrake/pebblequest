@@ -918,6 +918,30 @@ int16_t get_num_heavy_items_owned(void)
 }
 
 /******************************************************************************
+   Function: get_equip_target
+
+Description: Given an item type, returns that item's equip target (RIGHT_HAND,
+             LEFT_HAND, or BODY).
+
+     Inputs: item_type - Integer representing the item type of interest.
+
+    Outputs: Integer representing the item's equip target.
+******************************************************************************/
+int16_t get_equip_target(const int16_t item_type)
+{
+  if (item_type < SHIELD)
+  {
+    return RIGHT_HAND;
+  }
+  else if (item_type == SHIELD)
+  {
+    return LEFT_HAND;
+  }
+
+  return BODY;
+}
+
+/******************************************************************************
    Function: get_cell_type
 
 Description: Returns the type of cell at a given set of coordinates.
@@ -1276,12 +1300,15 @@ static void menu_draw_row_callback(GContext *ctx,
   {
     strcat_item_name(title_str, get_cell_type(g_player->position));
   }
-  else // INVENTORY_MODE, PEBBLE_INFUSION_MODE, REPLACE_ITEM_MODE
+  else // INVENTORY_MODE, PEBBLE_INFUSION_MODE, or REPLACE_ITEM_MODE
   {
-    n = cell_index->row + (g_game_mode == INVENTORY_MODE ? 0 :
-                           get_num_pebble_types_owned());
-    item_type = get_nth_item_type(n);
+    item_type = get_nth_item_type(cell_index->row -
+                                  (g_game_mode != INVENTORY_MODE ?
+                                   get_num_pebble_types_owned()  :
+                                   0));
     strcat_item_name(title_str, item_type);
+
+    // Pebbles (only relevant in INVENTORY_MODE):
     if (item_type < FIRST_HEAVY_ITEM)
     {
       strcat(title_str, " (");
@@ -1292,11 +1319,14 @@ static void menu_draw_row_callback(GContext *ctx,
         strcat(subtitle_str, "Equipped");
       }
     }
-    else // Heavy items:
+
+    // Heavy items:
+    else
     {
-      n = cell_index->row - (g_game_mode == INVENTORY_MODE ? 0 :
-                             get_num_pebble_types_owned());
-      item = g_player->heavy_items[n];
+      item = g_player->heavy_items[cell_index->row -
+                                   (g_game_mode == INVENTORY_MODE ?
+                                    get_num_pebble_types_owned()  :
+                                    0)];
       if (item->infused_pebble != NONE)
       {
         strcat_magic_type(title_str, item->infused_pebble);
@@ -1353,6 +1383,7 @@ void menu_select_callback(MenuLayer *menu_layer,
           {
             init_quest(rand() % NUM_RANDOM_QUEST_TYPES);
           }
+          set_game_mode(ACTIVE_MODE);
           g_current_scroll = g_quest->type;
           set_game_mode(SCROLL_MODE);
         }
@@ -1375,7 +1406,8 @@ void menu_select_callback(MenuLayer *menu_layer,
     {
       g_player->stats[cell_index->row] =
         get_boosted_stat_value(cell_index->row, 1);
-      set_game_mode(ACTIVE_MODE);
+      g_quest == NULL ? set_game_mode(MAIN_MENU_MODE) :
+                        set_game_mode(ACTIVE_MODE);
     }
   }
   else if (g_game_mode == LOOT_MODE)
@@ -1387,6 +1419,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   {
     if (cell_index->row < FIRST_HEAVY_ITEM)
     {
+      g_current_selection = cell_index->row;
       set_game_mode(PEBBLE_OPTIONS_MODE);
     }
     else
@@ -1410,9 +1443,29 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else if (g_game_mode == PEBBLE_INFUSION_MODE)
   {
+    if (g_player->heavy_items[cell_index->row]->infused_pebble == NONE)
+    {
+      g_player->heavy_items[cell_index->row]->infused_pebble =
+        g_current_selection;
+      set_game_mode(INVENTORY_MODE);
+    }
   }
-  else if (g_game_mode == REPLACE_ITEM_MODE)
+  else // if (g_game_mode == REPLACE_ITEM_MODE)
   {
+    // Is the item being replaced currently equipped?
+    equip_target =
+      get_equip_target(g_player->heavy_items[cell_index->row]->type);
+    if (g_player-> g_player->equipped_heavy_items[equip_target] &&
+        equip_target != get_equip_target(g_current_selection))
+    {
+      // Unequip it, unless the new item has the same equip target:
+      g_player->equipped_heavy_items[equip_target] = NULL;
+    }
+
+    // Reinitialize the heavy item struct, then return to gameplay:
+    init_heavy_item(g_player->heavy_items[cell_index->row],
+                    g_current_selection);
+    set_game_mode(ACTIVE_MODE);
   }
 }
 
@@ -1470,7 +1523,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   {
     return get_num_pebble_types_owned() + get_num_heavy_items_owned();
   }
-  else // PEBBLE_INFUSION_MODE || REPLACE_ITEM_MODE
+  else // PEBBLE_INFUSION_MODE or REPLACE_ITEM_MODE
   {
     return get_num_heavy_items_owned();
   }
@@ -3246,24 +3299,6 @@ void add_item_to_inventory(const int16_t item_type)
 }
 
 /******************************************************************************
-   Function: equip_pebble
-
-Description: Equips a given Pebble in the player's right hand.
-
-     Inputs: pebble_type - Type of Pebble to be equipped.
-
-    Outputs: None.
-******************************************************************************/
-void equip_pebble(const int16_t pebble_type)
-{
-  // Unequip the currently-equipped weapon (if any):
-  g_player->equipped_heavy_items[RIGHT_HAND] = NULL;
-
-  // Equip the Pebble:
-  g_player->equipped_pebble = pebble_type;
-}
-
-/******************************************************************************
    Function: equip_heavy_item
 
 Description: Equips a given heavy item to its appropriate equip target.
@@ -3274,22 +3309,13 @@ Description: Equips a given heavy item to its appropriate equip target.
 ******************************************************************************/
 void equip_heavy_item(heavy_item_t *const item)
 {
-  int16_t equip_target = RIGHT_HAND;
+  int16_t equip_target = get_equip_target(item->type);
 
-  // Check for an unusual equip target:
-  if (item->type == SHIELD)
+  // If the item equips to the right hand, unequip any equipped Pebble:
+  if (equip_target == RIGHT_HAND)
   {
-    equip_target = LEFT_HAND;
+    g_player->equipped_pebble = NONE;
   }
-  else if (item->type == ROBE        ||
-           item->type == LIGHT_ARMOR ||
-           item->type == HEAVY_ARMOR)
-  {
-    equip_target = BODY;
-  }
-
-  // Unequip the currently-equipped Pebble (if any):
-  g_player->equipped_pebble = NONE;
 
   // Equip the heavy item:
   g_player->equipped_heavy_items[equip_target] = item;
