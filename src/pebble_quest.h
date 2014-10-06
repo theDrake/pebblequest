@@ -312,12 +312,18 @@ typedef struct Quest {
   Global Variables
 ******************************************************************************/
 
-Window *g_menu_window,
+Window *g_main_menu_window,
+       *g_ad_hoc_menu_window,
+       *g_options_menu_window,
+       *g_heavy_items_menu_window,
        *g_scroll_window,
        *g_graphics_window;
 InverterLayer *g_inverter_layer;
 ScrollLayer *g_scroll_scroll_layer;
-MenuLayer *g_menu_layer;
+MenuLayer *g_main_menu_menu_layer,
+          *g_ad_hoc_menu_menu_layer,
+          *g_options_menu_menu_layer,
+          *g_heavy_items_menu_menu_layer;
 TextLayer *g_scroll_text_layer;
 AppTimer *g_player_timer,
          *g_flash_timer;
@@ -440,8 +446,6 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 void graphics_click_config_provider(void *context);
 void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
 void scroll_click_config_provider(void *context);
-void menu_back_single_click(ClickRecognizerRef recognizer, void *context);
-void menu_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
 void strcat_item_name(char *dest_str, const int16_t item_type);
 void strcat_magic_type(char *dest_str, const int16_t magic_type);
@@ -463,8 +467,8 @@ void init_scroll(void);
 void deinit_scroll(void);
 void init_graphics(void);
 void deinit_graphics(void);
-void init_menu(void);
-void deinit_menu(void);
+void init_menu_windows(void);
+void deinit_menu_windows(void);
 void init(void);
 void deinit(void);
 int main(void);

@@ -33,15 +33,28 @@ void set_game_mode(const int16_t mode)
   {
     show_scroll(g_current_scroll);
   }
-  else
+  else if (g_game_mode == MAIN_MENU_MODE)
   {
-    menu_layer_reload_data(g_menu_layer);
+    show_window(g_main_menu_window, NOT_ANIMATED);
+  }
+  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
+  {
+    show_window(g_options_menu_window, ANIMATED);
+  }
+  else if (g_game_mode == PEBBLE_INFUSION_MODE ||
+           g_game_mode == REPLACE_ITEM_MODE)
+  {
+    show_window(g_heavy_items_menu_window, ANIMATED);
+  }
+  else // INVENTORY_MODE, SHOW_STATS_MODE, LOOT_MODE, or LEVEL_UP_MODE
+  {
+    show_window(g_ad_hoc_menu_window, ANIMATED);
+  }
+    /*menu_layer_reload_data(g_menu_layer);
     menu_layer_set_selected_index(g_menu_layer,
                                   (MenuIndex) {0, 0},
                                   MenuRowAlignCenter,
-                                  NOT_ANIMATED);
-    show_window(g_menu_window, NOT_ANIMATED);
-  }
+                                  NOT_ANIMATED);*/
 }
 
 /******************************************************************************
@@ -321,7 +334,7 @@ void adjust_player_current_health(const int16_t amount)
   }
   else if (g_player->stats[CURRENT_HEALTH] <= 0)
   {
-    //show_window(g_menu_layer_window, NOT_ANIMATED);
+    //show_window(g_menu_window, NOT_ANIMATED);
     show_scroll(DEATH_SCROLL);
   }
 }
@@ -1179,31 +1192,39 @@ static void menu_draw_header_callback(GContext *ctx,
                                       uint16_t section_index,
                                       void *data)
 {
-  char header_str[MENU_HEADER_STR_LEN + 1];
+  char header_str[MENU_HEADER_STR_LEN + 1] = "";
 
   if (g_game_mode == MAIN_MENU_MODE)
   {
-    strcpy(header_str, "Main Menu");
+    strcat(header_str, "Main Menu");
   }
   else if (g_game_mode == INVENTORY_MODE)
   {
-    strcpy(header_str, "Inventory");
+    strcat(header_str, "Inventory");
   }
   else if (g_game_mode == PEBBLE_OPTIONS_MODE)
   {
-    strcpy(header_str, "What do you want to do?");
+    strcat_item_name(header_str, g_current_selection);
   }
   else if (g_game_mode == PEBBLE_INFUSION_MODE)
   {
-    strcpy(header_str, "Infuse which item?");
+    strcat(header_str, "Which item?");
   }
   else if (g_game_mode == LOOT_MODE)
   {
-    strcpy(header_str, "Loot");
+    strcat(header_str, "Loot");
+  }
+  else if (g_game_mode == REPLACE_ITEM_MODE)
+  {
+    strcat(header_str, "Replace an item?");
+  }
+  else if (g_game_mode == SHOW_STATS_MODE)
+  {
+    strcat(header_str, "Stats");
   }
   else // if (g_game_mode == LEVEL_UP_MODE)
   {
-    strcpy(header_str, "Level ");
+    strcat(header_str, "Level ");
     strcat_int(header_str, g_player->level);
     strcat(header_str, " reached!");
   }
@@ -2913,57 +2934,6 @@ void scroll_click_config_provider(void *context)
 }
 
 /******************************************************************************
-   Function: menu_back_single_click
-
-Description: The menu window's single-click handler for the "back" button.
-
-     Inputs: recognizer - The click recognizer.
-             context    - Pointer to the associated context.
-
-    Outputs: None.
-******************************************************************************/
-void menu_back_single_click(ClickRecognizerRef recognizer, void *context)
-{
-  if (g_game_mode == MAIN_MENU_MODE)
-  {
-    window_stack_pop(ANIMATED);
-  }
-  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
-  {
-    set_game_mode(INVENTORY_MODE);
-  }
-  else if (g_game_mode == PEBBLE_INFUSION_MODE)
-  {
-    set_game_mode(PEBBLE_OPTIONS_MODE);
-  }
-  else if ((g_game_mode == LOOT_MODE         ||
-            g_game_mode == REPLACE_ITEM_MODE ||
-            g_game_mode == LEVEL_UP_MODE) &&
-           g_quest != NULL)
-  {
-    set_game_mode(ACTIVE_MODE);
-  }
-  else // INVENTORY_MODE, SHOW_STATS_MODE, etc.
-  {
-    set_game_mode(MAIN_MENU_MODE);
-  }
-}
-
-/******************************************************************************
-   Function: menu_click_config_provider
-
-Description: Button-click configurations for the menu window.
-
-     Inputs: context - Pointer to the associated context.
-
-    Outputs: None.
-******************************************************************************/
-void menu_click_config_provider(void *context)
-{
-  window_single_click_subscribe(BUTTON_ID_BACK, menu_back_single_click);
-}
-
-/******************************************************************************
    Function: tick_handler
 
 Description: Handles changes to the game world every second while in active
@@ -3798,19 +3768,20 @@ void deinit_graphics(void)
 }
 
 /******************************************************************************
-   Function: init_menu_window
+   Function: init_menu_windows
 
-Description: Initializes the menu window.
+Description: Initializes the menu windows.
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void init_menu_window(void)
+void init_menu_windows(void)
 {
-  g_menu_window = window_create();
-  g_menu_layer  = menu_layer_create(FULL_SCREEN_FRAME);
-  menu_layer_set_callbacks(g_menu_layer, NULL, (MenuLayerCallbacks)
+  // Main menu window:
+  g_main_menu_window     = window_create();
+  g_main_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
+  menu_layer_set_callbacks(g_main_menu_menu_layer, NULL, (MenuLayerCallbacks)
   {
     .get_header_height = menu_get_header_height_callback,
     .draw_header       = menu_draw_header_callback,
@@ -3818,27 +3789,83 @@ void init_menu_window(void)
     .draw_row          = menu_draw_row_callback,
     .select_click      = menu_select_callback,
   });
-  menu_layer_set_click_config_onto_window(g_menu_layer, g_menu_window);
-  window_set_click_config_provider(g_menu_window,
-                                   (ClickConfigProvider)
-                                     menu_click_config_provider);
-  layer_add_child(window_get_root_layer(g_menu_window),
-                  menu_layer_get_layer(g_menu_layer));
+  layer_add_child(window_get_root_layer(g_main_menu_window),
+                  menu_layer_get_layer(g_main_menu_menu_layer));
+  menu_layer_set_click_config_onto_window(g_main_menu_menu_layer,
+                                          g_main_menu_window);
+
+  // Ad hoc menu window:
+  g_ad_hoc_menu_window     = window_create();
+  g_ad_hoc_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
+  menu_layer_set_callbacks(g_ad_hoc_menu_menu_layer, NULL, (MenuLayerCallbacks)
+  {
+    .get_header_height = menu_get_header_height_callback,
+    .draw_header       = menu_draw_header_callback,
+    .get_num_rows      = menu_get_num_rows_callback,
+    .draw_row          = menu_draw_row_callback,
+    .select_click      = menu_select_callback,
+  });
+  layer_add_child(window_get_root_layer(g_ad_hoc_menu_window),
+                  menu_layer_get_layer(g_ad_hoc_menu_menu_layer));
+  menu_layer_set_click_config_onto_window(g_ad_hoc_menu_menu_layer,
+                                          g_ad_hoc_menu_window);
+
+  // Options menu window:
+  g_options_menu_window     = window_create();
+  g_options_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
+  menu_layer_set_callbacks(g_options_menu_menu_layer,
+                           NULL,
+                           (MenuLayerCallbacks)
+  {
+    .get_header_height = menu_get_header_height_callback,
+    .draw_header       = menu_draw_header_callback,
+    .get_num_rows      = menu_get_num_rows_callback,
+    .draw_row          = menu_draw_row_callback,
+    .select_click      = menu_select_callback,
+  });
+  layer_add_child(window_get_root_layer(g_options_menu_window),
+                  menu_layer_get_layer(g_options_menu_menu_layer));
+  menu_layer_set_click_config_onto_window(g_options_menu_menu_layer,
+                                          g_options_menu_window);
+
+  // Heavy items menu window:
+  g_heavy_items_menu_window     = window_create();
+  g_heavy_items_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
+  menu_layer_set_callbacks(g_heavy_items_menu_menu_layer,
+                           NULL,
+                           (MenuLayerCallbacks)
+  {
+    .get_header_height = menu_get_header_height_callback,
+    .draw_header       = menu_draw_header_callback,
+    .get_num_rows      = menu_get_num_rows_callback,
+    .draw_row          = menu_draw_row_callback,
+    .select_click      = menu_select_callback,
+  });
+  layer_add_child(window_get_root_layer(g_heavy_items_menu_window),
+                  menu_layer_get_layer(g_heavy_items_menu_menu_layer));
+  menu_layer_set_click_config_onto_window(g_heavy_items_menu_menu_layer,
+                                          g_heavy_items_menu_window);
 }
 
 /******************************************************************************
-   Function: deinit_menu_window
+   Function: deinit_menu_windows
 
-Description: Deinitializes the menu window.
+Description: Deinitializes the menu windows.
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void deinit_menu_window(void)
+void deinit_menu_windows(void)
 {
-  menu_layer_destroy(g_menu_layer);
-  window_destroy(g_menu_window);
+  menu_layer_destroy(g_main_menu_menu_layer);
+  window_destroy(g_main_menu_window);
+  menu_layer_destroy(g_ad_hoc_menu_menu_layer);
+  window_destroy(g_ad_hoc_menu_window);
+  menu_layer_destroy(g_options_menu_menu_layer);
+  window_destroy(g_options_menu_window);
+  menu_layer_destroy(g_heavy_items_menu_menu_layer);
+  window_destroy(g_heavy_items_menu_window);
 }
 
 /******************************************************************************
@@ -3857,7 +3884,7 @@ void init(void)
   srand(time(NULL));
   g_game_mode = MAIN_MENU_MODE;
   g_quest     = NULL;
-  init_menu_window();
+  init_menu_windows();
   init_scroll();
   init_graphics();
   init_wall_coords();
@@ -3889,7 +3916,7 @@ void init(void)
   {
     init_player();
   }
-  show_window(g_menu_window, NOT_ANIMATED);
+  show_window(g_main_menu_window, NOT_ANIMATED);
 }
 
 /******************************************************************************
@@ -3916,7 +3943,7 @@ void deinit(void)
                      sizeof(player_t));
   deinit_scroll();
   deinit_graphics();
-  deinit_menu_window();
+  deinit_menu_windows();
   deinit_quest();
   deinit_player();
 }
