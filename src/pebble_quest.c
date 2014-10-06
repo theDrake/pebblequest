@@ -1356,9 +1356,6 @@ void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data)
 {
-  int16_t n, item_type;
-  heavy_item_t *item;
-
   if (g_game_mode == MAIN_MENU_MODE)
   {
     switch (cell_index->row)
