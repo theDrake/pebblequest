@@ -1248,9 +1248,9 @@ static void menu_draw_row_callback(GContext *ctx,
                                    MenuIndex *cell_index,
                                    void *data)
 {
-  int16_t item_type;
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
+  int16_t item_type;
   heavy_item_t *item;
 
   if (g_game_mode == MAIN_MENU_MODE)
@@ -1265,7 +1265,7 @@ static void menu_draw_row_callback(GContext *ctx,
         strcat(title_str, "Character Stats");
         strcat(subtitle_str, "Strength, Agility...");
         break;
-      case 2:
+      default:
         strcat(title_str, "Inventory");
         strcat(subtitle_str, "Equip/infuse items.");
         break;
@@ -1391,20 +1391,17 @@ void menu_select_callback(MenuLayer *menu_layer,
       case 1: // Character Stats
         set_game_mode(SHOW_STATS_MODE);
         break;
-      case 2: // Inventory
+      default: // Inventory
         set_game_mode(INVENTORY_MODE);
         break;
     }
   }
   else if (g_game_mode == LEVEL_UP_MODE)
   {
-    if (g_player->stats[cell_index->row] < MAX_INT_VALUE)
-    {
-      g_player->stats[cell_index->row] =
-        get_boosted_stat_value(cell_index->row, 1);
-      g_quest == NULL ? set_game_mode(MAIN_MENU_MODE) :
-                        set_game_mode(ACTIVE_MODE);
-    }
+    g_player->stats[cell_index->row] = get_boosted_stat_value(cell_index->row,
+                                                              1);
+    g_quest == NULL ? set_game_mode(MAIN_MENU_MODE) :
+                      set_game_mode(ACTIVE_MODE);
   }
   else if (g_game_mode == LOOT_MODE)
   {
@@ -1421,7 +1418,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     else
     {
       equip_heavy_item(g_player->heavy_items[cell_index->row -
-                                               NUM_PEBBLE_TYPES]);
+                                               get_num_pebble_types_owned()]);
     }
   }
   else if (g_game_mode == PEBBLE_OPTIONS_MODE)
@@ -1514,6 +1511,10 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   else if (g_game_mode == LEVEL_UP_MODE)
   {
     return 3;
+  }
+  else if (g_game_mode == SHOW_STATS_MODE)
+  {
+    return 3; // To be increased later.
   }
   else if (g_game_mode == INVENTORY_MODE)
   {
