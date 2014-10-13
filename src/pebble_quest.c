@@ -1069,7 +1069,6 @@ void show_narration(const int16_t narration)
     case LEVEL_UP_NARRATION:
       strcpy(narration_str, "\nCongratulations!\nYou have reached Level ");
       strcat_int(narration_str, g_player->level);
-      strcat(narration_str, " reached")
       break;
     default: // case DEATH_NARRATION: (Total chars: 60~75)
       strcpy(narration_str, "Alas, you have fallen.\n\nLevel: ");

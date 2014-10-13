@@ -249,18 +249,18 @@ typedef struct HeavyItem {
 
 typedef struct NonPlayerCharacter {
   GPoint position;
-  int16_t type,
-          stats[NUM_CHARACTER_STATS],
-          status_effects[NUM_STATUS_EFFECTS];
+  uint16_t type,
+           stats[NUM_CHARACTER_STATS],
+           status_effects[NUM_STATUS_EFFECTS];
   struct NonPlayerCharacter *next;
 } __attribute__((__packed__)) npc_t;
 
 typedef struct PlayerCharacter {
   GPoint position;
   int16_t direction,
-          status_effects[NUM_STATUS_EFFECTS],
           equipped_pebble;
   uint16_t stats[NUM_CHARACTER_STATS],
+           status_effects[NUM_STATUS_EFFECTS],
            pebbles[NUM_PEBBLE_TYPES],
            num_pebbles_found,
            num_kills,
