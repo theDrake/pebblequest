@@ -4,9 +4,8 @@
      Author: David C. Drake (http://davidcdrake.com)
 
 Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
-             developed for the Pebble smartwatch (SDK 2.0). Copyright 2014,
-             David C. Drake. More information available online:
-             http://davidcdrake.com/pebblequest
+             developed for the Pebble smartwatch (SDK 2). Copyright 2014, David
+             C. Drake. More info online: http://davidcdrake.com/pebblequest
 ******************************************************************************/
 
 #ifndef PEBBLE_QUEST_H_
@@ -19,7 +18,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 ******************************************************************************/
 
 #define ACTIVE_MODE          0
-#define SCROLL_MODE          1
+#define NARRATION_MODE       1
 #define MAIN_MENU_MODE       2
 #define INVENTORY_MODE       3
 #define PEBBLE_OPTIONS_MODE  4
@@ -96,39 +95,14 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_STATUS_EFFECTS 7
 
 /******************************************************************************
-  Quest- and Map-related Constants
+  Location-related Constants
 ******************************************************************************/
 
-// Quest types:
-#define FIND_PEBBLE            0  // Find a legendary Pebble of Power!
-#define FIND_ITEM              1  // Find a valuable item.
-#define RECOVER_ITEM           2  // Find lost or stolen goods.
-#define ESCORT                 3  // Lead someone from point A to point B.
-#define RESCUE                 4  // Find captives and get them to safety.
-#define ASSASSINATE            5  // Kill a specific enemy.
-#define EXTERMINATE            6  // Kill all enemies.
-#define ESCAPE                 7  // You've been captured. Get out alive!
-#define MAIN_QUEST_1           8  // Find your first Pebble.
-#define MAIN_QUEST_2           9  // Find your seventh Pebble.
-#define MAIN_QUEST_3           10 // Answer the Archmage's summons.
-#define NUM_QUEST_TYPES        11
-#define NUM_RANDOM_QUEST_TYPES 7
-
-// Location types:
-#define DUNGEON            0
-#define TUNNEL             1
-#define TOWN               2
-#define CASTLE             3
-#define TOWER              4
-#define NUM_LOCATION_TYPES 5
-
 // Cell types (for loot, an item type value is used):
-#define QUEST_ITEM  -1
-#define CAPTIVE     -2
-#define EMPTY       -3
-#define SOLID       -4
-#define CLOSED_DOOR -5
-#define LOCKED_DOOR -6
+#define EMPTY       -1
+#define SOLID       -2
+#define CLOSED_DOOR -3
+#define LOCKED_DOOR -4
 
 // Directions:
 #define NORTH          0
@@ -146,19 +120,20 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define RANDOM_POINT_WEST  GPoint(0, rand() % MAP_HEIGHT)
 
 /******************************************************************************
-  Scroll-related Constants
+  Narration-related Constants
 ******************************************************************************/
 
-#define SCROLL_STR_LEN          240
-#define SCROLL_TEXT_LAYER_FRAME GRect(3, 0, SCREEN_WIDTH - 6, SCROLL_STR_LEN * 4)
-#define SCROLL_HEIGHT_OFFSET    10 // Ensures descenders (e.g., 'y') are fully visible.
-#define SCROLL_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
+#define NARRATION_STR_LEN          85
+#define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
+#define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 
-// Scroll types (quest scrolls are handled by quest type values):
-#define FAILURE_SCROLL   NUM_QUEST_TYPES
-#define VICTORY_SCROLL   (NUM_QUEST_TYPES + 1)
-#define DEATH_SCROLL     (NUM_QUEST_TYPES + 2)
-#define NUM_SCROLL_TYPES (NUM_QUEST_TYPES + 3)
+// Narration types:
+#define INTRO_NARRATION_1   0
+#define INTRO_NARRATION_2   1
+#define INTRO_NARRATION_3   2
+#define LEVEL_UP_NARRATION  3
+#define DEATH_NARRATION     4
+#define NUM_NARRATION_TYPES 5
 
 /******************************************************************************
   Pebble- and Item-related Constants
@@ -283,30 +258,28 @@ typedef struct NonPlayerCharacter {
 typedef struct PlayerCharacter {
   GPoint position;
   int16_t direction,
-          stats[NUM_CHARACTER_STATS],
           status_effects[NUM_STATUS_EFFECTS],
-          pebbles[NUM_PEBBLE_TYPES],
-          equipped_pebble,
-          num_pebbles_found,
-          exp_points,
-          level;
+          equipped_pebble;
+  uint16_t stats[NUM_CHARACTER_STATS],
+           pebbles[NUM_PEBBLE_TYPES],
+           num_pebbles_found,
+           num_kills,
+           exp_points,
+           level;
   heavy_item_t *heavy_items[MAX_HEAVY_ITEMS], // Clothing, armor, and weapons.
                *equipped_heavy_items[NUM_EQUIP_TARGETS];
 } __attribute__((__packed__)) player_t;
 
-typedef struct Quest {
-  int16_t type,
-          map[MAP_WIDTH][MAP_HEIGHT],
+typedef struct Location {
+  int16_t map[MAP_WIDTH][MAP_HEIGHT],
           entrance_direction,
           exit_direction,
-          primary_npc_type,
-          num_npcs,
-          kills;
+          primary_npc_type;
+  uint16_t depth;
   GPoint starting_point,
          ending_point;
   npc_t *npcs;
-  bool completed;
-} __attribute__((__packed__)) quest_t;
+} __attribute__((__packed__)) location_t;
 
 /******************************************************************************
   Global Variables
@@ -316,26 +289,25 @@ Window *g_main_menu_window,
        *g_ad_hoc_menu_window,
        *g_options_menu_window,
        *g_heavy_items_menu_window,
-       *g_scroll_window,
+       *g_narration_window,
        *g_graphics_window;
 InverterLayer *g_inverter_layer;
-ScrollLayer *g_scroll_scroll_layer;
 MenuLayer *g_main_menu_menu_layer,
           *g_ad_hoc_menu_menu_layer,
           *g_options_menu_menu_layer,
           *g_heavy_items_menu_menu_layer;
-TextLayer *g_scroll_text_layer;
+TextLayer *g_narration_text_layer;
 AppTimer *g_player_timer,
          *g_flash_timer;
 GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
 int16_t g_game_mode,
-        g_current_scroll,
+        g_current_narration,
         g_current_selection,
         g_player_animation_mode;
 GPath *g_compass_path;
-quest_t *g_quest;
+location_t *g_location;
 player_t *g_player;
 
 static const GPathInfo COMPASS_PATH_INFO = {
@@ -360,7 +332,6 @@ void damage_npc(npc_t *npc, const int16_t damage);
 void remove_npc(npc_t *npc);
 void adjust_player_current_health(const int16_t amount);
 void adjust_player_current_mp(const int16_t amount);
-void end_quest(void);
 void add_new_npc(const int16_t npc_type, const GPoint position);
 int16_t get_random_npc_type(void);
 GPoint get_npc_spawn_point(void);
@@ -385,7 +356,7 @@ npc_t *get_npc_at(const GPoint cell);
 bool out_of_bounds(const GPoint cell);
 bool occupiable(const GPoint cell);
 bool touching(const GPoint cell, const GPoint cell_2);
-void show_scroll(const int16_t scroll);
+void show_narration(const int16_t narration);
 void show_window(Window *window, bool animated);
 static void menu_draw_header_callback(GContext* ctx,
                                       const Layer *cell_layer,
@@ -444,8 +415,8 @@ void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context);
 void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                                             void *context);
 void graphics_click_config_provider(void *context);
-void scroll_select_single_click(ClickRecognizerRef recognizer, void *context);
-void scroll_click_config_provider(void *context);
+void narration_select_single_click(ClickRecognizerRef recognizer, void *context);
+void narration_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
 void strcat_item_name(char *dest_str, const int16_t item_type);
 void strcat_magic_type(char *dest_str, const int16_t magic_type);
@@ -460,11 +431,11 @@ void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
 void init_heavy_item(heavy_item_t *item, const int16_t n);
 void init_wall_coords(void);
-void init_quest(const int16_t type);
-void init_quest_map(void);
-void deinit_quest(void);
-void init_scroll(void);
-void deinit_scroll(void);
+void init_location(const uint16_t depth);
+void init_location_map(void);
+void deinit_location(void);
+void init_narration(void);
+void deinit_narration(void);
 void init_graphics(void);
 void deinit_graphics(void);
 void init_menu_windows(void);

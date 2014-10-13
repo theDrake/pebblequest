@@ -4,7 +4,7 @@
      Author: David C. Drake (http://davidcdrake.com)
 
 Description: Function definitions for the 3D, first-person, fantasy RPG
-             PebbleQuest, developed for the Pebble smartwatch (SDK 2.0).
+             PebbleQuest, developed for the Pebble smartwatch (SDK 2).
              Copyright 2014, David C. Drake. More information available online:
              http://davidcdrake.com/pebblequest
 ******************************************************************************/
@@ -15,7 +15,7 @@ Description: Function definitions for the 3D, first-person, fantasy RPG
    Function: set_game_mode
 
 Description: Sets the current game mode according to a given mode value, then
-             shows the graphics window, scroll window, or menu window (with
+             shows the graphics window, narration window, or menu window (with
              reloaded data) accordingly.
 
      Inputs: mode - Integer representing the desired game mode.
@@ -29,9 +29,9 @@ void set_game_mode(const int16_t mode)
   {
     show_window(g_graphics_window, NOT_ANIMATED);
   }
-  else if (mode == SCROLL_MODE)
+  else if (mode == NARRATION_MODE)
   {
-    show_scroll(g_current_scroll);
+    show_narration(g_current_narration);
   }
   else if (g_game_mode == MAIN_MENU_MODE)
   {
@@ -102,10 +102,10 @@ void move_player(const int16_t direction)
   GPoint destination = get_cell_farther_away(g_player->position, direction, 1);
 
   // Check for movement into the entrance/exit:
-  if (gpoint_equal(&g_player->position, &g_quest->starting_point) &&
-      g_player->direction == g_quest->entrance_direction)
+  if (gpoint_equal(&g_player->position, &g_location->starting_point) &&
+      g_player->direction == g_location->entrance_direction)
   {
-    end_quest();
+    init_location(g_location->depth + 1);
   }
   else if (occupiable(destination))
   {
@@ -117,11 +117,6 @@ void move_player(const int16_t direction)
     {
       set_game_mode(LOOT_MODE);
     }
-    /*if (get_cell_type(destination) == QUEST_ITEM)
-    {
-      set_cell_type(destination, EMPTY);
-      g_quest->completed = true;
-    }*/
     layer_mark_dirty(window_get_root_layer(g_graphics_window));
   }
 }
@@ -256,12 +251,8 @@ void damage_npc(npc_t *npc, const int16_t damage)
   npc->stats[CURRENT_HEALTH] -= damage;
   if (npc->stats[CURRENT_HEALTH] <= 0)
   {
-    g_quest->kills++;
+    g_player->num_kills++;
     //g_player->exp_points += get_exp_bonus(npc->type);
-    if (g_quest->type == MAIN_QUEST_3 && npc->type == ARCHMAGE)
-    {
-      g_quest->completed = true;
-    }
     remove_npc(npc);
   }
 }
@@ -270,7 +261,7 @@ void damage_npc(npc_t *npc, const int16_t damage)
    Function: remove_npc
 
 Description: Handles the removal of a given NPC from memory and from the
-             current quest's list of NPCs.
+             current location's list of NPCs.
 
      Inputs: npc - Pointer to the NPC to be killed.
 
@@ -280,25 +271,25 @@ void remove_npc(npc_t *npc)
 {
   npc_t *npc_pointer, *npc_pointer_2;
 
-  npc_pointer = npc_pointer_2 = g_quest->npcs;
+  npc_pointer = npc_pointer_2 = g_location->npcs;
   while (npc_pointer != NULL)
   {
     if (npc_pointer == npc)
     {
       if (npc_pointer->next != NULL)
       {
-        if (npc_pointer == g_quest->npcs)
+        if (npc_pointer == g_location->npcs)
         {
-          g_quest->npcs = npc_pointer->next;
+          g_location->npcs = npc_pointer->next;
         }
         else
         {
           npc_pointer_2->next = npc_pointer->next;
         }
       }
-      else if (npc_pointer == g_quest->npcs)
+      else if (npc_pointer == g_location->npcs)
       {
-        g_quest->npcs = NULL;
+        g_location->npcs = NULL;
       }
       else
       {
@@ -335,7 +326,7 @@ void adjust_player_current_health(const int16_t amount)
   else if (g_player->stats[CURRENT_HEALTH] <= 0)
   {
     //show_window(g_menu_window, NOT_ANIMATED);
-    show_scroll(DEATH_SCROLL);
+    show_narration(DEATH_NARRATION);
   }
 }
 
@@ -383,35 +374,12 @@ Description: Adjusts the player's visibility depth by a given amount, which may
 }*/
 
 /******************************************************************************
-   Function: end_quest
-
-Description: Called when the player walks into the exit, ending the current
-             quest.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void end_quest(void)
-{
-  if (g_quest->completed)
-  {
-    g_current_scroll = VICTORY_SCROLL;
-  }
-  else
-  {
-    g_current_scroll = FAILURE_SCROLL;
-  }
-  set_game_mode(SCROLL_MODE);
-}
-
-/******************************************************************************
    Function: add_new_npc
 
 Description: Creates an NPC of a given type at a given location and adds it to
-             the current quest's linked list of NPCs. (If this would exceed the
-             max. number of NPCs at one time, or if the given position isn't
-             occupiable, a new NPC is not created.)
+             the current location's linked list of NPCs. (If this would exceed
+             the max. number of NPCs at one time, or if the given position
+             isn't occupiable, a new NPC is not created.)
 
      Inputs: npc_type - Desired type for the new NPC.
              position - Desired spawn point for the new NPC.
@@ -420,14 +388,14 @@ Description: Creates an NPC of a given type at a given location and adds it to
 ******************************************************************************/
 void add_new_npc(const int16_t npc_type, const GPoint position)
 {
-  npc_t *npc_pointer = g_quest->npcs;
+  npc_t *npc_pointer = g_location->npcs;
 
   if (occupiable(position))
   {
     if (npc_pointer == NULL)
     {
-      g_quest->npcs = malloc(sizeof(npc_t));
-      init_npc(g_quest->npcs, npc_type, position);
+      g_location->npcs = malloc(sizeof(npc_t));
+      init_npc(g_location->npcs, npc_type, position);
 
       return;
     }
@@ -970,7 +938,7 @@ int16_t get_cell_type(const GPoint cell)
     return SOLID;
   }
 
-  return g_quest->map[cell.x][cell.y];
+  return g_location->map[cell.x][cell.y];
 }
 
 /******************************************************************************
@@ -986,7 +954,7 @@ Description: Sets the cell at a given set of coordinates to a given type.
 ******************************************************************************/
 void set_cell_type(GPoint cell, const int16_t type)
 {
-  g_quest->map[cell.x][cell.y] = type;
+  g_location->map[cell.x][cell.y] = type;
 }
 
 /******************************************************************************
@@ -1001,7 +969,7 @@ Description: Returns a pointer to the NPC occupying a given cell.
 ******************************************************************************/
 npc_t *get_npc_at(const GPoint cell)
 {
-  npc_t *npc = g_quest->npcs;
+  npc_t *npc = g_location->npcs;
 
   while (npc != NULL)
   {
@@ -1072,81 +1040,50 @@ bool touching(const GPoint cell, const GPoint cell_2)
 }
 
 /******************************************************************************
-   Function: show_scroll
+   Function: show_narration
 
-Description: Displays desired scroll text via the scroll window.
+Description: Displays desired narration text via the narration window.
 
-     Inputs: scroll - Integer indicating desired scroll text.
+     Inputs: narration - Integer indicating desired narration text.
 
     Outputs: None.
 ******************************************************************************/
-void show_scroll(const int16_t scroll)
+void show_narration(const int16_t narration)
 {
-  static char scroll_str[SCROLL_STR_LEN + 1]; // To store scroll text.
-  GSize content_size;                         // To adjust scroll size.
+  static char narration_str[NARRATION_STR_LEN + 1];
 
-  switch (scroll)
+  switch (narration)
   {
-    strcpy(scroll_str, "Adventurer,\n\n ");
-    //strcpy(scroll_str, "Hero of the Realm,\n\n  ");
-    case MAIN_QUEST_1:
-      strcat(scroll_str,
-"Seek ye the fabled Pebbles of Power, remnants of the sundered Elderstone, for the good of the Realm. The Archmage hath scried the location of a cave where thy search may begin. May the Gods be with thee!\n\n--King Lannus");
+    case INTRO_NARRATION_1: // Total chars: 82
+      strcpy(narration_str, "The Elderstone was sundered long ago, splintering"
+                            " into countless Pebbles of Power.");
       break;
-    case MAIN_QUEST_2:
-      strcat(scroll_str,
-"Thy skill in finding and recovering Pebbles of Power is astounding! Bring them to me that I may attempt to reunite them, to forge anew a shard of the legendary Elderstone.\n\n--Archmage Dreyan");
+    case INTRO_NARRATION_2: // Total chars: 85
+      strcpy(narration_str, "You have entered the vast, cavernous depths where"
+                            " those Pebbles are rumored to exist.");
       break;
-    case MAIN_QUEST_3:
-      strcat(scroll_str,
-"Thou hast revealed the Archmage's treachery and bravely defeated him, saving the Realm from a fate most dire! I name thee Hero of the Realm and offer my wealth to assist thee in thy future adventures.\n\n--King Lannus");
+    case INTRO_NARRATION_3: // Total chars: 81
+      strcpy(narration_str, "Welcome, adventurer, to the endless underworld of"
+                            " PebbleQuest!\n\ndavidcdrake.com");
       break;
-    case FIND_PEBBLE:
-      strcat(scroll_str, "Find a Pebble...");
+    case LEVEL_UP_NARRATION:
+      strcpy(narration_str, "\nCongratulations!\nYou have reached Level ");
+      strcat_int(g_player->level);
+      strcat(narration_str, " reached")
       break;
-    case FIND_ITEM:
-      strcat(scroll_str, "Find an artifact...");
-      break;
-    case RECOVER_ITEM:
-      strcat(scroll_str, "Find my stuff!");
-      break;
-    case ESCORT:
-      strcat(scroll_str, "Escort me to...");
-      break;
-    case RESCUE:
-      strcat(scroll_str, "Please rescue my grandson!");
-      break;
-    case ASSASSINATE:
-      strcat(scroll_str, "Kill their leader.");
-      break;
-    case EXTERMINATE:
-      strcat(scroll_str, "Wipe them out. All of them.");
-      break;
-    case ESCAPE:
-      strcat(scroll_str, "Escape!");
-      break;
-    case FAILURE_SCROLL:
-      strcat(scroll_str, "Alas, thou hast failed.");
-      deinit_quest();
-      break;
-    case VICTORY_SCROLL:
-      strcat(scroll_str, "Thou art victorious!");
-      deinit_quest();
-      break;
-    default: // case DEATH_SCROLL:
-      strcat(scroll_str, "Alas, our hero hath perished.");
-      deinit_quest();
+    default: // case DEATH_NARRATION: (Total chars: 60~75)
+      strcpy(narration_str, "Alas, you have fallen.\n\nLevel: ");
+      strcat_int(g_player->level);
+      strcat("\nDepth: ");
+      strcat_int(g_location->depth);
+      strcat("\nPebbles found: ");
+      strcat_int(g_player->num_pebbles_found);
+      init_player();
+      deinit_location();
       break;
   }
-  text_layer_set_text(g_scroll_text_layer, scroll_str);
-  content_size = text_layer_get_content_size(g_scroll_text_layer);
-  content_size.h += SCROLL_HEIGHT_OFFSET;
-  text_layer_set_size(g_scroll_text_layer, content_size);
-  scroll_layer_set_content_size(g_scroll_scroll_layer, content_size);
-  scroll_layer_set_content_offset(g_scroll_scroll_layer,
-                                  GPointZero,
-                                  NOT_ANIMATED);
-  show_window(g_scroll_window, ANIMATED);
+  text_layer_set_text(g_narration_text_layer, narration_str);
+  show_window(g_narration_window, NOT_ANIMATED);
 }
 
 /******************************************************************************
@@ -1258,8 +1195,8 @@ static void menu_draw_row_callback(GContext *ctx,
     switch (cell_index->row)
     {
       case 0:
-        strcat(title_str, g_quest == NULL ? "New Quest" : "Continue");
-        strcat(subtitle_str, "Enter the fray!");
+        strcat(title_str, "Play");
+        strcat(subtitle_str, "Dungeon-crawl, baby!");
         break;
       case 1:
         strcat(title_str, "Character Stats");
@@ -1359,29 +1296,12 @@ void menu_select_callback(MenuLayer *menu_layer,
   {
     switch (cell_index->row)
     {
-      case 0: // New Quest / Continue
-        if (g_quest == NULL)
+      case 0: // Play
+        if (g_location == NULL)
         {
-          g_quest = malloc(sizeof(quest_t));
-          if (g_player->num_pebbles_found == 0)
-          {
-            init_quest(MAIN_QUEST_1);
-          }
-          else if (g_player->num_pebbles_found == NUM_PEBBLE_TYPES - 1)
-          {
-            init_quest(MAIN_QUEST_2);
-          }
-          else if (g_player->num_pebbles_found == NUM_PEBBLE_TYPES)
-          {
-            init_quest(MAIN_QUEST_3);
-          }
-          else
-          {
-            init_quest(rand() % NUM_RANDOM_QUEST_TYPES);
-          }
-          set_game_mode(ACTIVE_MODE);
-          g_current_scroll = g_quest->type;
-          set_game_mode(SCROLL_MODE);
+          init_location(1);
+          g_current_narration = INTRO_NARRATION_1;
+          set_game_mode(NARRATION_MODE);
         }
         else
         {
@@ -1400,8 +1320,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   {
     g_player->stats[cell_index->row] = get_boosted_stat_value(cell_index->row,
                                                               1);
-    g_quest == NULL ? set_game_mode(MAIN_MENU_MODE) :
-                      set_game_mode(ACTIVE_MODE);
+    set_game_mode(ACTIVE_MODE);
   }
   else if (g_game_mode == LOOT_MODE)
   {
@@ -1709,7 +1628,7 @@ void draw_cell_walls(GContext *ctx,
   right         = g_back_wall_coords[depth][position][BOTTOM_RIGHT].x;
   top           = g_back_wall_coords[depth][position][TOP_LEFT].y;
   bottom        = g_back_wall_coords[depth][position][BOTTOM_RIGHT].y;
-  exit_present  = gpoint_equal(&cell, &g_quest->starting_point);
+  exit_present  = gpoint_equal(&cell, &g_location->starting_point);
   exit_offset_y = (right - left) / 4;
   if (bottom - top < MIN_WALL_HEIGHT)
   {
@@ -1738,7 +1657,7 @@ void draw_cell_walls(GContext *ctx,
     }
 
     // Entrance/exit:
-    if (exit_present && g_player->direction == g_quest->entrance_direction)
+    if (exit_present && g_player->direction == g_location->entrance_direction)
     {
       graphics_context_set_fill_color(ctx, GColorBlack);
       exit_offset_x = (right - left) / 3;
@@ -1789,7 +1708,7 @@ void draw_cell_walls(GContext *ctx,
 
       // Entrance/exit:
       if (exit_present && get_direction_to_the_left(g_player->direction) ==
-                          g_quest->entrance_direction)
+                          g_location->entrance_direction)
       {
         exit_offset_x = (right - left) / 3;
         fill_quad(ctx,
@@ -1840,7 +1759,7 @@ void draw_cell_walls(GContext *ctx,
 
       // Entrance/exit:
       if (exit_present && get_direction_to_the_right(g_player->direction) ==
-                          g_quest->entrance_direction)
+                          g_location->entrance_direction)
       {
         exit_offset_x = (right - left) / 3;
         fill_quad(ctx,
@@ -2905,33 +2824,47 @@ void graphics_click_config_provider(void *context)
 }
 
 /******************************************************************************
-   Function: scroll_select_single_click
+   Function: narration_select_single_click
 
-Description: The scroll window's single-click handler for the "select" button.
-             Hides the scroll window.
+Description: The narration window's single-click handler for the "select"
+             button. Hides the narration window.
 
      Inputs: recognizer - The click recognizer.
              context    - Pointer to the associated context.
 
     Outputs: None.
 ******************************************************************************/
-void scroll_select_single_click(ClickRecognizerRef recognizer, void *context)
+void narration_select_single_click(ClickRecognizerRef recognizer,
+                                   void *context)
 {
-  window_stack_pop(NOT_ANIMATED);
+  if (g_current_narration == INTRO_NARRATION_1 ||
+      g_current_narration == INTRO_NARRATION_2)
+  {
+    show_narration(++g_current_narration);
+  }
+  else if (g_current_narration == LEVEL_UP_NARRATION)
+  {
+    set_game_mode(ACTIVE_MODE);
+  }
+  else
+  {
+    set_game_mode(MAIN_MENU_MODE);
+  }
 }
 
 /******************************************************************************
-   Function: scroll_click_config_provider
+   Function: narration_click_config_provider
 
-Description: Button-click configurations for the scroll window.
+Description: Button-click configurations for the narration window.
 
      Inputs: context - Pointer to the associated context.
 
     Outputs: None.
 ******************************************************************************/
-void scroll_click_config_provider(void *context)
+void narration_click_config_provider(void *context)
 {
-  window_single_click_subscribe(BUTTON_ID_SELECT, scroll_select_single_click);
+  window_single_click_subscribe(BUTTON_ID_SELECT,
+                                narration_select_single_click);
 }
 
 /******************************************************************************
@@ -2953,7 +2886,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
   if (g_game_mode == ACTIVE_MODE)
   {
     // Handle NPC behavior:
-    npc_pointer = g_quest->npcs;
+    npc_pointer = g_location->npcs;
     while (npc_pointer != NULL)
     {
       determine_npc_behavior(npc_pointer);
@@ -2966,9 +2899,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Determine whether a new NPC should be generated:
-    if (current_num_npcs < MAX_NPCS_AT_ONE_TIME               &&
-        g_quest->kills + current_num_npcs < g_quest->num_npcs &&
-        rand() % 4 == 0)
+    if (current_num_npcs < MAX_NPCS_AT_ONE_TIME && rand() % 10 == 0)
     {
       add_new_npc(get_random_npc_type(), get_npc_spawn_point());
     }
@@ -3022,10 +2953,6 @@ void strcat_item_name(char *dest_str, const int16_t item_type)
     {
       /*case KEY:
         strcat(dest_str, "Key");
-        break;
-      case QUEST_ITEM:
-        g_quest->type == RESCUE ? strcat(dest_str, "Captive") :
-                                  strcat(dest_str, "Artifact");
         break;*/
       case ROBE:
         strcat(dest_str, "Robe");
@@ -3276,6 +3203,7 @@ void add_item_to_inventory(const int16_t item_type)
   if (item_type < FIRST_HEAVY_ITEM)
   {
     g_player->pebbles[item_type]++;
+    g_player->num_pebbles_found++;
   }
   else
   {
@@ -3335,6 +3263,7 @@ void init_player(void)
   g_player->level             = 1;
   g_player->exp_points        = 0;
   g_player->num_pebbles_found = 0;
+  g_player->num_kills         = 0;
   g_player->equipped_pebble   = NONE;
   g_player->stats[STRENGTH]   = DEFAULT_BASE_STAT_VALUE;
   g_player->stats[AGILITY]    = DEFAULT_BASE_STAT_VALUE;
@@ -3518,41 +3447,40 @@ void init_wall_coords(void)
 }
 
 /******************************************************************************
-   Function: init_quest
+   Function: init_location
 
-Description: Initializes the global quest struct according to a given quest
-             type.
+Description: Initializes the global location struct according to a given depth.
 
-     Inputs: type - The type of quest to initialize.
+     Inputs: depth - Integer representing how deep the player has descended in
+                     the dungeon.
 
     Outputs: None.
 ******************************************************************************/
-void init_quest(const int16_t type)
+void init_location(const uint16_t depth)
 {
-  g_quest->type             = type;
-  g_quest->completed        = false;
-  g_quest->kills            = 0;
-  g_quest->npcs             = NULL;
-  g_quest->primary_npc_type = GOBLIN;
-  g_quest->num_npcs         = 5 * (rand() % 5 + 2);  // 10-30 enemies.
-  //g_quest->exp_reward       = 5 * g_quest->num_npcs; // 50-150 exp. points.
-  init_quest_map();
+  deinit_location();
+  g_location                   = malloc(sizeof(location_t));
+  g_location->depth            = depth;
+  g_location->primary_npc_type = GOBLIN;
+  g_location->npcs             = NULL;
+  init_location_map();
 
   // Move and orient the player:
-  g_player->position = g_quest->starting_point;
-  set_player_direction(get_opposite_direction(g_quest->entrance_direction));
+  g_player->position = g_location->starting_point;
+  set_player_direction(get_opposite_direction(g_location->entrance_direction));
+  //g_player->has_key = false;
 }
 
 /******************************************************************************
-   Function: init_quest_map
+   Function: init_location_map
 
-Description: Initializes the current quest's map (i.e., its 2D array of cells).
+Description: Initializes the current location's map (a 2D array of cells).
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void init_quest_map(void)
+void init_location_map(void)
 {
   int16_t i, j, builder_direction;
   GPoint builder_position;
@@ -3562,35 +3490,35 @@ void init_quest_map(void)
   {
     for (j = 0; j < MAP_HEIGHT; ++j)
     {
-      g_quest->map[i][j] = SOLID;
+      g_location->map[i][j] = SOLID;
     }
   }
 
   // Next, set starting and exit points:
-  switch (g_quest->entrance_direction = rand() % NUM_DIRECTIONS)
+  switch (g_location->entrance_direction = rand() % NUM_DIRECTIONS)
   {
     case NORTH:
-      g_quest->starting_point = RANDOM_POINT_NORTH;
-      g_quest->ending_point   = RANDOM_POINT_SOUTH;
+      g_location->starting_point = RANDOM_POINT_NORTH;
+      g_location->ending_point   = RANDOM_POINT_SOUTH;
       break;
     case SOUTH:
-      g_quest->starting_point = RANDOM_POINT_SOUTH;
-      g_quest->ending_point   = RANDOM_POINT_NORTH;
+      g_location->starting_point = RANDOM_POINT_SOUTH;
+      g_location->ending_point   = RANDOM_POINT_NORTH;
       break;
     case EAST:
-      g_quest->starting_point = RANDOM_POINT_EAST;
-      g_quest->ending_point   = RANDOM_POINT_WEST;
+      g_location->starting_point = RANDOM_POINT_EAST;
+      g_location->ending_point   = RANDOM_POINT_WEST;
       break;
     default: // case WEST:
-      g_quest->starting_point = RANDOM_POINT_WEST;
-      g_quest->ending_point   = RANDOM_POINT_EAST;
+      g_location->starting_point = RANDOM_POINT_WEST;
+      g_location->ending_point   = RANDOM_POINT_EAST;
       break;
   }
 
   // Now, carve a path between the starting and end points:
-  builder_position  = g_quest->starting_point;
-  builder_direction = get_opposite_direction(g_quest->entrance_direction);
-  while (!gpoint_equal(&builder_position, &g_quest->ending_point))
+  builder_position  = g_location->starting_point;
+  builder_direction = get_opposite_direction(g_location->entrance_direction);
+  while (!gpoint_equal(&builder_position, &g_location->ending_point))
   {
     set_cell_type(builder_position, EMPTY);
     switch (builder_direction)
@@ -3620,105 +3548,78 @@ void init_quest_map(void)
         }
         break;
     }
-    g_quest->exit_direction = builder_direction;
+    g_location->exit_direction = builder_direction;
     if (rand() % NUM_DIRECTIONS == 0) // 25% chance of turning.
     {
       builder_direction = rand() % NUM_DIRECTIONS;
     }
   }
   set_cell_type(builder_position, EMPTY);
-
-  // Finally, add special NPCs/objects, if applicable:
-  if (g_quest->type == MAIN_QUEST_3)
-  {
-    add_new_npc(ARCHMAGE, g_quest->ending_point);
-  }
-  /*else if (g_quest->type == RECOVER_ITEM || g_quest->type == RESCUE)
-  {
-    set_cell_type(g_quest->ending_point, QUEST_ITEM);
-  }*/
 }
 
 /******************************************************************************
-   Function: deinit_quest
+   Function: deinit_location
 
-Description: Deinitializes the global quest struct, freeing associated memory.
-             Also resets relevant player struct data members, including health,
-             energy, status effects, keys, and quest items.
+Description: Deinitializes the global location struct, freeing associated
+             memory.
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void deinit_quest(void)
+void deinit_location(void)
 {
   int16_t i;
 
-  if (g_quest != NULL)
+  if (g_location != NULL)
   {
-    // Reset relevant player data:
-    //g_player->inventory[QUEST_ITEM]->n = 0;
-    //g_player->inventory[KEY]->n        = 0;
-    g_player->stats[CURRENT_HEALTH]    = g_player->stats[MAX_HEALTH];
-    g_player->stats[CURRENT_ENERGY]    = g_player->stats[MAX_ENERGY];
-    for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
+    // Remove NPCs and the location struct itself from memory:
+    while (g_location->npcs != NULL)
     {
-      g_player->status_effects[i] = 0;
+      remove_npc(g_location->npcs);
     }
-
-    // Remove NPCs and the quest struct itself from memory:
-    while (g_quest->npcs != NULL)
-    {
-      remove_npc(g_quest->npcs);
-    }
-    free(g_quest);
-    g_quest = NULL;
+    free(g_location);
+    g_location = NULL;
   }
 }
 
 /******************************************************************************
-   Function: init_scroll
+   Function: init_narration
 
-Description: Initializes the scroll window.
+Description: Initializes the narration window.
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void init_scroll(void)
+void init_narration(void)
 {
-  g_scroll_window       = window_create();
-  g_scroll_scroll_layer = scroll_layer_create(FULL_SCREEN_FRAME);
-  scroll_layer_set_click_config_onto_window(g_scroll_scroll_layer,
-                                            g_scroll_window);
-  window_set_click_config_provider(g_scroll_window,
-                                   (ClickConfigProvider)
-                                     scroll_click_config_provider);
-  layer_add_child(window_get_root_layer(g_scroll_window),
-                  scroll_layer_get_layer(g_scroll_scroll_layer));
-  g_scroll_text_layer = text_layer_create(SCROLL_TEXT_LAYER_FRAME);
-  text_layer_set_background_color(g_scroll_text_layer, GColorWhite);
-  text_layer_set_text_color(g_scroll_text_layer, GColorBlack);
-  text_layer_set_font(g_scroll_text_layer, SCROLL_FONT);
-  text_layer_set_text_alignment(g_scroll_text_layer, GTextAlignmentLeft);
-  scroll_layer_add_child(g_scroll_scroll_layer,
-                         text_layer_get_layer(g_scroll_text_layer));
+  g_narration_window = window_create();
+  window_set_background_color(g_narration_window, GColorBlack);
+  window_set_click_config_provider(g_narration_window,
+                                   narration_click_config_provider);
+  g_narration_text_layer = text_layer_create(NARRATION_TEXT_LAYER_FRAME);
+  text_layer_set_background_color(g_narration_text_layer, GColorBlack);
+  text_layer_set_text_color(g_narration_text_layer, GColorWhite);
+  text_layer_set_font(g_narration_text_layer, NARRATION_FONT);
+  text_layer_set_text_alignment(g_narration_text_layer, GTextAlignmentLeft);
+  layer_add_child(window_get_root_layer(g_narration_window),
+                  text_layer_get_layer(g_narration_text_layer));
 }
 
 /******************************************************************************
-   Function: deinit_scroll
+   Function: deinit_narration
 
-Description: Deinitializes the scroll window.
+Description: Deinitializes the narration window.
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void deinit_scroll(void)
+void deinit_narration(void)
 {
-  text_layer_destroy(g_scroll_text_layer);
-  scroll_layer_destroy(g_scroll_scroll_layer);
-  window_destroy(g_scroll_window);
+  text_layer_destroy(g_narration_text_layer);
+  window_destroy(g_narration_window);
 }
 
 /******************************************************************************
@@ -3737,7 +3638,7 @@ void init_graphics(void)
   window_set_background_color(g_graphics_window, GColorBlack);
   window_set_window_handlers(g_graphics_window, (WindowHandlers)
   {
-    .appear    = graphics_window_appear,
+    .appear = graphics_window_appear,
   });
   window_set_click_config_provider(g_graphics_window,
                                    (ClickConfigProvider)
@@ -3884,16 +3785,15 @@ void init(void)
 
   srand(time(NULL));
   g_game_mode = MAIN_MENU_MODE;
-  g_quest     = NULL;
+  g_location  = NULL;
   init_menu_windows();
-  init_scroll();
+  init_narration();
   init_graphics();
   init_wall_coords();
   g_compass_path = gpath_create(&COMPASS_PATH_INFO);
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
-  app_focus_service_subscribe(app_focus_handler);
 
   // Check for saved data and initialize the player struct:
   g_player = malloc(sizeof(player_t));
@@ -3917,6 +3817,7 @@ void init(void)
   {
     init_player();
   }
+  app_focus_service_subscribe(app_focus_handler);
   show_window(g_main_menu_window, NOT_ANIMATED);
 }
 
@@ -3942,10 +3843,10 @@ void deinit(void)
   persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS,
                      g_player,
                      sizeof(player_t));
-  deinit_scroll();
+  deinit_narration();
   deinit_graphics();
   deinit_menu_windows();
-  deinit_quest();
+  deinit_location();
   deinit_player();
 }
 
