@@ -46,7 +46,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define HEALTH_RECOVERY_RATE       1 // Health per second.
 #define ENERGY_RECOVERY_RATE       1 // Energy per second.
 #define MIN_DAMAGE                 2
-#define MIN_ENERGY_LOSS_PER_ACTION -2
+#define MIN_ENERGY_LOSS_PER_ACTION 2
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
@@ -423,7 +423,7 @@ void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
 void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
-void assign_minor_stats(int16_t *stats_array);
+void assign_minor_stats(uint16_t *stats_array);
 void add_item_to_inventory(const int16_t item_type);
 void equip_heavy_item(heavy_item_t *const item);
 void init_player(void);

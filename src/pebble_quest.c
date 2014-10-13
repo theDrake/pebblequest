@@ -1068,16 +1068,16 @@ void show_narration(const int16_t narration)
       break;
     case LEVEL_UP_NARRATION:
       strcpy(narration_str, "\nCongratulations!\nYou have reached Level ");
-      strcat_int(g_player->level);
+      strcat_int(narration_str, g_player->level);
       strcat(narration_str, " reached")
       break;
     default: // case DEATH_NARRATION: (Total chars: 60~75)
       strcpy(narration_str, "Alas, you have fallen.\n\nLevel: ");
-      strcat_int(g_player->level);
-      strcat("\nDepth: ");
-      strcat_int(g_location->depth);
-      strcat("\nPebbles found: ");
-      strcat_int(g_player->num_pebbles_found);
+      strcat_int(narration_str, g_player->level);
+      strcat(narration_str, "\nDepth: ");
+      strcat_int(narration_str, g_location->depth);
+      strcat(narration_str, "\nPebbles found: ");
+      strcat_int(narration_str, g_player->num_pebbles_found);
       init_player();
       deinit_location();
       break;
@@ -1864,7 +1864,7 @@ void draw_cell_contents(GContext *ctx,
   // Draw the character (or a treasure chest for loot):
   if (npc == NULL)
   {
-    if (get_cell_type(cell) == CAPTIVE)
+    /*if (get_cell_type(cell) == CAPTIVE)
     {
       // Legs:
       graphics_fill_rect(ctx,
@@ -1967,7 +1967,7 @@ void draw_cell_contents(GContext *ctx,
                                   floor_center_point.y - (drawing_unit * 9)),
                            drawing_unit / 6);
     }
-    else if (get_cell_type(cell) > EMPTY) // Loot!
+    else*/ if (get_cell_type(cell) > EMPTY) // Loot!
     {
       graphics_context_set_fill_color(ctx, GColorWhite);
       graphics_fill_rect(ctx,
@@ -2755,7 +2755,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       if (g_player->equipped_pebble != NONE)
       {
         flash_screen();
-        adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
+        adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION * -1);
         if (npc != NULL)
         {
           damage_npc(npc,
@@ -2767,7 +2767,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       // Otherwise, the player is attacking with a physical weapon:
       else if (g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
       {
-        adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION);
+        adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION * -1);
         g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
                                             player_timer_callback,
                                             NULL);
@@ -3171,7 +3171,7 @@ Description: Assigns values to the minor stats of a given stats array according
 
     Outputs: None.
 ******************************************************************************/
-void assign_minor_stats(int16_t *stats_array)
+void assign_minor_stats(uint16_t *stats_array)
 {
   stats_array[MAX_HEALTH]       = stats_array[STRENGTH * 10];
   stats_array[MAX_ENERGY]       = stats_array[INTELLECT * 10];
@@ -3569,8 +3569,6 @@ Description: Deinitializes the global location struct, freeing associated
 ******************************************************************************/
 void deinit_location(void)
 {
-  int16_t i;
-
   if (g_location != NULL)
   {
     // Remove NPCs and the location struct itself from memory:
