@@ -50,11 +50,6 @@ void set_game_mode(const int16_t mode)
   {
     show_window(g_ad_hoc_menu_window, ANIMATED);
   }
-    /*menu_layer_reload_data(g_menu_layer);
-    menu_layer_set_selected_index(g_menu_layer,
-                                  (MenuIndex) {0, 0},
-                                  MenuRowAlignCenter,
-                                  NOT_ANIMATED);*/
 }
 
 /******************************************************************************
@@ -1059,24 +1054,26 @@ void show_narration(const int16_t narration)
                             " into countless Pebbles of Power.");
       break;
     case INTRO_NARRATION_2: // Total chars: 85
-      strcpy(narration_str, "You have entered the vast, cavernous depths where"
-                            " those Pebbles are rumored to exist.");
+      strcpy(narration_str, "You have descended into a vast dungeon where the "
+                            "Pebbles are guarded by foul wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 81
-      strcpy(narration_str, "Welcome, adventurer, to the endless underworld of"
-                            " PebbleQuest!\n\ndavidcdrake.com");
+    case INTRO_NARRATION_3: // Total chars: 75
+      strcpy(narration_str, "Welcome, hero, to the endless underworld of "
+                            "PebbleQuest!\n\n  davidcdrake.com");
       break;
     case LEVEL_UP_NARRATION:
       strcpy(narration_str, "\nCongratulations!\nYou have reached Level ");
       strcat_int(narration_str, g_player->level);
       break;
-    default: // case DEATH_NARRATION: (Total chars: 60~75)
-      strcpy(narration_str, "Alas, you have fallen.\n\nLevel: ");
+    default: // case DEATH_NARRATION: Total chars: 62~85
+      strcpy(narration_str, "Alas, you have fallen.\nLevel: ");
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
       strcat_int(narration_str, g_location->depth);
-      strcat(narration_str, "\nPebbles found: ");
+      strcat(narration_str, "\nPebbles: ");
       strcat_int(narration_str, g_player->num_pebbles_found);
+      strcat(narration_str, "\nKills: ");
+      strcat_int(narration_str, g_player->num_kills);
       init_player();
       deinit_location();
       break;
@@ -1130,40 +1127,45 @@ static void menu_draw_header_callback(GContext *ctx,
 {
   char header_str[MENU_HEADER_STR_LEN + 1] = "";
 
-  if (g_game_mode == MAIN_MENU_MODE)
+  if (window_stack_get_top_window() == g_main_menu_window)
   {
-    strcat(header_str, "PebbleQuest - Main Menu");
+    strcat(header_str, "PebbleQuest - Menu");
   }
-  else if (g_game_mode == INVENTORY_MODE)
-  {
-    strcat(header_str, "Inventory");
-  }
-  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
+  else if (window_stack_get_top_window() == g_options_menu_window)
   {
     strcat_item_name(header_str, g_current_selection);
   }
-  else if (g_game_mode == PEBBLE_INFUSION_MODE)
+  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
   {
-    strcat(header_str, "Which item?");
+    if (g_game_mode == INVENTORY_MODE)
+    {
+      strcat(header_str, "Inventory");
+    }
+    else if (g_game_mode == LOOT_MODE)
+    {
+      strcat(header_str, "Loot");
+    }
+    else if (g_game_mode == SHOW_STATS_MODE)
+    {
+      strcat(header_str, "Your Stats");
+    }
+    else // if (g_game_mode == LEVEL_UP_MODE)
+    {
+      strcat(header_str, "Increase an Attribute");
+    }
   }
-  else if (g_game_mode == LOOT_MODE)
+  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
   {
-    strcat(header_str, "Loot");
+    if (g_game_mode == REPLACE_ITEM_MODE)
+    {
+      strcat(header_str, "Replace an item?");
+    }
+    else // if (g_game_mode == PEBBLE_INFUSION_MODE)
+    {
+      strcat(header_str, "Which item?");
+    }
   }
-  else if (g_game_mode == REPLACE_ITEM_MODE)
-  {
-    strcat(header_str, "Replace an item?");
-  }
-  else if (g_game_mode == SHOW_STATS_MODE)
-  {
-    strcat(header_str, "Stats");
-  }
-  else // if (g_game_mode == LEVEL_UP_MODE)
-  {
-    strcat(header_str, "Level ");
-    strcat_int(header_str, g_player->level);
-    strcat(header_str, " reached!");
-  }
+
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
@@ -1189,7 +1191,7 @@ static void menu_draw_row_callback(GContext *ctx,
   int16_t item_type;
   heavy_item_t *item;
 
-  if (g_game_mode == MAIN_MENU_MODE)
+  if (window_stack_get_top_window() == g_main_menu_window)
   {
     switch (cell_index->row)
     {
@@ -1207,17 +1209,7 @@ static void menu_draw_row_callback(GContext *ctx,
         break;
     }
   }
-  else if (g_game_mode == SHOW_STATS_MODE || g_game_mode == LEVEL_UP_MODE)
-  {
-    strcat_stat_name(title_str, cell_index->row);
-    strcat_stat_value(title_str, cell_index->row);
-    if (g_game_mode == LEVEL_UP_MODE)
-    {
-      strcat(title_str, "->");
-      strcat_int(title_str, get_boosted_stat_value(cell_index->row, 1));
-    }
-  }
-  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
+  else if (window_stack_get_top_window() == g_options_menu_window)
   {
     switch (cell_index->row)
     {
@@ -1229,45 +1221,68 @@ static void menu_draw_row_callback(GContext *ctx,
         break;
     }
   }
-  else if (g_game_mode == LOOT_MODE)
+  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
   {
-    strcat_item_name(title_str, get_cell_type(g_player->position));
-  }
-  else // INVENTORY_MODE, PEBBLE_INFUSION_MODE, or REPLACE_ITEM_MODE
-  {
-    item_type = get_nth_item_type(cell_index->row -
-                                  (g_game_mode != INVENTORY_MODE ?
-                                   get_num_pebble_types_owned()  :
-                                   0));
-    strcat_item_name(title_str, item_type);
-
-    // Pebbles (only relevant in INVENTORY_MODE):
-    if (item_type < FIRST_HEAVY_ITEM)
+    if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
     {
-      strcat(title_str, " (");
-      strcat_int(title_str, g_player->pebbles[item_type]);
-      strcat(title_str, ")");
-      if (g_player->equipped_pebble == item_type)
+      strcat_item_name(title_str, get_cell_type(g_player->position));
+    }
+    else if (g_game_mode == SHOW_STATS_MODE || g_game_mode == LEVEL_UP_MODE)
+    {
+      strcat_stat_name(title_str, cell_index->row);
+      strcat_stat_value(title_str, cell_index->row);
+      if (g_game_mode == LEVEL_UP_MODE)
       {
-        strcat(subtitle_str, "Equipped");
+        strcat(title_str, "->");
+        strcat_int(title_str, get_boosted_stat_value(cell_index->row, 1));
       }
     }
-
-    // Heavy items:
-    else
+    else // INVENTORY_MODE
     {
-      item = g_player->heavy_items[cell_index->row -
-                                   (g_game_mode == INVENTORY_MODE ?
-                                    get_num_pebble_types_owned()  :
-                                    0)];
-      if (item->infused_pebble != NONE)
+      item_type = get_nth_item_type(cell_index->row);
+      strcat_item_name(title_str, item_type);
+
+      // Pebbles:
+      if (item_type < FIRST_HEAVY_ITEM)
       {
-        strcat_magic_type(title_str, item->infused_pebble);
+        strcat(title_str, " (");
+        strcat_int(title_str, g_player->pebbles[item_type]);
+        strcat(title_str, ")");
+        if (g_player->equipped_pebble == item_type)
+        {
+          strcat(subtitle_str, "Equipped");
+        }
       }
-      if (g_player->equipped_heavy_items[get_equip_target(item->type)] == item)
+
+      // Heavy items:
+      else
       {
-        strcat(subtitle_str, "Equipped");
+        item = g_player->heavy_items[cell_index->row -
+                                       get_num_pebble_types_owned()];
+        if (item->infused_pebble != NONE)
+        {
+          strcat_magic_type(title_str, item->infused_pebble);
+        }
+        if (g_player->equipped_heavy_items[get_equip_target(item->type)] ==
+              item)
+        {
+          strcat(subtitle_str, "Equipped");
+        }
       }
+    }
+  }
+  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
+  {
+    item = g_player->heavy_items[cell_index->row -
+                                   get_num_pebble_types_owned()];
+    strcat_item_name(title_str, item->type);
+    if (item->infused_pebble != NONE)
+    {
+      strcat_magic_type(title_str, item->infused_pebble);
+    }
+    if (g_player->equipped_heavy_items[get_equip_target(item->type)] == item)
+    {
+      strcat(subtitle_str, "Equipped");
     }
   }
 
@@ -1291,7 +1306,7 @@ void menu_select_callback(MenuLayer *menu_layer,
 {
   int16_t equip_target;
 
-  if (g_game_mode == MAIN_MENU_MODE)
+  if (window_stack_get_top_window() == g_main_menu_window)
   {
     switch (cell_index->row)
     {
@@ -1315,31 +1330,37 @@ void menu_select_callback(MenuLayer *menu_layer,
         break;
     }
   }
-  else if (g_game_mode == LEVEL_UP_MODE)
+  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
   {
-    g_player->stats[cell_index->row] = get_boosted_stat_value(cell_index->row,
-                                                              1);
-    set_game_mode(ACTIVE_MODE);
-  }
-  else if (g_game_mode == LOOT_MODE)
-  {
-    add_item_to_inventory(get_cell_type(g_player->position));
-    set_cell_type(g_player->position, EMPTY);
-  }
-  else if (g_game_mode == INVENTORY_MODE)
-  {
-    if (get_nth_item_type(cell_index->row) < FIRST_HEAVY_ITEM)
+    if (g_game_mode == LEVEL_UP_MODE)
     {
-      g_current_selection = cell_index->row;
-      set_game_mode(PEBBLE_OPTIONS_MODE);
+      g_player->stats[cell_index->row] =
+        get_boosted_stat_value(cell_index->row, 1);
+      set_game_mode(ACTIVE_MODE);
     }
-    else
+    else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
     {
-      equip_heavy_item(g_player->heavy_items[cell_index->row -
-                                               get_num_pebble_types_owned()]);
+      add_item_to_inventory(get_cell_type(g_player->position));
+      set_cell_type(g_player->position, EMPTY);
+    }
+    else if (g_game_mode == INVENTORY_MODE      ||
+             g_game_mode == PEBBLE_OPTIONS_MODE ||
+             g_game_mode == PEBBLE_INFUSION_MODE)
+    {
+      if (get_nth_item_type(cell_index->row) < FIRST_HEAVY_ITEM)
+      {
+        g_current_selection = cell_index->row;
+        set_game_mode(PEBBLE_OPTIONS_MODE);
+      }
+      else
+      {
+        equip_heavy_item(g_player->heavy_items[cell_index->row -
+                                                 get_num_pebble_types_owned()]);
+        menu_layer_reload_data(g_ad_hoc_menu_layer);
+      }
     }
   }
-  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
+  else if (window_stack_get_top_window() == g_options_menu_window)
   {
     switch (cell_index->row)
     {
@@ -1355,10 +1376,22 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else if (g_game_mode == PEBBLE_INFUSION_MODE)
   {
+    // Ensure the item isn't already infused:
     if (g_player->heavy_items[cell_index->row]->infused_pebble == NONE)
     {
+      // Infuse the item:
       g_player->heavy_items[cell_index->row]->infused_pebble =
         g_current_selection;
+
+      // Remove the Pebble from the pool of equippable/infusable Pebbles:
+      g_player->pebbles[g_current_selection]--;
+      if (g_player->equipped_pebble == g_current_selection &&
+          g_player->pebbles[g_current_selection] == 0)
+      {
+        g_player->equipped_pebble = NONE;
+      }
+
+      // Return to the inventory menu:
       set_game_mode(INVENTORY_MODE);
     }
   }
@@ -1415,31 +1448,34 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
                                            uint16_t section_index,
                                            void *data)
 {
-  if (g_game_mode == MAIN_MENU_MODE)
+  if (window_stack_get_top_window() == g_main_menu_window)
   {
     return MAIN_MENU_NUM_ROWS;
   }
-  else if (g_game_mode == LOOT_MODE)
+  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
   {
-    return 1;
+    if (g_game_mode == LEVEL_UP_MODE)
+    {
+      return 3;
+    }
+    else if (g_game_mode == SHOW_STATS_MODE)
+    {
+      return 3; // To be increased later.
+    }
+    else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
+    {
+      return 1;
+    }
+    else // INVENTORY_MODE
+    {
+      return get_num_pebble_types_owned() + get_num_heavy_items_owned();
+    }
   }
-  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
+  else if (window_stack_get_top_window() == g_options_menu_window)
   {
     return 2;
   }
-  else if (g_game_mode == LEVEL_UP_MODE)
-  {
-    return 3;
-  }
-  else if (g_game_mode == SHOW_STATS_MODE)
-  {
-    return 3; // To be increased later.
-  }
-  else if (g_game_mode == INVENTORY_MODE)
-  {
-    return get_num_pebble_types_owned() + get_num_heavy_items_owned();
-  }
-  else // PEBBLE_INFUSION_MODE or REPLACE_ITEM_MODE
+  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
   {
     return get_num_heavy_items_owned();
   }
