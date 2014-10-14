@@ -123,7 +123,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Narration-related Constants
 ******************************************************************************/
 
-#define NARRATION_STR_LEN          85
+#define NARRATION_STR_LEN          90
 #define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 

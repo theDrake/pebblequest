@@ -35,19 +35,35 @@ void set_game_mode(const int16_t mode)
   }
   else if (g_game_mode == MAIN_MENU_MODE)
   {
+    /*menu_layer_set_selected_index(g_main_menu_menu_layer,
+                                  (MenuIndex) {0, 0},
+                                  MenuRowAlignCenter,
+                                  NOT_ANIMATED);*/
     show_window(g_main_menu_window, NOT_ANIMATED);
   }
   else if (g_game_mode == PEBBLE_OPTIONS_MODE)
   {
+    /*menu_layer_set_selected_index(g_options_menu_menu_layer,
+                                  (MenuIndex) {0, 0},
+                                  MenuRowAlignCenter,
+                                  NOT_ANIMATED);*/
     show_window(g_options_menu_window, ANIMATED);
   }
   else if (g_game_mode == PEBBLE_INFUSION_MODE ||
            g_game_mode == REPLACE_ITEM_MODE)
   {
+    /*menu_layer_set_selected_index(g_heavy_items_menu_menu_layer,
+                                  (MenuIndex) {0, 0},
+                                  MenuRowAlignCenter,
+                                  NOT_ANIMATED);*/
     show_window(g_heavy_items_menu_window, ANIMATED);
   }
   else // INVENTORY_MODE, SHOW_STATS_MODE, LOOT_MODE, or LEVEL_UP_MODE
   {
+    menu_layer_set_selected_index(g_ad_hoc_menu_menu_layer,
+                                  (MenuIndex) {0, 0},
+                                  MenuRowAlignCenter,
+                                  NOT_ANIMATED);
     show_window(g_ad_hoc_menu_window, ANIMATED);
   }
 }
@@ -1032,15 +1048,15 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "You have descended into a vast dungeon where the "
                             "Pebbles are guarded by foul wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 75
-      strcpy(narration_str, "Welcome, hero, to the endless underworld of "
-                            "PebbleQuest!\n\n  davidcdrake.com");
+    case INTRO_NARRATION_3: // Total chars: 86
+      strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
+                            "Built by David C. Drake:\n davidcdrake.com");
       break;
     case LEVEL_UP_NARRATION:
       strcpy(narration_str, "\nCongratulations!\nYou have reached Level ");
       strcat_int(narration_str, g_player->level);
       break;
-    default: // case DEATH_NARRATION: Total chars: 62~85
+    default: // case DEATH_NARRATION: Total chars: 62~??
       strcpy(narration_str, "Alas, you have fallen.\nLevel: ");
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
@@ -1122,7 +1138,7 @@ static void menu_draw_header_callback(GContext *ctx,
     }
     else if (g_game_mode == SHOW_STATS_MODE)
     {
-      strcat(header_str, "Your Stats");
+      strcat(header_str, "Character Stats");
     }
     else // if (g_game_mode == LEVEL_UP_MODE)
     {
@@ -3795,14 +3811,6 @@ void init(void)
   srand(time(NULL));
   g_game_mode = MAIN_MENU_MODE;
   g_location  = NULL;
-  init_menu_windows();
-  init_narration();
-  init_graphics();
-  init_wall_coords();
-  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
-  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
-                                       GRAPHICS_FRAME_HEIGHT +
-                                         STATUS_BAR_HEIGHT / 2));
 
   // Check for saved data and initialize the player struct:
   g_player = malloc(sizeof(player_t));
@@ -3826,6 +3834,16 @@ void init(void)
   {
     init_player();
   }
+
+  // Now initialize everything else:
+  init_menu_windows();
+  init_narration();
+  init_graphics();
+  init_wall_coords();
+  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
+  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
+                                       GRAPHICS_FRAME_HEIGHT +
+                                         STATUS_BAR_HEIGHT / 2));
   app_focus_service_subscribe(app_focus_handler);
   show_window(g_main_menu_window, NOT_ANIMATED);
 }
