@@ -796,7 +796,7 @@ int16_t get_boosted_stat_value(const int16_t stat_index,
 
 Description: Returns the type of the nth item in the player's inventory.
 
-     Inputs: n - Integer indicating the item of interest (1st, 2nd, 3rd, etc.).
+     Inputs: n - Integer indicating the item of interest (0th, 1st, 2nd, etc.).
 
     Outputs: The nth item's type.
 ******************************************************************************/
@@ -807,7 +807,7 @@ int16_t get_nth_item_type(const int16_t n)
   // Search Pebbles:
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {
-    if (g_player->pebbles[i] > 0 && ++item_count == n)
+    if (g_player->pebbles[i] > 0 && item_count++ == n)
     {
       return i;
     }
@@ -816,7 +816,7 @@ int16_t get_nth_item_type(const int16_t n)
   // Search heavy items:
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    if (g_player->heavy_items[i]->type != NONE && ++item_count == n)
+    if (g_player->heavy_items[i]->type != NONE && item_count++ == n)
     {
       return g_player->heavy_items[i]->type;
     }
@@ -1132,7 +1132,7 @@ static void menu_draw_header_callback(GContext *ctx,
 
   if (g_game_mode == MAIN_MENU_MODE)
   {
-    strcat(header_str, "Main Menu");
+    strcat(header_str, "PebbleQuest - Main Menu");
   }
   else if (g_game_mode == INVENTORY_MODE)
   {
@@ -1328,7 +1328,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else if (g_game_mode == INVENTORY_MODE)
   {
-    if (cell_index->row < FIRST_HEAVY_ITEM)
+    if (get_nth_item_type(cell_index->row) < FIRST_HEAVY_ITEM)
     {
       g_current_selection = cell_index->row;
       set_game_mode(PEBBLE_OPTIONS_MODE);
@@ -1346,6 +1346,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       case 0: // Equip
         g_player->equipped_heavy_items[RIGHT_HAND] = NULL;
         g_player->equipped_pebble                  = g_current_selection;
+        set_game_mode(INVENTORY_MODE);
         break;
       default: // Infuse into Item
         set_game_mode(PEBBLE_INFUSION_MODE);
@@ -1361,7 +1362,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       set_game_mode(INVENTORY_MODE);
     }
   }
-  else // if (g_game_mode == REPLACE_ITEM_MODE)
+  else if (g_game_mode == REPLACE_ITEM_MODE)
   {
     // Unequip the old item, unless the new item has the same equip target:
     equip_target =
@@ -2843,7 +2844,7 @@ void narration_select_single_click(ClickRecognizerRef recognizer,
   }
   else if (g_current_narration == LEVEL_UP_NARRATION)
   {
-    set_game_mode(ACTIVE_MODE);
+    set_game_mode(LEVEL_UP_MODE);
   }
   else
   {
@@ -2953,6 +2954,30 @@ void strcat_item_name(char *dest_str, const int16_t item_type)
       /*case KEY:
         strcat(dest_str, "Key");
         break;*/
+      case DAGGER:
+        strcat(dest_str, "Dagger");
+        break;
+      case STAFF:
+        strcat(dest_str, "Staff");
+        break;
+      case SWORD:
+        strcat(dest_str, "Sword");
+        break;
+      case MACE:
+        strcat(dest_str, "Mace");
+        break;
+      case AXE:
+        strcat(dest_str, "Axe");
+        break;
+      case FLAIL:
+        strcat(dest_str, "Flail");
+        break;
+      case BOW:
+        strcat(dest_str, "Bow");
+        break;
+      case SHIELD:
+        strcat(dest_str, "Shield");
+        break;
       case ROBE:
         strcat(dest_str, "Robe");
         break;
@@ -2961,30 +2986,6 @@ void strcat_item_name(char *dest_str, const int16_t item_type)
         break;
       case HEAVY_ARMOR:
         strcat(dest_str, "H. Armor");
-        break;
-      case SHIELD:
-        strcat(dest_str, "Shield");
-        break;
-      case DAGGER:
-        strcat(dest_str, "Dagger");
-        break;
-      case SWORD:
-        strcat(dest_str, "Sword");
-        break;
-      case AXE:
-        strcat(dest_str, "Axe");
-        break;
-      case STAFF:
-        strcat(dest_str, "Staff");
-        break;
-      case MACE:
-        strcat(dest_str, "Mace");
-        break;
-      case FLAIL:
-        strcat(dest_str, "Flail");
-        break;
-      case BOW:
-        strcat(dest_str, "Bow");
         break;
     }
   }
