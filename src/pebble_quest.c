@@ -1356,7 +1356,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       {
         equip_heavy_item(g_player->heavy_items[cell_index->row -
                                                  get_num_pebble_types_owned()]);
-        menu_layer_reload_data(g_ad_hoc_menu_layer);
+        menu_layer_reload_data(g_ad_hoc_menu_menu_layer);
       }
     }
   }
