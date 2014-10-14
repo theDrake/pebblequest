@@ -821,31 +821,6 @@ int16_t get_nth_item_type(const int16_t n)
 }
 
 /******************************************************************************
-   Function: get_pointer_to_nth_item
-
-Description: Returns a pointer to the nth item in the player's inventory, which
-             is assumed to be a heavy item.
-
-     Inputs: n - Integer indicating the item of interest (1st, 2nd, 3rd, etc.).
-
-    Outputs: Pointer to the nth item (which should be a heavy item).
-******************************************************************************/
-heavy_item_t *get_pointer_to_nth_item(const int16_t n)
-{
-  int16_t i, item_count = get_num_pebble_types_owned();
-
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
-    if (g_player->heavy_items[i]->type != NONE && ++item_count == n)
-    {
-      break;
-    }
-  }
-
-  return g_player->heavy_items[i];
-}
-
-/******************************************************************************
    Function: get_num_pebble_types_owned
 
 Description: Returns the number of types of Pebbles in the player's inventory.

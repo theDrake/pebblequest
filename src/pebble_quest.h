@@ -346,7 +346,6 @@ int16_t get_opposite_direction(const int16_t direction);
 int16_t get_boosted_stat_value(const int16_t stat_index,
                                const int16_t boost_amount);
 int16_t get_nth_item_type(const int16_t n);
-heavy_item_t *get_pointer_to_nth_item(const int16_t n);
 int16_t get_num_pebble_types_owned(void);
 int16_t get_num_heavy_items_owned(void);
 int16_t get_equip_target(const int16_t item_type);
