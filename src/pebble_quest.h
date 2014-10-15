@@ -399,6 +399,11 @@ void draw_status_bar(GContext *ctx);
 void draw_status_meter(GContext *ctx,
                        const GPoint origin,
                        const float ratio);
+void fill_ellipse(GContext *ctx,
+                  const GPoint center,
+                  const int16_t h_radius,
+                  const int16_t v_radius,
+                  const GColor color);
 void flash_screen(void);
 static void flash_timer_callback(void *data);
 static void player_timer_callback(void *data);

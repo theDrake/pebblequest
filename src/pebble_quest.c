@@ -1828,27 +1828,24 @@ void draw_cell_contents(GContext *ctx,
   floor_center_point = get_floor_center_point(depth, position);
 
   // Draw an entrance on the ceiling or an exit/shadow on the ground:
-  graphics_context_set_fill_color(ctx, GColorBlack);
   if (get_cell_type(cell) == ENTRANCE)
   {
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 4,
-                             GRAPHICS_FRAME_HEIGHT - (floor_center_point.y -
-                                                      drawing_unit / 2),
-                             drawing_unit * 8,
-                             drawing_unit),
-                       drawing_unit / 2,
-                       GCornersAll);
+    fill_ellipse(ctx,
+                 GPoint(floor_center_point.x - drawing_unit * 4,
+                        GRAPHICS_FRAME_HEIGHT - (floor_center_point.y -
+                                                 drawing_unit / 2)),
+                 drawing_unit * 8,
+                 drawing_unit,
+                 GColorBlack);
   }
   else
   {
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 4,
-                             floor_center_point.y - drawing_unit / 2,
-                             drawing_unit * 8,
-                             drawing_unit),
-                       drawing_unit / 2,
-                       GCornersAll);
+    fill_ellipse(ctx,
+                 GPoint(floor_center_point.x - drawing_unit * 4,
+                        floor_center_point.y - drawing_unit / 2),
+                 drawing_unit * 8,
+                 drawing_unit,
+                 GColorBlack);
   }
 
   // Draw the character (or a treasure chest for loot):
@@ -2366,7 +2363,7 @@ void draw_status_meter(GContext *ctx,
 /******************************************************************************
    Function: draw_shaded_ellipse
 
-Description: Draws a filled ellipse according to given specifications.
+Description: Draws a shaded ellipse according to given specifications.
 
      Inputs: ctx         - Pointer to the relevant graphics context.
              center      - Central coordinates of the ellipse (with respect to
@@ -2497,7 +2494,7 @@ Description: Draws a filled ellipse according to given specifications.
 
     Outputs: None.
 ******************************************************************************/
-/*void fill_ellipse(GContext *ctx,
+void fill_ellipse(GContext *ctx,
                   const GPoint center,
                   const int16_t h_radius,
                   const int16_t v_radius,
@@ -2518,7 +2515,7 @@ Description: Draws a filled ellipse according to given specifications.
                        GPoint(center.x - x_offset, center.y + y_offset),
                        GPoint(center.x + x_offset, center.y + y_offset));
   }
-}*/
+}
 
 /******************************************************************************
    Function: draw_ellipse
