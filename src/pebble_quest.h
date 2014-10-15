@@ -267,15 +267,15 @@ typedef struct PlayerCharacter {
           num_pebbles_found,
           num_kills,
           exp_points,
-          level;
+          level,
+          depth;
   heavy_item_t *heavy_items[MAX_HEAVY_ITEMS], // Clothing, armor, and weapons.
                *equipped_heavy_items[NUM_EQUIP_TARGETS];
 } __attribute__((__packed__)) player_t;
 
 typedef struct Location {
   int16_t map[MAP_WIDTH][MAP_HEIGHT],
-          primary_npc_type,
-          depth;
+          primary_npc_type;
   npc_t *npcs;
 } __attribute__((__packed__)) location_t;
 
@@ -433,7 +433,7 @@ void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
 void init_heavy_item(heavy_item_t *item, const int16_t n);
 void init_wall_coords(void);
-void init_location(const int16_t depth);
+void init_location(void);
 void init_location_map(void);
 void deinit_location(void);
 void init_narration(void);

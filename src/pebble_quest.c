@@ -115,7 +115,7 @@ void move_player(const int16_t direction)
   // Check for the exit:
   if (get_cell_type(g_player->position) == EXIT)
   {
-    init_location(g_location->depth + 1);
+    init_location();
   }
   else if (occupiable(destination))
   {
@@ -1048,25 +1048,26 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "You have descended into a vast dungeon where the "
                             "Pebbles are guarded by evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 82
+    case INTRO_NARRATION_3: // Total chars: 79
       strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
-                            " By David C. Drake:\n  davidcdrake.com");
+                            "By David C. Drake:\ndavidcdrake.com");
       break;
     case LEVEL_UP_NARRATION:
       strcpy(narration_str, "\nCongratulations!\nYou have reached Level ");
       strcat_int(narration_str, g_player->level);
       break;
-    default: // case DEATH_NARRATION: Total chars: 62~??
-      strcpy(narration_str, "Alas, you have fallen.\nLevel: ");
+    default: // case DEATH_NARRATION: Total chars: 57~??
+      strcpy(narration_str, "You have fallen.\n\nLevel: ");
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
-      strcat_int(narration_str, g_location->depth);
+      strcat_int(narration_str, g_player->depth);
       strcat(narration_str, "\nPebbles: ");
       strcat_int(narration_str, g_player->num_pebbles_found);
       strcat(narration_str, "\nKills: ");
       strcat_int(narration_str, g_player->num_kills);
-      init_player();
-      deinit_location();
+      //init_player();
+      //deinit_location();
+      init_location();
       break;
   }
   text_layer_set_text(g_narration_text_layer, narration_str);
@@ -1302,9 +1303,9 @@ void menu_select_callback(MenuLayer *menu_layer,
     switch (cell_index->row)
     {
       case 0: // Play
-        if (g_location == NULL)
+        if (g_player->depth == 0)
         {
-          init_location(1);
+          init_location();
           set_game_mode(ACTIVE_MODE);
           g_current_narration = INTRO_NARRATION_1;
           set_game_mode(NARRATION_MODE);
@@ -1828,25 +1829,15 @@ void draw_cell_contents(GContext *ctx,
   floor_center_point = get_floor_center_point(depth, position);
 
   // Draw an entrance on the ceiling or an exit/shadow on the ground:
-  if (get_cell_type(cell) == ENTRANCE)
-  {
-    fill_ellipse(ctx,
-                 GPoint(floor_center_point.x - drawing_unit * 4,
+  fill_ellipse(ctx,
+               GPoint(floor_center_point.x,
+                      get_cell_type(cell) == ENTRANCE ?
                         GRAPHICS_FRAME_HEIGHT - (floor_center_point.y -
-                                                 drawing_unit / 2)),
-                 drawing_unit * 8,
-                 drawing_unit,
-                 GColorBlack);
-  }
-  else
-  {
-    fill_ellipse(ctx,
-                 GPoint(floor_center_point.x - drawing_unit * 4,
+                                                 drawing_unit / 2) :
                         floor_center_point.y - drawing_unit / 2),
-                 drawing_unit * 8,
-                 drawing_unit,
-                 GColorBlack);
-  }
+               drawing_unit * 3,
+               drawing_unit * 1.5,
+               GColorBlack);
 
   // Draw the character (or a treasure chest for loot):
   if (npc == NULL)
@@ -2829,6 +2820,10 @@ void narration_select_single_click(ClickRecognizerRef recognizer,
   {
     show_narration(++g_current_narration);
   }
+  else if (g_current_narration == INTRO_NARRATION_3)
+  {
+    set_game_mode(ACTIVE_MODE);
+  }
   else if (g_current_narration == LEVEL_UP_NARRATION)
   {
     set_game_mode(LEVEL_UP_MODE);
@@ -3249,6 +3244,7 @@ void init_player(void)
 
   g_player->level             = 1;
   g_player->exp_points        = 0;
+  g_player->depth             = 0;
   g_player->num_pebbles_found = 0;
   g_player->num_kills         = 0;
   g_player->equipped_pebble   = NONE;
@@ -3443,14 +3439,14 @@ Description: Initializes the global location struct according to a given depth.
 
     Outputs: None.
 ******************************************************************************/
-void init_location(const int16_t depth)
+void init_location(void)
 {
   deinit_location();
   g_location                   = malloc(sizeof(location_t));
-  g_location->depth            = depth;
   g_location->primary_npc_type = GOBLIN;
   g_location->npcs             = NULL;
   init_location_map();
+  g_player->depth++;
 }
 
 /******************************************************************************
