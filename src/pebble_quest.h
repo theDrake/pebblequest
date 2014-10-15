@@ -99,10 +99,12 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 ******************************************************************************/
 
 // Cell types (for loot, an item type value is used):
-#define EMPTY       -1
-#define SOLID       -2
-#define CLOSED_DOOR -3
-#define LOCKED_DOOR -4
+#define ENTRANCE    -1
+#define EXIT        -2
+#define EMPTY       -3
+#define SOLID       -4
+#define CLOSED_DOOR -5
+#define LOCKED_DOOR -6
 
 // Directions:
 #define NORTH          0
@@ -249,35 +251,31 @@ typedef struct HeavyItem {
 
 typedef struct NonPlayerCharacter {
   GPoint position;
-  uint16_t type,
-           stats[NUM_CHARACTER_STATS],
-           status_effects[NUM_STATUS_EFFECTS];
+  int16_t type,
+          stats[NUM_CHARACTER_STATS],
+          status_effects[NUM_STATUS_EFFECTS];
   struct NonPlayerCharacter *next;
 } __attribute__((__packed__)) npc_t;
 
 typedef struct PlayerCharacter {
   GPoint position;
   int16_t direction,
-          equipped_pebble;
-  uint16_t stats[NUM_CHARACTER_STATS],
-           status_effects[NUM_STATUS_EFFECTS],
-           pebbles[NUM_PEBBLE_TYPES],
-           num_pebbles_found,
-           num_kills,
-           exp_points,
-           level;
+          stats[NUM_CHARACTER_STATS],
+          status_effects[NUM_STATUS_EFFECTS],
+          pebbles[NUM_PEBBLE_TYPES],
+          equipped_pebble,
+          num_pebbles_found,
+          num_kills,
+          exp_points,
+          level;
   heavy_item_t *heavy_items[MAX_HEAVY_ITEMS], // Clothing, armor, and weapons.
                *equipped_heavy_items[NUM_EQUIP_TARGETS];
 } __attribute__((__packed__)) player_t;
 
 typedef struct Location {
   int16_t map[MAP_WIDTH][MAP_HEIGHT],
-          entrance_direction,
-          exit_direction,
-          primary_npc_type;
-  uint16_t depth;
-  GPoint starting_point,
-         ending_point;
+          primary_npc_type,
+          depth;
   npc_t *npcs;
 } __attribute__((__packed__)) location_t;
 
@@ -422,7 +420,7 @@ void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
 void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
-void assign_minor_stats(uint16_t *stats_array);
+void assign_minor_stats(int16_t *stats_array);
 void add_item_to_inventory(const int16_t item_type);
 void equip_heavy_item(heavy_item_t *const item);
 void init_player(void);
@@ -430,7 +428,7 @@ void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
 void init_heavy_item(heavy_item_t *item, const int16_t n);
 void init_wall_coords(void);
-void init_location(const uint16_t depth);
+void init_location(const int16_t depth);
 void init_location_map(void);
 void deinit_location(void);
 void init_narration(void);

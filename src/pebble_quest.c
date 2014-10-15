@@ -112,9 +112,8 @@ void move_player(const int16_t direction)
 {
   GPoint destination = get_cell_farther_away(g_player->position, direction, 1);
 
-  // Check for movement into the entrance/exit:
-  if (gpoint_equal(&g_player->position, &g_location->starting_point) &&
-      g_player->direction == g_location->entrance_direction)
+  // Check for the exit:
+  if (get_cell_type(g_player->position) == EXIT)
   {
     init_location(g_location->depth + 1);
   }
@@ -124,7 +123,7 @@ void move_player(const int16_t direction)
     g_player->position = destination;
 
     // Check for loot:
-    if (get_cell_type(destination) > EMPTY)
+    if (get_cell_type(destination) >= 0)
     {
       set_game_mode(LOOT_MODE);
     }
@@ -336,8 +335,9 @@ void adjust_player_current_health(const int16_t amount)
   }
   else if (g_player->stats[CURRENT_HEALTH] <= 0)
   {
-    //show_window(g_menu_window, NOT_ANIMATED);
-    show_narration(DEATH_NARRATION);
+    set_game_mode(MAIN_MENU_MODE);
+    g_current_narration = DEATH_NARRATION;
+    set_game_mode(NARRATION_MODE);
   }
 }
 
@@ -1046,11 +1046,11 @@ void show_narration(const int16_t narration)
       break;
     case INTRO_NARRATION_2: // Total chars: 85
       strcpy(narration_str, "You have descended into a vast dungeon where the "
-                            "Pebbles are guarded by foul wizards.");
+                            "Pebbles are guarded by evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 86
+    case INTRO_NARRATION_3: // Total chars: 82
       strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
-                            "Built by David C. Drake:\n davidcdrake.com");
+                            " By David C. Drake:\n  davidcdrake.com");
       break;
     case LEVEL_UP_NARRATION:
       strcpy(narration_str, "\nCongratulations!\nYou have reached Level ");
@@ -1305,6 +1305,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         if (g_location == NULL)
         {
           init_location(1);
+          set_game_mode(ACTIVE_MODE);
           g_current_narration = INTRO_NARRATION_1;
           set_game_mode(NARRATION_MODE);
         }
@@ -1646,8 +1647,8 @@ void draw_cell_walls(GContext *ctx,
                      const int16_t depth,
                      const int16_t position)
 {
-  int16_t left, right, top, bottom, y_offset, exit_offset_x, exit_offset_y;
-  bool back_wall_drawn, left_wall_drawn, right_wall_drawn, exit_present;
+  int16_t left, right, top, bottom, y_offset;
+  bool back_wall_drawn, left_wall_drawn, right_wall_drawn;
   GPoint cell_2;
 
   // Back wall:
@@ -1655,8 +1656,6 @@ void draw_cell_walls(GContext *ctx,
   right         = g_back_wall_coords[depth][position][BOTTOM_RIGHT].x;
   top           = g_back_wall_coords[depth][position][TOP_LEFT].y;
   bottom        = g_back_wall_coords[depth][position][BOTTOM_RIGHT].y;
-  exit_present  = gpoint_equal(&cell, &g_location->starting_point);
-  exit_offset_y = (right - left) / 4;
   if (bottom - top < MIN_WALL_HEIGHT)
   {
     return;
@@ -1681,20 +1680,6 @@ void draw_cell_walls(GContext *ctx,
       graphics_draw_line(ctx,
                          GPoint(left, bottom + 1),
                          GPoint(right, bottom + 1));
-    }
-
-    // Entrance/exit:
-    if (exit_present && g_player->direction == g_location->entrance_direction)
-    {
-      graphics_context_set_fill_color(ctx, GColorBlack);
-      exit_offset_x = (right - left) / 3;
-      graphics_fill_rect(ctx,
-                         GRect(left + exit_offset_x,
-                               top + exit_offset_y,
-                               exit_offset_x,
-                               bottom - top - exit_offset_y),
-                         NO_CORNER_RADIUS,
-                         GCornerNone);
     }
 
     back_wall_drawn = true;
@@ -1732,23 +1717,6 @@ void draw_cell_walls(GContext *ctx,
       graphics_draw_line(ctx,
                          GPoint(left, bottom + y_offset),
                          GPoint(right, bottom));
-
-      // Entrance/exit:
-      if (exit_present && get_direction_to_the_left(g_player->direction) ==
-                          g_location->entrance_direction)
-      {
-        exit_offset_x = (right - left) / 3;
-        fill_quad(ctx,
-                  GPoint(depth == 0 ? 0 : left + exit_offset_x,
-                         top - (depth == 0 ? y_offset - 4: y_offset / 3) +
-                           exit_offset_y),
-                  GPoint(depth == 0 ? 0 : left + exit_offset_x,
-                         bottom + (depth == 0 ? y_offset : y_offset / 3)),
-                  GPoint(right - exit_offset_x, top + exit_offset_y),
-                  GPoint(right - exit_offset_x, bottom + 3),
-                  GColorBlack);
-      }
-
       left_wall_drawn = true;
     }
   }
@@ -1783,25 +1751,6 @@ void draw_cell_walls(GContext *ctx,
       graphics_draw_line(ctx,
                          GPoint(left, bottom),
                          GPoint(right, bottom + y_offset));
-
-      // Entrance/exit:
-      if (exit_present && get_direction_to_the_right(g_player->direction) ==
-                          g_location->entrance_direction)
-      {
-        exit_offset_x = (right - left) / 3;
-        fill_quad(ctx,
-                  GPoint(left + exit_offset_x, top + exit_offset_y),
-                  GPoint(left + exit_offset_x, bottom + 4),
-                  GPoint(depth == 0 ? GRAPHICS_FRAME_WIDTH :
-                                      right - exit_offset_x,
-                         top - (depth == 0 ? y_offset - 5 : y_offset / 3) +
-                           exit_offset_y),
-                  GPoint(depth == 0 ? GRAPHICS_FRAME_WIDTH :
-                                      right - exit_offset_x,
-                         bottom + (depth == 0 ? y_offset : y_offset / 3)),
-                  GColorBlack);
-      }
-
       right_wall_drawn = true;
     }
   }
@@ -1859,8 +1808,8 @@ void draw_cell_contents(GContext *ctx,
                         const int16_t position)
 {
   int16_t drawing_unit; // Reference variable for drawing contents at depth.
-  npc_t *npc = get_npc_at(cell);
   GPoint floor_center_point;
+  npc_t *npc = get_npc_at(cell);
 
   // Check for a completely empty cell:
   if (get_cell_type(cell) == EMPTY && npc == NULL)
@@ -1878,15 +1827,29 @@ void draw_cell_contents(GContext *ctx,
   }
   floor_center_point = get_floor_center_point(depth, position);
 
-  // Draw a shadow on the ground:
+  // Draw an entrance on the ceiling or an exit/shadow on the ground:
   graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_fill_rect(ctx,
-                     GRect(floor_center_point.x - drawing_unit * 4,
-                           floor_center_point.y - drawing_unit / 2,
-                           drawing_unit * 8,
-                           drawing_unit),
-                     drawing_unit / 2,
-                     GCornersAll);
+  if (get_cell_type(cell) == ENTRANCE)
+  {
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit * 4,
+                             GRAPHICS_FRAME_HEIGHT - (floor_center_point.y -
+                                                      drawing_unit / 2),
+                             drawing_unit * 8,
+                             drawing_unit),
+                       drawing_unit / 2,
+                       GCornersAll);
+  }
+  else
+  {
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit * 4,
+                             floor_center_point.y - drawing_unit / 2,
+                             drawing_unit * 8,
+                             drawing_unit),
+                       drawing_unit / 2,
+                       GCornersAll);
+  }
 
   // Draw the character (or a treasure chest for loot):
   if (npc == NULL)
@@ -1994,7 +1957,7 @@ void draw_cell_contents(GContext *ctx,
                                   floor_center_point.y - (drawing_unit * 9)),
                            drawing_unit / 6);
     }
-    else*/ if (get_cell_type(cell) > EMPTY) // Loot!
+    else*/ if (get_cell_type(cell) >= 0) // Loot!
     {
       graphics_context_set_fill_color(ctx, GColorWhite);
       graphics_fill_rect(ctx,
@@ -3198,7 +3161,7 @@ Description: Assigns values to the minor stats of a given stats array according
 
     Outputs: None.
 ******************************************************************************/
-void assign_minor_stats(uint16_t *stats_array)
+void assign_minor_stats(int16_t *stats_array)
 {
   stats_array[MAX_HEALTH]       = stats_array[STRENGTH * 10];
   stats_array[MAX_ENERGY]       = stats_array[INTELLECT * 10];
@@ -3483,7 +3446,7 @@ Description: Initializes the global location struct according to a given depth.
 
     Outputs: None.
 ******************************************************************************/
-void init_location(const uint16_t depth)
+void init_location(const int16_t depth)
 {
   deinit_location();
   g_location                   = malloc(sizeof(location_t));
@@ -3491,17 +3454,13 @@ void init_location(const uint16_t depth)
   g_location->primary_npc_type = GOBLIN;
   g_location->npcs             = NULL;
   init_location_map();
-
-  // Move and orient the player:
-  g_player->position = g_location->starting_point;
-  set_player_direction(get_opposite_direction(g_location->entrance_direction));
-  //g_player->has_key = false;
 }
 
 /******************************************************************************
    Function: init_location_map
 
-Description: Initializes the current location's map (a 2D array of cells).
+Description: Initializes the current location's map (a 2D array of cells) and
+             moves/orients the player accordingly.
 
      Inputs: None.
 
@@ -3510,7 +3469,7 @@ Description: Initializes the current location's map (a 2D array of cells).
 void init_location_map(void)
 {
   int16_t i, j, builder_direction;
-  GPoint builder_position;
+  GPoint starting_point, ending_point, builder_position;
 
   // First, set each cell to solid:
   for (i = 0; i < MAP_WIDTH; ++i)
@@ -3522,30 +3481,30 @@ void init_location_map(void)
   }
 
   // Next, set starting and exit points:
-  switch (g_location->entrance_direction = rand() % NUM_DIRECTIONS)
+  set_player_direction(builder_direction = rand() % NUM_DIRECTIONS);
+  switch (builder_direction)
   {
     case NORTH:
-      g_location->starting_point = RANDOM_POINT_NORTH;
-      g_location->ending_point   = RANDOM_POINT_SOUTH;
+      starting_point = RANDOM_POINT_NORTH;
+      ending_point   = RANDOM_POINT_SOUTH;
       break;
     case SOUTH:
-      g_location->starting_point = RANDOM_POINT_SOUTH;
-      g_location->ending_point   = RANDOM_POINT_NORTH;
+      starting_point = RANDOM_POINT_SOUTH;
+      ending_point   = RANDOM_POINT_NORTH;
       break;
     case EAST:
-      g_location->starting_point = RANDOM_POINT_EAST;
-      g_location->ending_point   = RANDOM_POINT_WEST;
+      starting_point = RANDOM_POINT_EAST;
+      ending_point   = RANDOM_POINT_WEST;
       break;
     default: // case WEST:
-      g_location->starting_point = RANDOM_POINT_WEST;
-      g_location->ending_point   = RANDOM_POINT_EAST;
+      starting_point = RANDOM_POINT_WEST;
+      ending_point   = RANDOM_POINT_EAST;
       break;
   }
+  g_player->position = builder_position = starting_point;
 
   // Now, carve a path between the starting and end points:
-  builder_position  = g_location->starting_point;
-  builder_direction = get_opposite_direction(g_location->entrance_direction);
-  while (!gpoint_equal(&builder_position, &g_location->ending_point))
+  while (!gpoint_equal(&builder_position, &ending_point))
   {
     set_cell_type(builder_position, EMPTY);
     switch (builder_direction)
@@ -3575,13 +3534,13 @@ void init_location_map(void)
         }
         break;
     }
-    g_location->exit_direction = builder_direction;
     if (rand() % NUM_DIRECTIONS == 0) // 25% chance of turning.
     {
       builder_direction = rand() % NUM_DIRECTIONS;
     }
   }
-  set_cell_type(builder_position, EMPTY);
+  set_cell_type(starting_point, ENTRANCE);
+  set_cell_type(ending_point, EXIT);
 }
 
 /******************************************************************************
