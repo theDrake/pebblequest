@@ -254,7 +254,6 @@ typedef struct NonPlayerCharacter {
   int16_t type,
           stats[NUM_CHARACTER_STATS],
           status_effects[NUM_STATUS_EFFECTS];
-  struct NonPlayerCharacter *next;
 } __attribute__((__packed__)) npc_t;
 
 typedef struct PlayerCharacter {
@@ -276,7 +275,7 @@ typedef struct PlayerCharacter {
 typedef struct Location {
   int16_t map[MAP_WIDTH][MAP_HEIGHT],
           primary_npc_type;
-  npc_t *npcs;
+  npc_t npcs[MAX_NPCS_AT_ONE_TIME];
 } __attribute__((__packed__)) location_t;
 
 /******************************************************************************
@@ -327,7 +326,6 @@ void move_npc(npc_t *npc, const int16_t direction);
 void determine_npc_behavior(npc_t *npc);
 void damage_player(int16_t damage);
 void damage_npc(npc_t *npc, const int16_t damage);
-void remove_npc(npc_t *npc);
 void adjust_player_current_health(const int16_t amount);
 void adjust_player_current_mp(const int16_t amount);
 void add_new_npc(const int16_t npc_type, const GPoint position);

@@ -265,56 +265,9 @@ void damage_npc(npc_t *npc, const int16_t damage)
   npc->stats[CURRENT_HEALTH] -= damage;
   if (npc->stats[CURRENT_HEALTH] <= 0)
   {
-    remove_npc(npc);
+    npc->type = NONE;
     g_player->num_kills++;
     g_player->exp_points += 50; // get_exp_bonus(npc);
-  }
-}
-
-/******************************************************************************
-   Function: remove_npc
-
-Description: Handles the removal of a given NPC from memory and from the
-             current location's list of NPCs.
-
-     Inputs: npc - Pointer to the NPC to be killed.
-
-    Outputs: None.
-******************************************************************************/
-void remove_npc(npc_t *npc)
-{
-  npc_t *npc_pointer, *npc_pointer_2;
-
-  npc_pointer = npc_pointer_2 = g_location->npcs;
-  while (npc_pointer != NULL)
-  {
-    if (npc_pointer == npc)
-    {
-      if (npc_pointer->next != NULL)
-      {
-        if (npc_pointer == g_location->npcs)
-        {
-          g_location->npcs = npc_pointer->next;
-        }
-        else
-        {
-          npc_pointer_2->next = npc_pointer->next;
-        }
-      }
-      else if (npc_pointer == g_location->npcs)
-      {
-        g_location->npcs = NULL;
-      }
-      else
-      {
-        npc_pointer_2->next = NULL;
-      }
-      free(npc_pointer);
-
-      return;
-    }
-    npc_pointer_2 = npc_pointer;
-    npc_pointer = npc_pointer->next;
   }
 }
 
@@ -403,23 +356,17 @@ Description: Creates an NPC of a given type at a given location and adds it to
 ******************************************************************************/
 void add_new_npc(const int16_t npc_type, const GPoint position)
 {
-  npc_t *npc_pointer = g_location->npcs;
+  int16_t i;
 
   if (occupiable(position))
   {
-    if (npc_pointer == NULL)
+    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      g_location->npcs = malloc(sizeof(npc_t));
-      init_npc(g_location->npcs, npc_type, position);
-
-      return;
+      if (g_location->npcs[i] == NONE)
+      {
+        init_npc(g_location->npcs[i], npc_type, position);
+      }
     }
-    while (npc_pointer->next != NULL)
-    {
-      npc_pointer = npc_pointer->next;
-    }
-    npc_pointer->next = malloc(sizeof(npc_t));
-    init_npc(npc_pointer->next, npc_type, position);
   }
 }
 
@@ -959,15 +906,15 @@ Description: Returns a pointer to the NPC occupying a given cell.
 ******************************************************************************/
 npc_t *get_npc_at(const GPoint cell)
 {
-  npc_t *npc = g_location->npcs;
+  int16_t i;
 
-  while (npc != NULL)
+  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    if (gpoint_equal(&npc->position, &cell))
+    if (g_location->npcs[i]->type != NONE &&
+        gpoint_equal(&npc->position, &cell))
     {
       return npc;
     }
-    npc = npc->next;
   }
 
   return NULL;
@@ -2587,7 +2534,7 @@ Description: Called when the player timer reaches zero.
 ******************************************************************************/
 static void player_timer_callback(void *data)
 {
-  if (g_graphics_window == NULL)
+  if (g_game_mode != ACTIVE_MODE)
   {
     return;
   }
@@ -2858,26 +2805,25 @@ Description: Handles changes to the game world every second while in active
 ******************************************************************************/
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 {
-  int16_t current_num_npcs = 0;
-  npc_t *npc_pointer;
+  int16_t i;
 
   if (g_game_mode == ACTIVE_MODE)
   {
     // Handle NPC behavior:
-    npc_pointer = g_location->npcs;
-    while (npc_pointer != NULL)
+    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      determine_npc_behavior(npc_pointer);
-      if (g_player->stats[CURRENT_HEALTH] <= 0)
+      if (g_location->npcs[i]->type != NONE)
       {
-        return;
+        determine_npc_behavior(g_location->npcs[i]);
+        if (g_player->stats[CURRENT_HEALTH] <= 0)
+        {
+          return;
+        }
       }
-      current_num_npcs++;
-      npc_pointer = npc_pointer->next;
     }
 
-    // Determine whether a new NPC should be generated:
-    if (current_num_npcs < MAX_NPCS_AT_ONE_TIME && rand() % 10 == 0)
+    // Generate new NPCs periodically (does nothing if the NPC array is full):
+    if (rand() % 10 == 0)
     {
       add_new_npc(get_random_npc_type(), get_npc_spawn_point());
     }
@@ -3309,12 +3255,10 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
 {
   int16_t i;
 
-  npc->type             = type;
-  npc->position         = position;
-  npc->next             = NULL;
-  npc->stats[STRENGTH]  = g_player->stats[STRENGTH]  / 5;
-  npc->stats[AGILITY]   = g_player->stats[AGILITY]   / 5;
-  npc->stats[INTELLECT] = g_player->stats[INTELLECT] / 5;
+  npc->type     = type;
+  npc->position = position;
+  npc->stats[STRENGTH] = npc->stats[AGILITY] = npc->stats[INTELLECT] =
+    g_player->level / 2;
   for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
   {
     npc->status_effects[i] = 0;
@@ -3439,10 +3383,13 @@ Description: Initializes the global location struct according to a given depth.
 ******************************************************************************/
 void init_location(void)
 {
-  deinit_location();
-  g_location                   = malloc(sizeof(location_t));
+  int16_t i;
+
   g_location->primary_npc_type = GOBLIN;
-  g_location->npcs             = NULL;
+  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
+  {
+    g_location->npcs[i]->type = NONE;
+  }
   init_location_map();
   g_player->depth++;
 }
@@ -3548,10 +3495,9 @@ void deinit_location(void)
 {
   if (g_location != NULL)
   {
-    // Remove NPCs and the location struct itself from memory:
-    while (g_location->npcs != NULL)
+    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      remove_npc(g_location->npcs);
+      free(g_location->npcs[i]);
     }
     free(g_location);
     g_location = NULL;
