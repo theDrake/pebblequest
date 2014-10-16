@@ -160,6 +160,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define ROBE                 15
 #define HEAVY_ARMOR          16
 #define LIGHT_ARMOR          17
+#define NUM_HEAVY_ITEM_TYPES 18
 #define NUM_PEBBLE_TYPES     7
 #define NUM_HEAVY_ITEM_TYPES 11 // Excludes Pebbles.
 #define FIRST_HEAVY_ITEM     DAGGER
@@ -275,7 +276,7 @@ typedef struct PlayerCharacter {
 typedef struct Location {
   int16_t map[MAP_WIDTH][MAP_HEIGHT],
           primary_npc_type;
-  npc_t npcs[MAX_NPCS_AT_ONE_TIME];
+  npc_t *npcs[MAX_NPCS_AT_ONE_TIME];
 } __attribute__((__packed__)) location_t;
 
 /******************************************************************************
@@ -325,7 +326,7 @@ void move_player(const int16_t direction);
 void move_npc(npc_t *npc, const int16_t direction);
 void determine_npc_behavior(npc_t *npc);
 void damage_player(int16_t damage);
-void damage_npc(npc_t *npc, const int16_t damage);
+void damage_npc(npc_t *npc, int16_t damage);
 void adjust_player_current_health(const int16_t amount);
 void adjust_player_current_mp(const int16_t amount);
 void add_new_npc(const int16_t npc_type, const GPoint position);
