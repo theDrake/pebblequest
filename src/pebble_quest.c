@@ -165,7 +165,8 @@ void determine_npc_behavior(npc_t *npc)
 {
   if (touching(npc->position, g_player->position))
   {
-    damage_player(npc->stats[PHYSICAL_POWER]);
+    damage_player(npc->stats[PHYSICAL_POWER] -
+                    g_player->stats[PHYSICAL_DEFENSE]);
   }
   else
   {
@@ -235,7 +236,6 @@ Description: Damages the player according to his/her defense vs. a given damage
 ******************************************************************************/
 void damage_player(int16_t damage)
 {
-  damage -= g_player->stats[PHYSICAL_DEFENSE] / 2;
   if (damage < MIN_DAMAGE)
   {
     damage = MIN_DAMAGE;
@@ -258,12 +258,16 @@ Description: Damages a given NPC according to a given damage value. If this
 ******************************************************************************/
 void damage_npc(npc_t *npc, const int16_t damage)
 {
+  if (damage < MIN_DAMAGE)
+  {
+    damage = MIN_DAMAGE;
+  }
   npc->stats[CURRENT_HEALTH] -= damage;
   if (npc->stats[CURRENT_HEALTH] <= 0)
   {
-    g_player->num_kills++;
-    //g_player->exp_points += get_exp_bonus(npc->type);
     remove_npc(npc);
+    g_player->num_kills++;
+    g_player->exp_points += 50; // get_exp_bonus(npc);
   }
 }
 
@@ -2820,17 +2824,9 @@ void narration_select_single_click(ClickRecognizerRef recognizer,
   {
     show_narration(++g_current_narration);
   }
-  else if (g_current_narration == INTRO_NARRATION_3)
-  {
-    set_game_mode(ACTIVE_MODE);
-  }
-  else if (g_current_narration == LEVEL_UP_NARRATION)
-  {
-    set_game_mode(LEVEL_UP_MODE);
-  }
   else
   {
-    set_game_mode(MAIN_MENU_MODE);
+    window_stack_pop(NOT_ANIMATED);
   }
 }
 
@@ -3155,16 +3151,18 @@ Description: Assigns values to the minor stats of a given stats array according
 ******************************************************************************/
 void assign_minor_stats(int16_t *stats_array)
 {
-  stats_array[MAX_HEALTH]       = stats_array[STRENGTH * 10];
-  stats_array[MAX_ENERGY]       = stats_array[INTELLECT * 10];
-  stats_array[PHYSICAL_POWER]   = stats_array[STRENGTH * 2] +
-                                    stats_array[AGILITY];
-  stats_array[PHYSICAL_DEFENSE] = stats_array[STRENGTH] +
-                                    stats_array[AGILITY * 2];
-  stats_array[MAGICAL_POWER]    = stats_array[INTELLECT * 2] +
-                                    stats_array[AGILITY];
-  stats_array[MAGICAL_DEFENSE]  = stats_array[INTELLECT] +
-                                    stats_array[AGILITY * 2];
+  stats_array[CURRENT_HEALTH] = stats_array[MAX_HEALTH] =
+    stats_array[STRENGTH] * 10;
+  stats_array[CURRENT_ENERGY] = stats_array[MAX_ENERGY] =
+    stats_array[INTELLECT] * 5 + stats_array[AGILITY] * 5;
+  stats_array[PHYSICAL_POWER]   = stats_array[STRENGTH] +
+                                    stats_array[AGILITY] / 2;
+  stats_array[PHYSICAL_DEFENSE] = stats_array[AGILITY] +
+                                    stats_array[STRENGTH] / 2;
+  stats_array[MAGICAL_POWER]    = stats_array[INTELLECT] +
+                                    stats_array[AGILITY] / 2;
+  stats_array[MAGICAL_DEFENSE]  = stats_array[AGILITY] +
+                                    stats_array[INTELLECT] / 2;
 }
 
 /******************************************************************************
@@ -3762,13 +3760,17 @@ void init(void)
 
   srand(time(NULL));
   g_game_mode = MAIN_MENU_MODE;
-  g_location  = NULL;
 
-  // Check for saved data and initialize the player struct:
+  // Load saved data (or initialize brand new player and location structs):
   g_player = malloc(sizeof(player_t));
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
     g_player->heavy_items[i] = malloc(sizeof(heavy_item_t));
+  }
+  g_location = malloc(sizeof(location_t));
+  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
+  {
+    g_player->npcs[i] = malloc(sizeof(npc_t));
   }
   if (persist_exists(STORAGE_KEY))
   {
@@ -3781,10 +3783,20 @@ void init(void)
     persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS,
                       g_player,
                       sizeof(player_t));
+    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
+    {
+      persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i,
+                        g_location->npcs[i],
+                        sizeof(npc_t));
+    }
+    persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME,
+                      g_location,
+                      sizeof(location_t));
   }
   else
   {
     init_player();
+    init_location();
   }
 
   // Now initialize everything else:
@@ -3813,6 +3825,7 @@ void deinit(void)
 {
   int16_t i;
 
+  // Save player and location data to persistent storage:
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
     persist_write_data(STORAGE_KEY + i,
@@ -3822,6 +3835,17 @@ void deinit(void)
   persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS,
                      g_player,
                      sizeof(player_t));
+  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
+  {
+    persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i,
+                       g_location->npcs[i],
+                       sizeof(npc_t));
+  }
+  persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME,
+                     g_location,
+                     sizeof(location_t));
+
+  // Now deinitialize everything:
   deinit_narration();
   deinit_graphics();
   deinit_menu_windows();
