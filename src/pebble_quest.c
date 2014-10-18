@@ -1259,6 +1259,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     {
       add_item_to_inventory(get_cell_type(g_player->position));
       set_cell_type(g_player->position, EMPTY);
+      set_game_mode(ACTIVE_MODE);
     }
     else if (g_game_mode == INVENTORY_MODE      ||
              g_game_mode == PEBBLE_OPTIONS_MODE ||
@@ -3584,6 +3585,9 @@ void init(void)
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
+  init_narration();
+  init_graphics();
+  init_wall_coords();
 
   // Load saved data (or initialize brand new player and location structs):
   g_player = malloc(sizeof(player_t));
@@ -3624,11 +3628,8 @@ void init(void)
   }
 
   init_menu_windows();
-  init_narration();
-  init_graphics();
-  init_wall_coords();
-  app_focus_service_subscribe(app_focus_handler);
   show_window(g_main_menu_window, NOT_ANIMATED);
+  app_focus_service_subscribe(app_focus_handler);
 }
 
 /******************************************************************************
