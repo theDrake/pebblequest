@@ -729,31 +729,6 @@ int16_t get_opposite_direction(const int16_t direction)
 }
 
 /******************************************************************************
-   Function: get_boosted_stat_value
-
-Description: Determines what value a given stat will be raised to if boosted by
-             a given amount, which is either the sum of those values or
-             MAX_INT_VALUE.
-
-     Inputs: stat_index   - Index value of the stat of interest.
-             boost_amount - Desired boost amount.
-
-    Outputs: The new value the stat will have if it is boosted.
-******************************************************************************/
-int16_t get_boosted_stat_value(const int16_t stat_index,
-                               const int16_t boost_amount)
-{
-  int16_t boosted_stat_value = g_player->stats[stat_index] + boost_amount;
-
-  if (boosted_stat_value >= MAX_INT_VALUE)
-  {
-    return MAX_INT_VALUE;
-  }
-
-  return boosted_stat_value;
-}
-
-/******************************************************************************
    Function: get_nth_item_type
 
 Description: Returns the type of the nth item in the player's inventory.
@@ -911,7 +886,7 @@ npc_t *get_npc_at(const GPoint cell)
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
     if (g_location->npcs[i]->type != NONE &&
-        gpoint_equal(&g_location->npcs[i]->position, &cell))
+        gpoint_equal(&(g_location->npcs[i]->position), &cell))
     {
       return g_location->npcs[i];
     }
@@ -1016,8 +991,7 @@ void show_narration(const int16_t narration)
       strcat_int(narration_str, g_player->num_pebbles_found);
       strcat(narration_str, "\nKills: ");
       strcat_int(narration_str, g_player->num_kills);
-      //init_player();
-      //deinit_location();
+      init_player();
       init_location();
       break;
   }
@@ -1177,7 +1151,7 @@ static void menu_draw_row_callback(GContext *ctx,
       if (g_game_mode == LEVEL_UP_MODE)
       {
         strcat(title_str, "->");
-        strcat_int(title_str, get_boosted_stat_value(cell_index->row, 1));
+        strcat_int(title_str, g_player->stats[cell_index->row] + 1);
       }
     }
     else // INVENTORY_MODE
@@ -1278,8 +1252,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   {
     if (g_game_mode == LEVEL_UP_MODE)
     {
-      g_player->stats[cell_index->row] =
-        get_boosted_stat_value(cell_index->row, 1);
+      g_player->stats[cell_index->row]++;
       set_game_mode(ACTIVE_MODE);
     }
     else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
@@ -1299,7 +1272,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       else
       {
         equip_heavy_item(g_player->heavy_items[cell_index->row -
-                                                 get_num_pebble_types_owned()]);
+                                                get_num_pebble_types_owned()]);
         menu_layer_reload_data(g_ad_hoc_menu_menu_layer);
       }
     }
@@ -1604,16 +1577,16 @@ void draw_cell_walls(GContext *ctx,
   GPoint cell_2;
 
   // Back wall:
-  left          = g_back_wall_coords[depth][position][TOP_LEFT].x;
-  right         = g_back_wall_coords[depth][position][BOTTOM_RIGHT].x;
-  top           = g_back_wall_coords[depth][position][TOP_LEFT].y;
-  bottom        = g_back_wall_coords[depth][position][BOTTOM_RIGHT].y;
+  left   = g_back_wall_coords[depth][position][TOP_LEFT].x;
+  right  = g_back_wall_coords[depth][position][BOTTOM_RIGHT].x;
+  top    = g_back_wall_coords[depth][position][TOP_LEFT].y;
+  bottom = g_back_wall_coords[depth][position][BOTTOM_RIGHT].y;
   if (bottom - top < MIN_WALL_HEIGHT)
   {
     return;
   }
   back_wall_drawn = left_wall_drawn = right_wall_drawn = false;
-  cell_2 = get_cell_farther_away(cell, g_player->direction, 1);
+  cell_2          = get_cell_farther_away(cell, g_player->direction, 1);
   if (get_cell_type(cell_2) <= SOLID)
   {
     draw_shaded_quad(ctx,
@@ -1641,12 +1614,12 @@ void draw_cell_walls(GContext *ctx,
   right = left;
   if (depth == 0)
   {
-    left = 0;
+    left     = 0;
     y_offset = top;
   }
   else
   {
-    left = g_back_wall_coords[depth - 1][position][TOP_LEFT].x;
+    left     = g_back_wall_coords[depth - 1][position][TOP_LEFT].x;
     y_offset = top - g_back_wall_coords[depth - 1][position][TOP_LEFT].y;
   }
   if (position <= STRAIGHT_AHEAD)
@@ -2998,10 +2971,11 @@ Description: Assigns values to the minor stats of a given stats array according
 ******************************************************************************/
 void assign_minor_stats(int16_t *stats_array)
 {
-  stats_array[CURRENT_HEALTH] = stats_array[MAX_HEALTH] =
-    stats_array[STRENGTH] * 10;
-  stats_array[CURRENT_ENERGY] = stats_array[MAX_ENERGY] =
-    stats_array[INTELLECT] * 5 + stats_array[AGILITY] * 5;
+  stats_array[CURRENT_HEALTH]   = stats_array[MAX_HEALTH] =
+                                    stats_array[STRENGTH] * 10;
+  stats_array[CURRENT_ENERGY]   = stats_array[MAX_ENERGY] =
+                                    stats_array[INTELLECT] * 5 +
+                                    stats_array[AGILITY] * 5;
   stats_array[PHYSICAL_POWER]   = stats_array[STRENGTH] +
                                     stats_array[AGILITY] / 2;
   stats_array[PHYSICAL_DEFENSE] = stats_array[AGILITY] +
@@ -3093,9 +3067,9 @@ void init_player(void)
   g_player->num_pebbles_found = 0;
   g_player->num_kills         = 0;
   g_player->equipped_pebble   = NONE;
-  g_player->stats[STRENGTH]   = DEFAULT_BASE_STAT_VALUE;
-  g_player->stats[AGILITY]    = DEFAULT_BASE_STAT_VALUE;
-  g_player->stats[INTELLECT]  = DEFAULT_BASE_STAT_VALUE;
+  g_player->stats[STRENGTH]   = g_player->stats[AGILITY]   =
+                                g_player->stats[INTELLECT] =
+                                DEFAULT_BASE_STAT_VALUE;
   assign_minor_stats(g_player->stats);
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {
@@ -3156,10 +3130,10 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
 {
   int16_t i;
 
-  npc->type     = type;
-  npc->position = position;
+  npc->type            = type;
+  npc->position        = position;
   npc->stats[STRENGTH] = npc->stats[AGILITY] = npc->stats[INTELLECT] =
-    g_player->level / 2;
+    g_player->level / 2 + 1;
   for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
   {
     npc->status_effects[i] = 0;
@@ -3275,42 +3249,26 @@ void init_wall_coords(void)
 /******************************************************************************
    Function: init_location
 
-Description: Initializes the global location struct according to a given depth.
-
-     Inputs: depth - Integer representing how deep the player has descended in
-                     the dungeon.
-
-    Outputs: None.
-******************************************************************************/
-void init_location(void)
-{
-  int16_t i;
-
-  g_location->primary_npc_type = GOBLIN;
-  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
-  {
-    g_location->npcs[i]->type = NONE;
-  }
-  init_location_map();
-  g_player->depth++;
-}
-
-/******************************************************************************
-   Function: init_location_map
-
-Description: Initializes the current location's map (a 2D array of cells) and
-             moves/orients the player accordingly.
+Description: Initializes the global location struct according to the player's
+             current depth.
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void init_location_map(void)
+void init_location(void)
 {
   int16_t i, j, builder_direction;
-  GPoint starting_point, ending_point, builder_position;
+  GPoint builder_position;
 
-  // First, set each cell to solid:
+  // Set the primary NPC type and remove any preexisting NPCs:
+  g_location->primary_npc_type = rand() % NUM_NPC_TYPES;
+  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
+  {
+    g_location->npcs[i]->type = NONE;
+  }
+
+  // Now set each cell to solid:
   for (i = 0; i < MAP_WIDTH; ++i)
   {
     for (j = 0; j < MAP_HEIGHT; ++j)
@@ -3319,31 +3277,31 @@ void init_location_map(void)
     }
   }
 
-  // Next, set starting and exit points:
-  set_player_direction(builder_direction = rand() % NUM_DIRECTIONS);
-  switch (builder_direction)
+  // Next, set entrance and exit points:
+  switch (builder_direction = rand() % NUM_DIRECTIONS)
   {
     case NORTH:
-      starting_point = RANDOM_POINT_NORTH;
-      ending_point   = RANDOM_POINT_SOUTH;
+      builder_position = RANDOM_POINT_NORTH;
+      set_cell_type(RANDOM_POINT_SOUTH, EXIT);
       break;
     case SOUTH:
-      starting_point = RANDOM_POINT_SOUTH;
-      ending_point   = RANDOM_POINT_NORTH;
+      builder_position = RANDOM_POINT_SOUTH;
+      set_cell_type(RANDOM_POINT_NORTH, EXIT);
       break;
     case EAST:
-      starting_point = RANDOM_POINT_EAST;
-      ending_point   = RANDOM_POINT_WEST;
+      builder_position = RANDOM_POINT_EAST;
+      set_cell_type(RANDOM_POINT_WEST, EXIT);
       break;
     default: // case WEST:
-      starting_point = RANDOM_POINT_WEST;
-      ending_point   = RANDOM_POINT_EAST;
+      builder_position = RANDOM_POINT_WEST;
+      set_cell_type(RANDOM_POINT_EAST, EXIT);
       break;
   }
-  g_player->position = builder_position = starting_point;
+  g_player->position = GPoint(builder_position.x, builder_position.y);
+  set_player_direction(builder_direction);
 
-  // Now, carve a path between the starting and end points:
-  while (!gpoint_equal(&builder_position, &ending_point))
+  // Now carve a path between the entrance and exit points:
+  while (get_cell_type(builder_position) != EXIT)
   {
     // Add random loot or simply make the cell EMPTY:
     if (rand() % 20 == 0)
@@ -3390,8 +3348,9 @@ void init_location_map(void)
       builder_direction = rand() % NUM_DIRECTIONS;
     }
   }
-  set_cell_type(starting_point, ENTRANCE);
-  set_cell_type(ending_point, EXIT);
+
+  // Finally, ensure the entrance cell's type is ENTRANCE:
+  set_cell_type(g_player->position, ENTRANCE);
 }
 
 /******************************************************************************
@@ -3621,6 +3580,10 @@ void init(void)
 
   srand(time(NULL));
   g_game_mode = MAIN_MENU_MODE;
+  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
+  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
+                                       GRAPHICS_FRAME_HEIGHT +
+                                         STATUS_BAR_HEIGHT / 2));
 
   // Load saved data (or initialize brand new player and location structs):
   g_player = malloc(sizeof(player_t));
@@ -3646,11 +3609,11 @@ void init(void)
                       sizeof(player_t));
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i,
+      persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i + 1,
                         g_location->npcs[i],
                         sizeof(npc_t));
     }
-    persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME,
+    persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME + 1,
                       g_location,
                       sizeof(location_t));
   }
@@ -3660,15 +3623,10 @@ void init(void)
     init_location();
   }
 
-  // Now initialize everything else:
   init_menu_windows();
   init_narration();
   init_graphics();
   init_wall_coords();
-  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
-  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
-                                       GRAPHICS_FRAME_HEIGHT +
-                                         STATUS_BAR_HEIGHT / 2));
   app_focus_service_subscribe(app_focus_handler);
   show_window(g_main_menu_window, NOT_ANIMATED);
 }
@@ -3698,11 +3656,11 @@ void deinit(void)
                      sizeof(player_t));
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i,
+    persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i + 1,
                        g_location->npcs[i],
                        sizeof(npc_t));
   }
-  persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME,
+  persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME + 1,
                      g_location,
                      sizeof(location_t));
 

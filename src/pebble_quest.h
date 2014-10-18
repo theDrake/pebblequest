@@ -114,7 +114,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_DIRECTIONS 4
 
 // Other:
-#define MAP_WIDTH          15
+#define MAP_WIDTH          10
 #define MAP_HEIGHT         MAP_WIDTH
 #define RANDOM_POINT_NORTH GPoint(rand() % MAP_WIDTH, 0)
 #define RANDOM_POINT_SOUTH GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
@@ -164,7 +164,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_PEBBLE_TYPES     7
 #define NUM_HEAVY_ITEM_TYPES 11 // Excludes Pebbles.
 #define FIRST_HEAVY_ITEM     DAGGER
-#define MAX_HEAVY_ITEMS      5
+#define MAX_HEAVY_ITEMS      4
 
 // Equip targets (i.e., places where an item may be equipped):
 #define BODY              0
@@ -340,8 +340,6 @@ int16_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee);
 int16_t get_direction_to_the_left(const int16_t reference_direction);
 int16_t get_direction_to_the_right(const int16_t reference_direction);
 int16_t get_opposite_direction(const int16_t direction);
-int16_t get_boosted_stat_value(const int16_t stat_index,
-                               const int16_t boost_amount);
 int16_t get_nth_item_type(const int16_t n);
 int16_t get_num_pebble_types_owned(void);
 int16_t get_num_heavy_items_owned(void);
@@ -433,7 +431,6 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position);
 void init_heavy_item(heavy_item_t *item, const int16_t n);
 void init_wall_coords(void);
 void init_location(void);
-void init_location_map(void);
 void deinit_location(void);
 void init_narration(void);
 void deinit_narration(void);
