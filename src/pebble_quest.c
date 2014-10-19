@@ -3091,7 +3091,7 @@ void init_player(void)
   g_player->equipped_pebble   = NONE;
   g_player->stats[STRENGTH]   = g_player->stats[AGILITY]   =
                                 g_player->stats[INTELLECT] =
-                                DEFAULT_BASE_STAT_VALUE;
+                                DEFAULT_MAJOR_STAT_VALUE;
   assign_minor_stats(g_player->stats);
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {
