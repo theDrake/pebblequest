@@ -33,15 +33,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Player- and NPC-related Constants
 ******************************************************************************/
 
-#define DEFAULT_BASE_STAT_VALUE    1
-#define DEFAULT_PHYSICAL_POWER     10
-#define DEFAULT_PHYSICAL_DEFENSE   10
-#define DEFAULT_MAGICAL_POWER      10
-#define DEFAULT_MAGICAL_DEFENSE    10
-#define DEFAULT_SPEED              30
-#define DEFAULT_MAX_HEALTH         30
-#define DEFAULT_MAX_ENERGY         30
-#define DEFAULT_STAT_BOOST         5
+#define DEFAULT_MAJOR_STAT_VALUE   3
 #define NUM_PLAYER_ANIMATIONS      2 // No. of steps in the player's attack animation.
 #define HEALTH_RECOVERY_RATE       1 // Health per second.
 #define ENERGY_RECOVERY_RATE       1 // Energy per second.
@@ -254,7 +246,8 @@ typedef struct NonPlayerCharacter {
   GPoint position;
   int16_t type,
           stats[NUM_CHARACTER_STATS],
-          status_effects[NUM_STATUS_EFFECTS];
+          status_effects[NUM_STATUS_EFFECTS],
+          item;
 } __attribute__((__packed__)) npc_t;
 
 typedef struct PlayerCharacter {

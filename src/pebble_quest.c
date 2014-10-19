@@ -35,27 +35,27 @@ void set_game_mode(const int16_t mode)
   }
   else if (g_game_mode == MAIN_MENU_MODE)
   {
-    /*menu_layer_set_selected_index(g_main_menu_menu_layer,
+    menu_layer_set_selected_index(g_main_menu_menu_layer,
                                   (MenuIndex) {0, 0},
                                   MenuRowAlignCenter,
-                                  NOT_ANIMATED);*/
+                                  NOT_ANIMATED);
     show_window(g_main_menu_window, NOT_ANIMATED);
   }
   else if (g_game_mode == PEBBLE_OPTIONS_MODE)
   {
-    /*menu_layer_set_selected_index(g_options_menu_menu_layer,
+    menu_layer_set_selected_index(g_options_menu_menu_layer,
                                   (MenuIndex) {0, 0},
                                   MenuRowAlignCenter,
-                                  NOT_ANIMATED);*/
+                                  NOT_ANIMATED);
     show_window(g_options_menu_window, ANIMATED);
   }
   else if (g_game_mode == PEBBLE_INFUSION_MODE ||
            g_game_mode == REPLACE_ITEM_MODE)
   {
-    /*menu_layer_set_selected_index(g_heavy_items_menu_menu_layer,
+    menu_layer_set_selected_index(g_heavy_items_menu_menu_layer,
                                   (MenuIndex) {0, 0},
                                   MenuRowAlignCenter,
-                                  NOT_ANIMATED);*/
+                                  NOT_ANIMATED);
     show_window(g_heavy_items_menu_window, ANIMATED);
   }
   else // INVENTORY_MODE, SHOW_STATS_MODE, LOOT_MODE, or LEVEL_UP_MODE
@@ -267,7 +267,22 @@ void damage_npc(npc_t *npc, int16_t damage)
   {
     npc->type = NONE;
     g_player->num_kills++;
-    g_player->exp_points += 50; // get_exp_bonus(npc);
+
+    // If the NPC had an item, leave it behind as loot:
+    if (npc->item != NONE)
+    {
+      set_cell_type(npc->position, npc->item);
+    }
+
+    // Apply experience points and check for a "level up":
+    g_player->exp_points += 5; // get_exp_bonus(npc);
+    if (g_player->exp_points % 10 >= g_player->level)
+    {
+      g_player->level++;
+      set_game_mode(LEVEL_UP_MODE);
+      g_current_narration = LEVEL_UP_NARRATION;
+      set_game_mode(NARRATION_MODE);
+    }
   }
 }
 
@@ -978,9 +993,10 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
                             "By David C. Drake:\ndavidcdrake.com");
       break;
-    case LEVEL_UP_NARRATION:
-      strcpy(narration_str, "\nCongratulations!\nYou have reached Level ");
-      strcat_int(narration_str, g_player->level);
+    case LEVEL_UP_NARRATION: // Total chars: 58
+      strcpy(narration_str, "\n  You have gained"
+                            "\n          a level of"
+                            "\n       experience!");
       break;
     default: // case DEATH_NARRATION: Total chars: 57~??
       strcpy(narration_str, "You have fallen.\n\nLevel: ");
@@ -1144,11 +1160,15 @@ static void menu_draw_row_callback(GContext *ctx,
     {
       strcat_item_name(title_str, get_cell_type(g_player->position));
     }
-    else if (g_game_mode == SHOW_STATS_MODE || g_game_mode == LEVEL_UP_MODE)
+    else if (g_game_mode == SHOW_STATS_MODE ||
+             g_game_mode == LEVEL_UP_MODE   ||
+             g_game_mode == NARRATION_MODE)
     {
       strcat_stat_name(title_str, cell_index->row);
       strcat_stat_value(title_str, cell_index->row);
-      if (g_game_mode == LEVEL_UP_MODE)
+      if (g_game_mode == LEVEL_UP_MODE &&
+          menu_layer_get_selected_index(g_ad_hoc_menu_menu_layer).row ==
+            cell_index->row)
       {
         strcat(title_str, "->");
         strcat_int(title_str, g_player->stats[cell_index->row] + 1);
@@ -1162,13 +1182,13 @@ static void menu_draw_row_callback(GContext *ctx,
       // Pebbles:
       if (item_type < FIRST_HEAVY_ITEM)
       {
-        strcat(title_str, " (");
-        strcat_int(title_str, g_player->pebbles[item_type]);
-        strcat(title_str, ")");
         if (g_player->equipped_pebble == item_type)
         {
-          strcat(subtitle_str, "Equipped");
+          strcat(subtitle_str, "Equipped ");
         }
+        strcat(subtitle_str, "(");
+        strcat_int(subtitle_str, g_player->pebbles[item_type]);
+        strcat(subtitle_str, ")");
       }
 
       // Heavy items:
@@ -1190,8 +1210,7 @@ static void menu_draw_row_callback(GContext *ctx,
   }
   else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
   {
-    item = g_player->heavy_items[cell_index->row -
-                                   get_num_pebble_types_owned()];
+    item = g_player->heavy_items[cell_index->row];
     strcat_item_name(title_str, item->type);
     if (item->infused_pebble != NONE)
     {
@@ -1250,16 +1269,17 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
   {
-    if (g_game_mode == LEVEL_UP_MODE)
+    if (g_game_mode == LEVEL_UP_MODE || g_game_mode == NARRATION_MODE)
     {
       g_player->stats[cell_index->row]++;
+      assign_minor_stats(g_player->stats);
       set_game_mode(ACTIVE_MODE);
     }
     else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
     {
+      set_game_mode(ACTIVE_MODE);
       add_item_to_inventory(get_cell_type(g_player->position));
       set_cell_type(g_player->position, EMPTY);
-      set_game_mode(ACTIVE_MODE);
     }
     else if (g_game_mode == INVENTORY_MODE      ||
              g_game_mode == PEBBLE_OPTIONS_MODE ||
@@ -1267,7 +1287,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     {
       if (get_nth_item_type(cell_index->row) < FIRST_HEAVY_ITEM)
       {
-        g_current_selection = cell_index->row;
+        g_current_selection = get_nth_item_type(cell_index->row);
         set_game_mode(PEBBLE_OPTIONS_MODE);
       }
       else
@@ -1378,7 +1398,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
     }
     else if (g_game_mode == SHOW_STATS_MODE)
     {
-      return 3; // To be increased later.
+      return NUM_CHARACTER_STATS;
     }
     else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
     {
@@ -1761,7 +1781,7 @@ void draw_cell_contents(GContext *ctx,
                                                  drawing_unit / 2) :
                         floor_center_point.y - drawing_unit / 2),
                drawing_unit * 3,
-               drawing_unit * 1.5,
+               drawing_unit,
                GColorBlack);
 
   // If there's no NPC, check for loot, then we're done:
@@ -2571,6 +2591,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       // Otherwise, the player is attacking with a physical weapon:
       else if (g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
       {
+        flash_screen();
         adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION * -1);
         g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
                                             player_timer_callback,
@@ -2743,7 +2764,7 @@ void strcat_item_name(char *dest_str, const int16_t item_type)
 {
   if (item_type < FIRST_HEAVY_ITEM)
   {
-    strcat(dest_str, "Pebble");
+    strcat(dest_str, "P.");
     strcat_magic_type(dest_str, item_type);
   }
   else
@@ -2859,16 +2880,16 @@ void strcat_stat_name(char *dest_str, const int16_t stat)
       strcat(dest_str, "Energy");
       break;
     case PHYSICAL_POWER:
-      strcat(dest_str, "Phys. Power");
+      strcat(dest_str, "Ph. Power");
       break;
     case PHYSICAL_DEFENSE:
-      strcat(dest_str, "Phys. Defense");
+      strcat(dest_str, "Ph. Defense");
       break;
     case MAGICAL_POWER:
-      strcat(dest_str, "Mag. Power");
+      strcat(dest_str, "M. Power");
       break;
     case MAGICAL_DEFENSE:
-      strcat(dest_str, "Mag. Defense");
+      strcat(dest_str, "M. Defense");
       break;
   }
   strcat(dest_str, " ");
@@ -3088,6 +3109,11 @@ void init_player(void)
   add_item_to_inventory(ROBE);
   equip_heavy_item(g_player->heavy_items[0]);
   equip_heavy_item(g_player->heavy_items[1]);
+  add_item_to_inventory(HEAVY_ARMOR);
+  for (i = 0; i < 60; ++i)
+  {
+    add_item_to_inventory(PEBBLE_OF_LIGHTNING);
+  }
 }
 
 /******************************************************************************
@@ -3133,8 +3159,9 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
 
   npc->type            = type;
   npc->position        = position;
+  npc->item            = rand() % NUM_ITEM_TYPES;
   npc->stats[STRENGTH] = npc->stats[AGILITY] = npc->stats[INTELLECT] =
-    g_player->level / 2 + 1;
+    g_player->level / 4 + 1;
   for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
   {
     npc->status_effects[i] = 0;
@@ -3350,8 +3377,9 @@ void init_location(void)
     }
   }
 
-  // Finally, ensure the entrance cell's type is ENTRANCE:
+  // Finally, set the entrance to ENTRANCE and increment the player's depth:
   set_cell_type(g_player->position, ENTRANCE);
+  g_player->depth++;
 }
 
 /******************************************************************************
