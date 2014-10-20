@@ -77,14 +77,12 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_CHARACTER_STATS 11
 
 // Status effects:
-#define BURNED             0
-#define FROZEN             1
-#define SHOCKED            2
-#define BLIND              3
-#define SCARED             4
-#define STUNNED            5
-#define BLEEDING           6
-#define NUM_STATUS_EFFECTS 7
+#define DECREASED_STRENGTH  0
+#define DECREASED_AGILITY   1
+#define DECREASED_INTELLECT 2
+#define STUNNED             3
+#define DAMAGE_OVER_TIME    4
+#define NUM_STATUS_EFFECTS  5
 
 /******************************************************************************
   Location-related Constants
@@ -160,8 +158,8 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 
 // Equip targets (i.e., places where an item may be equipped):
 #define BODY              0
-#define RIGHT_HAND        1
-#define LEFT_HAND         2
+#define LEFT_HAND         1
+#define RIGHT_HAND        2
 #define NUM_EQUIP_TARGETS 3
 
 /******************************************************************************
@@ -242,14 +240,6 @@ typedef struct HeavyItem {
           infused_pebble;
 } __attribute__((__packed__)) heavy_item_t;
 
-typedef struct NonPlayerCharacter {
-  GPoint position;
-  int16_t type,
-          stats[NUM_CHARACTER_STATS],
-          status_effects[NUM_STATUS_EFFECTS],
-          item;
-} __attribute__((__packed__)) npc_t;
-
 typedef struct PlayerCharacter {
   GPoint position;
   int16_t direction,
@@ -265,6 +255,14 @@ typedef struct PlayerCharacter {
   heavy_item_t *heavy_items[MAX_HEAVY_ITEMS], // Clothing, armor, and weapons.
                *equipped_heavy_items[NUM_EQUIP_TARGETS];
 } __attribute__((__packed__)) player_t;
+
+typedef struct NonPlayerCharacter {
+  GPoint position;
+  int16_t type,
+          stats[NUM_CHARACTER_STATS],
+          status_effects[NUM_STATUS_EFFECTS],
+          item;
+} __attribute__((__packed__)) npc_t;
 
 typedef struct Location {
   int16_t map[MAP_WIDTH][MAP_HEIGHT],
@@ -415,7 +413,7 @@ void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
 void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
-void assign_minor_stats(int16_t *stats_array);
+void assign_minor_stats(int16_t *stats, heavy_item_t *equipped_items);
 void add_item_to_inventory(const int16_t item_type);
 void equip_heavy_item(heavy_item_t *const item);
 void init_player(void);

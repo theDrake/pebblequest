@@ -1060,15 +1060,15 @@ static void menu_draw_header_callback(GContext *ctx,
 {
   char header_str[MENU_HEADER_STR_LEN + 1] = "";
 
-  if (window_stack_get_top_window() == g_main_menu_window)
+  if (menu_layer == g_main_menu_menu_layer)
   {
     strcat(header_str, "PebbleQuest - Menu");
   }
-  else if (window_stack_get_top_window() == g_options_menu_window)
+  else if (menu_layer == g_options_menu_menu_layer)
   {
     strcat_item_name(header_str, g_current_selection);
   }
-  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
+  else if (menu_layer == g_ad_hoc_menu_menu_layer)
   {
     if (g_game_mode == INVENTORY_MODE)
     {
@@ -1087,7 +1087,7 @@ static void menu_draw_header_callback(GContext *ctx,
       strcat(header_str, "Increase an Attribute");
     }
   }
-  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
+  else // if (menu_layer == g_heavy_items_menu_menu_layer)
   {
     if (g_game_mode == REPLACE_ITEM_MODE)
     {
@@ -1124,7 +1124,7 @@ static void menu_draw_row_callback(GContext *ctx,
   int16_t item_type;
   heavy_item_t *item;
 
-  if (window_stack_get_top_window() == g_main_menu_window)
+  if (menu_layer == g_main_menu_menu_layer)
   {
     switch (cell_index->row)
     {
@@ -1142,7 +1142,7 @@ static void menu_draw_row_callback(GContext *ctx,
         break;
     }
   }
-  else if (window_stack_get_top_window() == g_options_menu_window)
+  else if (menu_layer == g_options_menu_menu_layer)
   {
     switch (cell_index->row)
     {
@@ -1154,7 +1154,7 @@ static void menu_draw_row_callback(GContext *ctx,
         break;
     }
   }
-  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
+  else if (menu_layer == g_ad_hoc_menu_menu_layer)
   {
     if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
     {
@@ -1208,7 +1208,7 @@ static void menu_draw_row_callback(GContext *ctx,
       }
     }
   }
-  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
+  else // if (menu_layer == g_heavy_items_menu_menu_layer)
   {
     item = g_player->heavy_items[cell_index->row];
     strcat_item_name(title_str, item->type);
@@ -1242,7 +1242,7 @@ void menu_select_callback(MenuLayer *menu_layer,
 {
   int16_t equip_target;
 
-  if (window_stack_get_top_window() == g_main_menu_window)
+  if (menu_layer == g_main_menu_menu_layer)
   {
     switch (cell_index->row)
     {
@@ -1267,12 +1267,12 @@ void menu_select_callback(MenuLayer *menu_layer,
         break;
     }
   }
-  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
+  else if (menu_layer == g_ad_hoc_menu_menu_layer)
   {
     if (g_game_mode == LEVEL_UP_MODE || g_game_mode == NARRATION_MODE)
     {
       g_player->stats[cell_index->row]++;
-      assign_minor_stats(g_player->stats);
+      assign_minor_stats(g_player->stats, g_player->heavy_items);
       set_game_mode(ACTIVE_MODE);
     }
     else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
@@ -1298,7 +1298,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       }
     }
   }
-  else if (window_stack_get_top_window() == g_options_menu_window)
+  else if (menu_layer == g_options_menu_menu_layer)
   {
     switch (cell_index->row)
     {
@@ -1386,11 +1386,11 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
                                            uint16_t section_index,
                                            void *data)
 {
-  if (window_stack_get_top_window() == g_main_menu_window)
+  if (menu_layer == g_main_menu_menu_layer)
   {
     return MAIN_MENU_NUM_ROWS;
   }
-  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
+  else if (menu_layer == g_ad_hoc_menu_menu_layer)
   {
     if (g_game_mode == LEVEL_UP_MODE)
     {
@@ -1409,11 +1409,11 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
       return get_num_pebble_types_owned() + get_num_heavy_items_owned();
     }
   }
-  else if (window_stack_get_top_window() == g_options_menu_window)
+  else if (menu_layer == g_options_menu_menu_layer)
   {
     return 2;
   }
-  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
+  else // if (menu_layer == g_heavy_items_menu_menu_layer)
   {
     return get_num_heavy_items_owned();
   }
@@ -1776,10 +1776,9 @@ void draw_cell_contents(GContext *ctx,
   // Draw a shadow/exit on the ground or an entrance on the ceiling:
   fill_ellipse(ctx,
                GPoint(floor_center_point.x,
-                      get_cell_type(cell) == ENTRANCE ?
-                        GRAPHICS_FRAME_HEIGHT - (floor_center_point.y -
-                                                 drawing_unit / 2) :
-                        floor_center_point.y - drawing_unit / 2),
+                      get_cell_type(cell) == ENTRANCE                ?
+                        GRAPHICS_FRAME_HEIGHT - floor_center_point.y :
+                        floor_center_point.y),
                drawing_unit * 3,
                drawing_unit,
                GColorBlack);
@@ -2892,7 +2891,7 @@ void strcat_stat_name(char *dest_str, const int16_t stat)
       strcat(dest_str, "M. Defense");
       break;
   }
-  strcat(dest_str, " ");
+  strcat(dest_str, ": ");
 }
 
 /******************************************************************************
@@ -2987,25 +2986,69 @@ Description: Assigns values to the minor stats of a given stats array according
              to its major stat values (STRENGTH, AGILITY, and INTELLECT), which
              must already be assigned.
 
-     Inputs: stats_array - Stats array of the character of interest.
+     Inputs: stats          - Stats array of the character of interest.
+             equipped_items - Array of equipped heavy items (only used for the
+                              player character).
 
     Outputs: None.
 ******************************************************************************/
-void assign_minor_stats(int16_t *stats_array)
+void assign_minor_stats(int16_t *stats, heavy_item_t *equipped_items)
 {
-  stats_array[CURRENT_HEALTH]   = stats_array[MAX_HEALTH] =
-                                    stats_array[STRENGTH] * 10;
-  stats_array[CURRENT_ENERGY]   = stats_array[MAX_ENERGY] =
-                                    stats_array[INTELLECT] * 5 +
-                                    stats_array[AGILITY] * 5;
-  stats_array[PHYSICAL_POWER]   = stats_array[STRENGTH] +
-                                    stats_array[AGILITY] / 2;
-  stats_array[PHYSICAL_DEFENSE] = stats_array[AGILITY] +
-                                    stats_array[STRENGTH] / 2;
-  stats_array[MAGICAL_POWER]    = stats_array[INTELLECT] +
-                                    stats_array[AGILITY] / 2;
-  stats_array[MAGICAL_DEFENSE]  = stats_array[AGILITY] +
-                                    stats_array[INTELLECT] / 2;
+  /*int16_t i;
+
+  if (equipped_items)
+  {
+    for (i = 0; i < RIGHT_HAND; ++i)
+    {
+      if (equipped_items[i])
+      {
+        if (equipped_items[i]->infused_pebble == PEBBLE_OF_FIRE)
+        {
+          stats[STRENGTH]++;
+        }
+        if (equipped_items[i]->infused_pebble == PEBBLE_OF_ICE)
+        {
+          stats[INTELLECT]++;
+        }
+        if (equipped_items[i]->infused_pebble == PEBBLE_OF_LIGHTNING)
+        {
+          stats[AGILITY]++;
+        }
+      }
+    }
+  }*/
+
+  // Set minor stats according to major stats (STRENGTH, AGILITY, INTELLECT):
+  stats[PHYSICAL_POWER]   = stats[STRENGTH] + stats[AGILITY] / 2;
+  stats[PHYSICAL_DEFENSE] = stats[AGILITY] + stats[STRENGTH] / 2;
+  stats[MAGICAL_POWER]    = stats[INTELLECT] + stats[AGILITY] / 2;
+  stats[MAGICAL_DEFENSE]  = stats[AGILITY] + stats[INTELLECT] / 2;
+  stats[CURRENT_HEALTH]   = stats[MAX_HEALTH] = stats[STRENGTH] * 10;
+  stats[CURRENT_ENERGY]   = stats[MAX_ENERGY] = stats[INTELLECT] * 5 +
+                                                  stats[AGILITY] * 5;
+
+  // Apply weapon/armor boosts:
+  if (equipped_items)
+  {
+    if (equipped_items[RIGHT_HAND])
+    {
+      for (i = DAGGER; i <= equipped_items[RIGHT_HAND]->type; i += 2)
+      {
+        stats[PHYSICAL_POWER]++;
+      }
+    }
+    if (equipped_items[BODY])
+    {
+      for (i = ROBE; i <= equipped_items[RIGHT_HAND]->type; ++i)
+      {
+        stats[PHYSICAL_DEFENSE]++;
+      }
+    }
+    if (equipped_items[LEFT_HAND])
+    {
+      stats[PHYSICAL_DEFENSE]++;
+    }
+  }
 }
 
 /******************************************************************************
@@ -3161,7 +3204,7 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   npc->position        = position;
   npc->item            = rand() % NUM_ITEM_TYPES;
   npc->stats[STRENGTH] = npc->stats[AGILITY] = npc->stats[INTELLECT] =
-    g_player->level / 4 + 1;
+    g_player->level / 3 + 1;
   for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
   {
     npc->status_effects[i] = 0;
@@ -3178,8 +3221,7 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   }
   if (type == THIEF   ||
       type == WARRIOR ||
-      type == GOBLIN  ||
-      type == ORC)
+      type == GOBLIN)
   {
     npc->stats[AGILITY] *= 2;
   }
@@ -3188,7 +3230,7 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   {
     npc->stats[INTELLECT] *= 2;
   }
-  assign_minor_stats(npc->stats);
+  assign_minor_stats(npc->stats, NULL);
 }
 
 /******************************************************************************
