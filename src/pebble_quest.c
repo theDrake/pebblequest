@@ -35,35 +35,22 @@ void set_game_mode(const int16_t mode)
   }
   else if (g_game_mode == MAIN_MENU_MODE)
   {
-    menu_layer_set_selected_index(g_main_menu_menu_layer,
-                                  (MenuIndex) {0, 0},
-                                  MenuRowAlignCenter,
-                                  NOT_ANIMATED);
     show_window(g_main_menu_window, NOT_ANIMATED);
   }
   else if (g_game_mode == PEBBLE_OPTIONS_MODE)
   {
-    menu_layer_set_selected_index(g_options_menu_menu_layer,
-                                  (MenuIndex) {0, 0},
-                                  MenuRowAlignCenter,
-                                  NOT_ANIMATED);
+    init_secondary_menus();
     show_window(g_options_menu_window, ANIMATED);
   }
   else if (g_game_mode == PEBBLE_INFUSION_MODE ||
            g_game_mode == REPLACE_ITEM_MODE)
   {
-    menu_layer_set_selected_index(g_heavy_items_menu_menu_layer,
-                                  (MenuIndex) {0, 0},
-                                  MenuRowAlignCenter,
-                                  NOT_ANIMATED);
+    init_secondary_menus();
     show_window(g_heavy_items_menu_window, ANIMATED);
   }
   else // INVENTORY_MODE, SHOW_STATS_MODE, LOOT_MODE, or LEVEL_UP_MODE
   {
-    menu_layer_set_selected_index(g_ad_hoc_menu_menu_layer,
-                                  (MenuIndex) {0, 0},
-                                  MenuRowAlignCenter,
-                                  NOT_ANIMATED);
+    init_secondary_menus();
     show_window(g_ad_hoc_menu_window, ANIMATED);
   }
 }
@@ -332,29 +319,6 @@ void adjust_player_current_energy(const int16_t amount)
     g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
   }
 }
-
-/******************************************************************************
-   Function: adjust_visibility_depth
-
-Description: Adjusts the player's visibility depth by a given amount, which may
-             be positive or negative.
-
-     Inputs: amount - Adjustment amount (which may be positive or negative).
-
-    Outputs: None.
-******************************************************************************/
-/*void adjust_visibility_depth(int16_t amount)
-{
-  g_player->visibility_depth += amount;
-  if (g_player->visibility_depth > MAX_VISIBILITY_DEPTH)
-  {
-    g_player->visibility_depth = MAX_VISIBILITY_DEPTH;
-  }
-  else if (g_player->visibility_depth < MIN_VISIBILITY_DEPTH)
-  {
-    g_player->visibility_depth = MIN_VISIBILITY_DEPTH;
-  }
-}*/
 
 /******************************************************************************
    Function: add_new_npc
@@ -993,10 +957,10 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
                             "By David C. Drake:\ndavidcdrake.com");
       break;
-    case LEVEL_UP_NARRATION: // Total chars: 58
+    case LEVEL_UP_NARRATION: // Total chars: 55
       strcpy(narration_str, "\n  You have gained"
-                            "\n          a level of"
-                            "\n       experience!");
+                            "\n        a level of"
+                            "\n      experience!");
       break;
     default: // case DEATH_NARRATION: Total chars: 57~??
       strcpy(narration_str, "You have fallen.\n\nLevel: ");
@@ -1060,15 +1024,15 @@ static void menu_draw_header_callback(GContext *ctx,
 {
   char header_str[MENU_HEADER_STR_LEN + 1] = "";
 
-  if ((MenuLayer *) cell_layer == g_main_menu_menu_layer)
+  if (window_stack_get_top_window() == g_main_menu_window)
   {
     strcat(header_str, "PebbleQuest - Menu");
   }
-  else if ((MenuLayer *) cell_layer == g_options_menu_menu_layer)
+  else if (window_stack_get_top_window() == g_options_menu_window)
   {
     strcat_item_name(header_str, g_current_selection);
   }
-  else if ((MenuLayer *) cell_layer == g_ad_hoc_menu_menu_layer)
+  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
   {
     if (g_game_mode == INVENTORY_MODE)
     {
@@ -1087,7 +1051,7 @@ static void menu_draw_header_callback(GContext *ctx,
       strcat(header_str, "Increase an Attribute");
     }
   }
-  else // if ((MenuLayer *) cell_layer == g_heavy_items_menu_menu_layer)
+  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
   {
     if (g_game_mode == REPLACE_ITEM_MODE)
     {
@@ -1124,7 +1088,7 @@ static void menu_draw_row_callback(GContext *ctx,
   int16_t item_type;
   heavy_item_t *item;
 
-  if ((MenuLayer *) cell_layer == g_main_menu_menu_layer)
+  if (window_stack_get_top_window() == g_main_menu_window)
   {
     switch (cell_index->row)
     {
@@ -1142,7 +1106,7 @@ static void menu_draw_row_callback(GContext *ctx,
         break;
     }
   }
-  else if ((MenuLayer *) cell_layer == g_options_menu_menu_layer)
+  else if (window_stack_get_top_window() == g_options_menu_window)
   {
     switch (cell_index->row)
     {
@@ -1154,7 +1118,7 @@ static void menu_draw_row_callback(GContext *ctx,
         break;
     }
   }
-  else if ((MenuLayer *) cell_layer == g_ad_hoc_menu_menu_layer)
+  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
   {
     if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
     {
@@ -1168,7 +1132,7 @@ static void menu_draw_row_callback(GContext *ctx,
       strcat_stat_value(title_str, cell_index->row);
       if (g_game_mode == LEVEL_UP_MODE)
       {
-        strcat(title_str, " -> ");
+        strcat(title_str, "->");
         strcat_int(title_str, g_player->stats[cell_index->row] + 1);
       }
     }
@@ -1206,7 +1170,7 @@ static void menu_draw_row_callback(GContext *ctx,
       }
     }
   }
-  else // if ((MenuLayer *) cell_layer == g_heavy_items_menu_menu_layer)
+  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
   {
     item = g_player->heavy_items[cell_index->row];
     strcat_item_name(title_str, item->type);
@@ -1411,7 +1375,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
     }
     else if (g_game_mode == SHOW_STATS_MODE)
     {
-      return NUM_CHARACTER_STATS;
+      return STATS_MENU_NUM_ROWS;
     }
     else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
     {
@@ -2465,9 +2429,25 @@ Description: Called when the graphics window appears.
 ******************************************************************************/
 static void graphics_window_appear(Window *window)
 {
-  g_game_mode             = ACTIVE_MODE;
-  g_player_animation_mode = 0;
+  deinit_secondary_menus();
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
+  g_player_animation_mode = 0;
+  g_game_mode             = ACTIVE_MODE;
+}
+
+/******************************************************************************
+   Function: main_menu_appear
+
+Description: Called when the main menu appears.
+
+     Inputs: window - Pointer to the main menu window.
+
+    Outputs: None.
+******************************************************************************/
+static void main_menu_appear(Window *window)
+{
+  g_game_mode = MAIN_MENU_MODE;
+  deinit_secondary_menus();
 }
 
 /******************************************************************************
@@ -2737,8 +2717,10 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Handle player stat recovery:
-    adjust_player_current_health(HEALTH_RECOVERY_RATE);
-    adjust_player_current_energy(ENERGY_RECOVERY_RATE);
+    adjust_player_current_health(MIN_REGEN +
+                    g_player->constant_status_effects[INCREASED_HEALTH_REGEN]);
+    adjust_player_current_energy(MIN_REGEN +
+                    g_player->constant_status_effects[INCREASED_ENERGY_REGEN]);
 
     layer_mark_dirty(window_get_root_layer(g_graphics_window));
   }
@@ -2993,61 +2975,6 @@ void strcat_int(char *dest_str, int16_t integer)
 }
 
 /******************************************************************************
-   Function: assign_minor_stats
-
-Description: Assigns values to the minor stats of a given stats array according
-             to its major stat values (STRENGTH, AGILITY, and INTELLECT), which
-             must already be assigned.
-
-     Inputs: stats          - Stats array of the character of interest.
-             equipped_items - Array of pointers to equipped heavy items (only
-                              used for the player character).
-
-    Outputs: None.
-******************************************************************************/
-void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items)
-{
-  int16_t i;
-
-  // Set minor stats according to major stats (STRENGTH, AGILITY, INTELLECT):
-  stats[PHYSICAL_POWER]   = stats[STRENGTH] + stats[AGILITY] / 2;
-  stats[PHYSICAL_DEFENSE] = stats[AGILITY] + stats[STRENGTH] / 2;
-  stats[MAGICAL_POWER]    = stats[INTELLECT] + stats[AGILITY] / 2;
-  stats[MAGICAL_DEFENSE]  = stats[AGILITY] + stats[INTELLECT] / 2;
-  stats[CURRENT_HEALTH]   = stats[MAX_HEALTH] = stats[STRENGTH] * 10;
-  stats[CURRENT_ENERGY]   = stats[MAX_ENERGY] = stats[INTELLECT] * 5 +
-                                                  stats[AGILITY] * 5;
-
-  // Apply weapon/armor effects:
-  if (equipped_items)
-  {
-    if (equipped_items[RIGHT_HAND])
-    {
-      // Weapons (excluding the bow):
-      for (i = DAGGER; i <= equipped_items[RIGHT_HAND]->type; i += 2)
-      {
-        stats[PHYSICAL_POWER]++;
-      }
-    }
-    if (equipped_items[BODY])
-    {
-      // Armor:
-      for (i = LIGHT_ARMOR; i <= equipped_items[BODY]->type; ++i)
-      {
-        stats[PHYSICAL_DEFENSE]++;
-        stats[MAGICAL_POWER]--;
-      }
-    }
-    // Shield:
-    if (equipped_items[LEFT_HAND])
-    {
-      stats[PHYSICAL_DEFENSE]++;
-      stats[MAGICAL_POWER]--;
-    }
-  }
-}
-
-/******************************************************************************
    Function: add_item_to_inventory
 
 Description: Adds an item of a given type to the player's inventory. If it's a
@@ -3159,6 +3086,61 @@ bool player_is_using_magic_type(int16_t magic_type)
 }
 
 /******************************************************************************
+   Function: assign_minor_stats
+
+Description: Assigns values to the minor stats of a given stats array according
+             to its major stat values (STRENGTH, AGILITY, and INTELLECT), which
+             must already be assigned.
+
+     Inputs: stats          - Stats array of the character of interest.
+             equipped_items - Array of pointers to equipped heavy items (only
+                              used for the player character).
+
+    Outputs: None.
+******************************************************************************/
+void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items)
+{
+  int16_t i;
+
+  // Set minor stats according to major stats (STRENGTH, AGILITY, INTELLECT):
+  stats[CURRENT_HEALTH]   = stats[MAX_HEALTH]   = stats[STRENGTH] * 10;
+  stats[CURRENT_ENERGY]   = stats[MAX_ENERGY]   = stats[INTELLECT] * 5 +
+                                                    stats[AGILITY] * 5;
+  stats[PHYSICAL_POWER]   = stats[STRENGTH] + stats[AGILITY] / 2;
+  stats[PHYSICAL_DEFENSE] = stats[AGILITY] + stats[STRENGTH] / 2;
+  stats[MAGICAL_POWER]    = stats[INTELLECT] + stats[AGILITY] / 2;
+  stats[MAGICAL_DEFENSE]  = stats[AGILITY] + stats[INTELLECT] / 2;
+
+  // Apply weapon/armor effects:
+  if (equipped_items)
+  {
+    if (equipped_items[RIGHT_HAND])
+    {
+      // Weapons (excluding the bow):
+      for (i = DAGGER; i <= equipped_items[RIGHT_HAND]->type; i += 2)
+      {
+        stats[PHYSICAL_POWER]++;
+      }
+    }
+    if (equipped_items[BODY])
+    {
+      // Armor:
+      for (i = LIGHT_ARMOR; i <= equipped_items[BODY]->type; ++i)
+      {
+        stats[PHYSICAL_DEFENSE]++;
+        stats[MAGICAL_POWER]--;
+      }
+    }
+    // Shield:
+    if (equipped_items[LEFT_HAND])
+    {
+      stats[PHYSICAL_DEFENSE]++;
+      stats[MAGICAL_POWER]--;
+    }
+  }
+}
+
+/******************************************************************************
    Function: init_player
 
 Description: Initializes the global player character struct according to
@@ -3254,11 +3236,13 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
 {
   int16_t i;
 
-  npc->type            = type;
-  npc->position        = position;
-  npc->item            = rand() % NUM_ITEM_TYPES;
-  npc->stats[STRENGTH] = npc->stats[AGILITY] = npc->stats[INTELLECT] =
-    g_player->level / 3 + 1;
+  npc->type     = type;
+  npc->position = position;
+  npc->item     = rand() % NUM_ITEM_TYPES;
+  for (i = 0; i < NUM_MAJOR_STATS; ++i)
+  {
+    g_player->stats[i] = g_player->level / 3 + 1;
+  }
   for (i = 0; i < NUM_TEMP_STATUS_EFFECTS; ++i)
   {
     npc->temp_status_effects[i] = 0;
@@ -3590,18 +3574,21 @@ void deinit_graphics(void)
 }
 
 /******************************************************************************
-   Function: init_menu_windows
+   Function: init_main_menu
 
-Description: Initializes the menu windows.
+Description: Initializes the main menu.
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void init_menu_windows(void)
+void init_main_menu(void)
 {
-  // Main menu window:
   g_main_menu_window     = window_create();
+  window_set_window_handlers(g_main_menu_window, (WindowHandlers)
+  {
+    .appear = main_menu_appear,
+  });
   g_main_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
   menu_layer_set_callbacks(g_main_menu_menu_layer, NULL, (MenuLayerCallbacks)
   {
@@ -3615,70 +3602,85 @@ void init_menu_windows(void)
                   menu_layer_get_layer(g_main_menu_menu_layer));
   menu_layer_set_click_config_onto_window(g_main_menu_menu_layer,
                                           g_main_menu_window);
-
-  // Ad hoc menu window:
-  g_ad_hoc_menu_window     = window_create();
-  g_ad_hoc_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
-  menu_layer_set_callbacks(g_ad_hoc_menu_menu_layer, NULL, (MenuLayerCallbacks)
-  {
-    .get_header_height = menu_get_header_height_callback,
-    .draw_header       = menu_draw_header_callback,
-    .get_num_rows      = menu_get_num_rows_callback,
-    .draw_row          = menu_draw_row_callback,
-    .select_click      = menu_select_callback,
-  });
-  layer_add_child(window_get_root_layer(g_ad_hoc_menu_window),
-                  menu_layer_get_layer(g_ad_hoc_menu_menu_layer));
-  menu_layer_set_click_config_onto_window(g_ad_hoc_menu_menu_layer,
-                                          g_ad_hoc_menu_window);
-
-  // Options menu window:
-  g_options_menu_window     = window_create();
-  g_options_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
-  menu_layer_set_callbacks(g_options_menu_menu_layer,
-                           NULL,
-                           (MenuLayerCallbacks)
-  {
-    .get_header_height = menu_get_header_height_callback,
-    .draw_header       = menu_draw_header_callback,
-    .get_num_rows      = menu_get_num_rows_callback,
-    .draw_row          = menu_draw_row_callback,
-    .select_click      = menu_select_callback,
-  });
-  layer_add_child(window_get_root_layer(g_options_menu_window),
-                  menu_layer_get_layer(g_options_menu_menu_layer));
-  menu_layer_set_click_config_onto_window(g_options_menu_menu_layer,
-                                          g_options_menu_window);
-
-  // Heavy items menu window:
-  g_heavy_items_menu_window     = window_create();
-  g_heavy_items_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
-  menu_layer_set_callbacks(g_heavy_items_menu_menu_layer,
-                           NULL,
-                           (MenuLayerCallbacks)
-  {
-    .get_header_height = menu_get_header_height_callback,
-    .draw_header       = menu_draw_header_callback,
-    .get_num_rows      = menu_get_num_rows_callback,
-    .draw_row          = menu_draw_row_callback,
-    .select_click      = menu_select_callback,
-  });
-  layer_add_child(window_get_root_layer(g_heavy_items_menu_window),
-                  menu_layer_get_layer(g_heavy_items_menu_menu_layer));
-  menu_layer_set_click_config_onto_window(g_heavy_items_menu_menu_layer,
-                                          g_heavy_items_menu_window);
 }
 
 /******************************************************************************
-   Function: deinit_menu_windows
+   Function: init_secondary_menus
 
-Description: Deinitializes the menu windows.
+Description: Initializes the secondary menus.
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void deinit_menu_windows(void)
+void init_secondary_menus(void)
+{
+  if (g_ad_hoc_menu_window == NULL)
+  {
+    // Ad hoc menu window:
+    g_ad_hoc_menu_window     = window_create();
+    g_ad_hoc_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
+    menu_layer_set_callbacks(g_ad_hoc_menu_menu_layer, NULL, (MenuLayerCallbacks)
+    {
+      .get_header_height = menu_get_header_height_callback,
+      .draw_header       = menu_draw_header_callback,
+      .get_num_rows      = menu_get_num_rows_callback,
+      .draw_row          = menu_draw_row_callback,
+      .select_click      = menu_select_callback,
+    });
+    layer_add_child(window_get_root_layer(g_ad_hoc_menu_window),
+                    menu_layer_get_layer(g_ad_hoc_menu_menu_layer));
+    menu_layer_set_click_config_onto_window(g_ad_hoc_menu_menu_layer,
+                                            g_ad_hoc_menu_window);
+
+    // Options menu window:
+    g_options_menu_window     = window_create();
+    g_options_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
+    menu_layer_set_callbacks(g_options_menu_menu_layer,
+                             NULL,
+                             (MenuLayerCallbacks)
+    {
+      .get_header_height = menu_get_header_height_callback,
+      .draw_header       = menu_draw_header_callback,
+      .get_num_rows      = menu_get_num_rows_callback,
+      .draw_row          = menu_draw_row_callback,
+      .select_click      = menu_select_callback,
+    });
+    layer_add_child(window_get_root_layer(g_options_menu_window),
+                    menu_layer_get_layer(g_options_menu_menu_layer));
+    menu_layer_set_click_config_onto_window(g_options_menu_menu_layer,
+                                            g_options_menu_window);
+
+    // Heavy items menu window:
+    g_heavy_items_menu_window     = window_create();
+    g_heavy_items_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
+    menu_layer_set_callbacks(g_heavy_items_menu_menu_layer,
+                             NULL,
+                             (MenuLayerCallbacks)
+    {
+      .get_header_height = menu_get_header_height_callback,
+      .draw_header       = menu_draw_header_callback,
+      .get_num_rows      = menu_get_num_rows_callback,
+      .draw_row          = menu_draw_row_callback,
+      .select_click      = menu_select_callback,
+    });
+    layer_add_child(window_get_root_layer(g_heavy_items_menu_window),
+                    menu_layer_get_layer(g_heavy_items_menu_menu_layer));
+    menu_layer_set_click_config_onto_window(g_heavy_items_menu_menu_layer,
+                                            g_heavy_items_menu_window);
+  }
+}
+
+/******************************************************************************
+   Function: deinit_main_menu
+
+Description: Deinitializes the main menu.
+
+     Inputs: None.
+
+    Outputs: None.
+******************************************************************************/
+void deinit_main_menu(void)
 {
   menu_layer_destroy(g_main_menu_menu_layer);
   window_destroy(g_main_menu_window);
@@ -3688,6 +3690,31 @@ void deinit_menu_windows(void)
   window_destroy(g_options_menu_window);
   menu_layer_destroy(g_heavy_items_menu_menu_layer);
   window_destroy(g_heavy_items_menu_window);
+}
+
+/******************************************************************************
+   Function: deinit_secondary_menus
+
+Description: Deinitializes the secondary menus.
+
+     Inputs: None.
+
+    Outputs: None.
+******************************************************************************/
+void deinit_secondary_menus(void)
+{
+  if (g_ad_hoc_menu_window)
+  {
+    menu_layer_destroy(g_ad_hoc_menu_menu_layer);
+    window_destroy(g_ad_hoc_menu_window);
+    menu_layer_destroy(g_options_menu_menu_layer);
+    window_destroy(g_options_menu_window);
+    menu_layer_destroy(g_heavy_items_menu_menu_layer);
+    window_destroy(g_heavy_items_menu_window);
+
+    // To indicate all secondary menus are deinitialized:
+    g_ad_hoc_menu_window = NULL;
+  }
 }
 
 /******************************************************************************
@@ -3704,14 +3731,25 @@ void init(void)
   int16_t i;
 
   srand(time(NULL));
-  g_game_mode = MAIN_MENU_MODE;
+
+  // Initialize and present the main menu:
+  init_main_menu();
+  set_game_mode(MAIN_MENU_MODE);
+
+  // To indicate secondary menus are not yet initialized:
+  g_ad_hoc_menu_window = NULL;
+
+  // Initialize the compass:
   g_compass_path = gpath_create(&COMPASS_PATH_INFO);
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
+
+  // Initialize other major windows, etc.:
   init_narration();
   init_graphics();
   init_wall_coords();
+  app_focus_service_subscribe(app_focus_handler);
 
   // Load saved data (or initialize brand new player and location structs):
   g_player = malloc(sizeof(player_t));
@@ -3750,10 +3788,6 @@ void init(void)
     init_player();
     init_location();
   }
-
-  init_menu_windows();
-  show_window(g_main_menu_window, NOT_ANIMATED);
-  app_focus_service_subscribe(app_focus_handler);
 }
 
 /******************************************************************************
@@ -3792,7 +3826,8 @@ void deinit(void)
   // Now deinitialize everything:
   deinit_narration();
   deinit_graphics();
-  deinit_menu_windows();
+  deinit_secondary_menus();
+  deinit_main_menu();
   deinit_location();
   deinit_player();
 }

@@ -33,11 +33,10 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Player- and NPC-related Constants
 ******************************************************************************/
 
-#define DEFAULT_MAJOR_STAT_VALUE   3
-#define NUM_PLAYER_ANIMATIONS      2 // No. of steps in the player's attack animation.
-#define HEALTH_RECOVERY_RATE       1 // Health per second.
-#define ENERGY_RECOVERY_RATE       1 // Energy per second.
-#define MIN_DAMAGE                 2
+#define DEFAULT_MAJOR_STAT_VALUE   3 // For STRENGTH, AGILITY, and INTELLECT.
+#define NUM_PLAYER_ANIMATIONS      2 // Steps in the player's attack animation.
+#define MIN_REGEN                  1 // Min. health/energy recovery per second.
+#define MIN_DAMAGE                 2 // Min. damage per attack/spell/effect.
 #define MIN_ENERGY_LOSS_PER_ACTION 2
 #define MAX_NPCS_AT_ONE_TIME       2
 
@@ -67,16 +66,14 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define AGILITY             1
 #define INTELLECT           2
 #define MAX_HEALTH          3
-#define HEALTH_REGEN        4
-#define MAX_ENERGY          5
-#define ENERGY_REGEN        6
-#define PHYSICAL_POWER      7
-#define PHYSICAL_DEFENSE    8
-#define MAGICAL_POWER       9
-#define MAGICAL_DEFENSE     10
-#define CURRENT_HEALTH      11
-#define CURRENT_ENERGY      12
-#define NUM_CHARACTER_STATS 13
+#define MAX_ENERGY          4
+#define PHYSICAL_POWER      5
+#define PHYSICAL_DEFENSE    6
+#define MAGICAL_POWER       7
+#define MAGICAL_DEFENSE     8
+#define CURRENT_HEALTH      9
+#define CURRENT_ENERGY      10
+#define NUM_CHARACTER_STATS 11
 #define NUM_MAJOR_STATS     3 // STRENGTH, AGILITY, and INTELLECT.
 
 /******************************************************************************
@@ -157,7 +154,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define RIGHT_HAND        2
 #define NUM_EQUIP_TARGETS 3
 
-// Constant status effects (via robe/armor/shield infusions):
+// Constant status effects (via infused robes/armor/shields):
 #define INCREASED_STRENGTH          0
 #define INCREASED_INTELLECT         1
 #define INCREASED_AGILITY           2
@@ -176,7 +173,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define STUN               5
 #define INTIMIDATE         6
 
-// Status effects:
+// Temporary status effects (via spells and infused weapons):
 #define DECREASED_INTELLECT     0
 #define DECREASED_STRENGTH      1
 #define DECREASED_AGILITY       2
@@ -207,8 +204,6 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define GRAPHICS_FRAME_HEIGHT    (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
 #define GRAPHICS_FRAME           GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
 #define MAX_VISIBILITY_DEPTH     6 // Helps determine no. of cells visible in a given line of sight.
-#define MIN_VISIBILITY_DEPTH     2 // Min. no. of cells visible in a given line of sight.
-#define DEFAULT_VISIBILITY_DEPTH (MAX_VISIBILITY_DEPTH + MIN_VISIBILITY_DEPTH) / 2 + (MAX_VISIBILITY_DEPTH + MIN_VISIBILITY_DEPTH) % 2;
 #define STRAIGHT_AHEAD           (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
 #define TOP_LEFT                 0                          // Index value for "g_back_wall_coords".
 #define BOTTOM_RIGHT             1                          // Index value for "g_back_wall_coords".
@@ -226,6 +221,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MENU_TITLE_STR_LEN    25
 #define MENU_SUBTITLE_STR_LEN 20
 #define MAIN_MENU_NUM_ROWS    3
+#define STATS_MENU_NUM_ROWS   (NUM_CHARACTER_STATS - 2)
 
 /******************************************************************************
   Button-related Constants
@@ -437,11 +433,11 @@ void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
 void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
-void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items);
 void add_item_to_inventory(const int16_t item_type);
 void equip_heavy_item(heavy_item_t *const item);
 void unequip_item_at(int16_t equip_target);
 bool player_is_using_magic_type(int16_t magic_type);
+void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items);
 void init_player(void);
 void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
@@ -453,8 +449,10 @@ void init_narration(void);
 void deinit_narration(void);
 void init_graphics(void);
 void deinit_graphics(void);
-void init_menu_windows(void);
-void deinit_menu_windows(void);
+void init_main_menu(void);
+void init_secondary_menus(void);
+void deinit_main_menu(void);
+void deinit_secondary_menus(void);
 void init(void);
 void deinit(void);
 int main(void);
