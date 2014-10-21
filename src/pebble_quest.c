@@ -269,7 +269,7 @@ void damage_npc(npc_t *npc, int16_t damage)
     g_player->num_kills++;
 
     // If the NPC had an item, leave it behind as loot:
-    if (npc->item != NONE)
+    if (npc->item > NONE)
     {
       set_cell_type(npc->position, npc->item);
     }
@@ -768,7 +768,7 @@ int16_t get_nth_item_type(const int16_t n)
   // Search heavy items:
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    if (g_player->heavy_items[i]->type != NONE && item_count++ == n)
+    if (g_player->heavy_items[i]->type > NONE && item_count++ == n)
     {
       return g_player->heavy_items[i]->type;
     }
@@ -816,7 +816,7 @@ int16_t get_num_heavy_items_owned(void)
 
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    if (g_player->heavy_items[i]->type != NONE)
+    if (g_player->heavy_items[i]->type > NONE)
     {
       num_heavy_items++;
     }
@@ -900,7 +900,7 @@ npc_t *get_npc_at(const GPoint cell)
 
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    if (g_location->npcs[i]->type != NONE &&
+    if (g_location->npcs[i]->type > NONE &&
         gpoint_equal(&(g_location->npcs[i]->position), &cell))
     {
       return g_location->npcs[i];
@@ -1060,15 +1060,15 @@ static void menu_draw_header_callback(GContext *ctx,
 {
   char header_str[MENU_HEADER_STR_LEN + 1] = "";
 
-  if (menu_layer == g_main_menu_menu_layer)
+  if ((MenuLayer *) cell_layer == g_main_menu_menu_layer)
   {
     strcat(header_str, "PebbleQuest - Menu");
   }
-  else if (menu_layer == g_options_menu_menu_layer)
+  else if ((MenuLayer *) cell_layer == g_options_menu_menu_layer)
   {
     strcat_item_name(header_str, g_current_selection);
   }
-  else if (menu_layer == g_ad_hoc_menu_menu_layer)
+  else if ((MenuLayer *) cell_layer == g_ad_hoc_menu_menu_layer)
   {
     if (g_game_mode == INVENTORY_MODE)
     {
@@ -1087,7 +1087,7 @@ static void menu_draw_header_callback(GContext *ctx,
       strcat(header_str, "Increase an Attribute");
     }
   }
-  else // if (menu_layer == g_heavy_items_menu_menu_layer)
+  else // if ((MenuLayer *) cell_layer == g_heavy_items_menu_menu_layer)
   {
     if (g_game_mode == REPLACE_ITEM_MODE)
     {
@@ -1124,7 +1124,7 @@ static void menu_draw_row_callback(GContext *ctx,
   int16_t item_type;
   heavy_item_t *item;
 
-  if (menu_layer == g_main_menu_menu_layer)
+  if ((MenuLayer *) cell_layer == g_main_menu_menu_layer)
   {
     switch (cell_index->row)
     {
@@ -1142,7 +1142,7 @@ static void menu_draw_row_callback(GContext *ctx,
         break;
     }
   }
-  else if (menu_layer == g_options_menu_menu_layer)
+  else if ((MenuLayer *) cell_layer == g_options_menu_menu_layer)
   {
     switch (cell_index->row)
     {
@@ -1154,7 +1154,7 @@ static void menu_draw_row_callback(GContext *ctx,
         break;
     }
   }
-  else if (menu_layer == g_ad_hoc_menu_menu_layer)
+  else if ((MenuLayer *) cell_layer == g_ad_hoc_menu_menu_layer)
   {
     if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
     {
@@ -1166,11 +1166,9 @@ static void menu_draw_row_callback(GContext *ctx,
     {
       strcat_stat_name(title_str, cell_index->row);
       strcat_stat_value(title_str, cell_index->row);
-      if (g_game_mode == LEVEL_UP_MODE &&
-          menu_layer_get_selected_index(g_ad_hoc_menu_menu_layer).row ==
-            cell_index->row)
+      if (g_game_mode == LEVEL_UP_MODE)
       {
-        strcat(title_str, "->");
+        strcat(title_str, " -> ");
         strcat_int(title_str, g_player->stats[cell_index->row] + 1);
       }
     }
@@ -1196,7 +1194,7 @@ static void menu_draw_row_callback(GContext *ctx,
       {
         item = g_player->heavy_items[cell_index->row -
                                        get_num_pebble_types_owned()];
-        if (item->infused_pebble != NONE)
+        if (item->infused_pebble > NONE)
         {
           strcat_magic_type(title_str, item->infused_pebble);
         }
@@ -1208,11 +1206,11 @@ static void menu_draw_row_callback(GContext *ctx,
       }
     }
   }
-  else // if (menu_layer == g_heavy_items_menu_menu_layer)
+  else // if ((MenuLayer *) cell_layer == g_heavy_items_menu_menu_layer)
   {
     item = g_player->heavy_items[cell_index->row];
     strcat_item_name(title_str, item->type);
-    if (item->infused_pebble != NONE)
+    if (item->infused_pebble > NONE)
     {
       strcat_magic_type(title_str, item->infused_pebble);
     }
@@ -1241,6 +1239,7 @@ void menu_select_callback(MenuLayer *menu_layer,
                           void *data)
 {
   int16_t equip_target;
+  bool old_item_was_equipped = false;
 
   if (menu_layer == g_main_menu_menu_layer)
   {
@@ -1269,18 +1268,21 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else if (menu_layer == g_ad_hoc_menu_menu_layer)
   {
-    if (g_game_mode == LEVEL_UP_MODE || g_game_mode == NARRATION_MODE)
+    // LEVEL_UP_MODE:
+    if (g_game_mode == NARRATION_MODE)
     {
       g_player->stats[cell_index->row]++;
-      assign_minor_stats(g_player->stats, g_player->heavy_items);
+      assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
       set_game_mode(ACTIVE_MODE);
     }
+    // LOOT_MODE:
     else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
     {
       set_game_mode(ACTIVE_MODE);
       add_item_to_inventory(get_cell_type(g_player->position));
       set_cell_type(g_player->position, EMPTY);
     }
+    // INVENTORY_MODE:
     else if (g_game_mode == INVENTORY_MODE      ||
              g_game_mode == PEBBLE_OPTIONS_MODE ||
              g_game_mode == PEBBLE_INFUSION_MODE)
@@ -1300,11 +1302,12 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else if (menu_layer == g_options_menu_menu_layer)
   {
+    // PEBBLE_OPTIONS_MODE:
     switch (cell_index->row)
     {
       case 0: // Equip
-        g_player->equipped_heavy_items[RIGHT_HAND] = NULL;
-        g_player->equipped_pebble                  = g_current_selection;
+        unequip_item_at(RIGHT_HAND);
+        g_player->equipped_pebble = g_current_selection;
         set_game_mode(INVENTORY_MODE);
         break;
       default: // Infuse into Item
@@ -1329,25 +1332,35 @@ void menu_select_callback(MenuLayer *menu_layer,
         g_player->equipped_pebble = NONE;
       }
 
-      // Return to the inventory menu:
+      // Reassign minor stats, then return to the inventory menu:
+      assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
       set_game_mode(INVENTORY_MODE);
     }
   }
   else if (g_game_mode == REPLACE_ITEM_MODE)
   {
-    // Unequip the old item, unless the new item has the same equip target:
+    // If the item to be replaced is equipped, unequip it:
     equip_target =
       get_equip_target(g_player->heavy_items[cell_index->row]->type);
     if (g_player->equipped_heavy_items[equip_target] ==
-          g_player->heavy_items[cell_index->row] &&
-        equip_target != get_equip_target(g_current_selection))
+          g_player->heavy_items[cell_index->row])
     {
-      g_player->equipped_heavy_items[equip_target] = NULL;
+      unequip_item_at(equip_target);
+      old_item_was_equipped = true;
     }
 
-    // Reinitialize the heavy item struct, then return to gameplay:
+    // Reinitialize the heavy item struct:
     init_heavy_item(g_player->heavy_items[cell_index->row],
                     g_current_selection);
+
+    // If old item was equipped, equip new one if it has the same equip target:
+    if (old_item_was_equipped &&
+        equip_target == get_equip_target(g_current_selection))
+    {
+      equip_heavy_item(g_player->heavy_items[cell_index->row]);
+    }
+
+    // Return to active gameplay:
     set_game_mode(ACTIVE_MODE);
   }
 }
@@ -2575,7 +2588,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     // If a Pebble is equipped, cast a spell:
     if (g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
     {
-      if (g_player->equipped_pebble != NONE)
+      if (g_player->equipped_pebble > NONE)
       {
         flash_screen();
         adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION * -1);
@@ -2707,7 +2720,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     // Handle NPC behavior:
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      if (g_location->npcs[i]->type != NONE)
+      if (g_location->npcs[i]->type > NONE)
       {
         determine_npc_behavior(g_location->npcs[i]);
         if (g_player->stats[CURRENT_HEALTH] <= 0)
@@ -2987,36 +3000,14 @@ Description: Assigns values to the minor stats of a given stats array according
              must already be assigned.
 
      Inputs: stats          - Stats array of the character of interest.
-             equipped_items - Array of equipped heavy items (only used for the
-                              player character).
+             equipped_items - Array of pointers to equipped heavy items (only
+                              used for the player character).
 
     Outputs: None.
 ******************************************************************************/
-void assign_minor_stats(int16_t *stats, heavy_item_t *equipped_items)
+void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items)
 {
-  /*int16_t i;
-
-  if (equipped_items)
-  {
-    for (i = 0; i < RIGHT_HAND; ++i)
-    {
-      if (equipped_items[i])
-      {
-        if (equipped_items[i]->infused_pebble == PEBBLE_OF_FIRE)
-        {
-          stats[STRENGTH]++;
-        }
-        if (equipped_items[i]->infused_pebble == PEBBLE_OF_ICE)
-        {
-          stats[INTELLECT]++;
-        }
-        if (equipped_items[i]->infused_pebble == PEBBLE_OF_LIGHTNING)
-        {
-          stats[AGILITY]++;
-        }
-      }
-    }
-  }*/
+  int16_t i;
 
   // Set minor stats according to major stats (STRENGTH, AGILITY, INTELLECT):
   stats[PHYSICAL_POWER]   = stats[STRENGTH] + stats[AGILITY] / 2;
@@ -3027,11 +3018,12 @@ void assign_minor_stats(int16_t *stats, heavy_item_t *equipped_items)
   stats[CURRENT_ENERGY]   = stats[MAX_ENERGY] = stats[INTELLECT] * 5 +
                                                   stats[AGILITY] * 5;
 
-  // Apply weapon/armor boosts:
+  // Apply weapon/armor effects:
   if (equipped_items)
   {
     if (equipped_items[RIGHT_HAND])
     {
+      // Weapons (excluding the bow):
       for (i = DAGGER; i <= equipped_items[RIGHT_HAND]->type; i += 2)
       {
         stats[PHYSICAL_POWER]++;
@@ -3039,14 +3031,18 @@ void assign_minor_stats(int16_t *stats, heavy_item_t *equipped_items)
     }
     if (equipped_items[BODY])
     {
-      for (i = ROBE; i <= equipped_items[RIGHT_HAND]->type; ++i)
+      // Armor:
+      for (i = LIGHT_ARMOR; i <= equipped_items[BODY]->type; ++i)
       {
         stats[PHYSICAL_DEFENSE]++;
+        stats[MAGICAL_POWER]--;
       }
     }
+    // Shield:
     if (equipped_items[LEFT_HAND])
     {
       stats[PHYSICAL_DEFENSE]++;
+      stats[MAGICAL_POWER]--;
     }
   }
 }
@@ -3102,14 +3098,64 @@ void equip_heavy_item(heavy_item_t *const item)
 {
   int16_t equip_target = get_equip_target(item->type);
 
-  // If the item equips to the right hand, unequip any equipped Pebble:
+  // Unequip the previously equipped item(s), if any:
+  unequip_item_at(equip_target);
+  if (item->type == BOW)
+  {
+    unequip_item_at(LEFT_HAND);
+  }
+
+  // Equip the heavy item and adjust major and minor stats accordingly:
+  g_player->equipped_heavy_items[equip_target] = item;
+  if (equip_target < RIGHT_HAND)
+  {
+    g_player->constant_status_effects[item->infused_pebble]++;
+  }
+  assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
+}
+
+/******************************************************************************
+   Function: unequip_item_at
+
+Description: Unequips the equipped item (if any) at a given equip target.
+
+     Inputs: equip_target - Integer representing the equip target (BODY,
+                            LEFT_HAND, or RIGHT_HAND) that is to be emptied.
+
+    Outputs: None.
+******************************************************************************/
+void unequip_item_at(int16_t equip_target)
+{
+  heavy_item_t *item = g_player->equipped_heavy_items[equip_target];
+
   if (equip_target == RIGHT_HAND)
   {
     g_player->equipped_pebble = NONE;
   }
+  else if (item && item->infused_pebble > NONE)
+  {
+    g_player->constant_status_effects[item->infused_pebble]--;
+  }
+  g_player->equipped_heavy_items[equip_target] = NULL;
+}
 
-  // Equip the heavy item:
-  g_player->equipped_heavy_items[equip_target] = item;
+/******************************************************************************
+   Function: player_is_using_magic_type
+
+Description: Determines whether the player's attack currently utilizes a given
+             magic type (either because the associated Pebble is equipped or
+             because a weapon infused by the associated Pebble is equipped).
+
+     Inputs: magic_type - Integer representing the "magic type" of interest.
+
+    Outputs: "True" if the player is using the given magic type to attack.
+******************************************************************************/
+bool player_is_using_magic_type(int16_t magic_type)
+{
+  return g_player->equipped_pebble == magic_type ||
+         (g_player->equipped_heavy_items[RIGHT_HAND] &&
+          g_player->equipped_heavy_items[RIGHT_HAND]->infused_pebble ==
+            magic_type);
 }
 
 /******************************************************************************
@@ -3124,7 +3170,7 @@ Description: Initializes the global player character struct according to
 ******************************************************************************/
 void init_player(void)
 {
-  int i;
+  int16_t i;
 
   g_player->level             = 1;
   g_player->exp_points        = 0;
@@ -3132,10 +3178,18 @@ void init_player(void)
   g_player->num_pebbles_found = 0;
   g_player->num_kills         = 0;
   g_player->equipped_pebble   = NONE;
-  g_player->stats[STRENGTH]   = g_player->stats[AGILITY]   =
-                                g_player->stats[INTELLECT] =
-                                DEFAULT_MAJOR_STAT_VALUE;
-  assign_minor_stats(g_player->stats);
+  for (i = 0; i < NUM_MAJOR_STATS; ++i)
+  {
+    g_player->stats[i] = DEFAULT_MAJOR_STAT_VALUE;
+  }
+  for (i = 0; i < NUM_CONSTANT_STATUS_EFFECTS; ++i)
+  {
+    g_player->constant_status_effects[i] = 0;
+  }
+  for (i = 0; i < NUM_TEMP_STATUS_EFFECTS; ++i)
+  {
+    g_player->temp_status_effects[i] = 0;
+  }
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {
     g_player->pebbles[i] = 0;
@@ -3205,9 +3259,9 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   npc->item            = rand() % NUM_ITEM_TYPES;
   npc->stats[STRENGTH] = npc->stats[AGILITY] = npc->stats[INTELLECT] =
     g_player->level / 3 + 1;
-  for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
+  for (i = 0; i < NUM_TEMP_STATUS_EFFECTS; ++i)
   {
-    npc->status_effects[i] = 0;
+    npc->temp_status_effects[i] = 0;
   }
 
   // Adjust for each NPC type's weaknesses/strengths:

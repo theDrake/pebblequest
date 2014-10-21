@@ -62,27 +62,22 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define STORM_ELEMENTAL 17
 #define NUM_NPC_TYPES   18
 
-// Character stats (order here matters for the stats menu):
+// Character stats:
 #define STRENGTH            0
 #define AGILITY             1
 #define INTELLECT           2
 #define MAX_HEALTH          3
-#define MAX_ENERGY          4
-#define PHYSICAL_POWER      5
-#define PHYSICAL_DEFENSE    6
-#define MAGICAL_POWER       7
-#define MAGICAL_DEFENSE     8
-#define CURRENT_HEALTH      9
-#define CURRENT_ENERGY      10
-#define NUM_CHARACTER_STATS 11
-
-// Status effects:
-#define DECREASED_STRENGTH  0
-#define DECREASED_AGILITY   1
-#define DECREASED_INTELLECT 2
-#define STUNNED             3
-#define DAMAGE_OVER_TIME    4
-#define NUM_STATUS_EFFECTS  5
+#define HEALTH_REGEN        4
+#define MAX_ENERGY          5
+#define ENERGY_REGEN        6
+#define PHYSICAL_POWER      7
+#define PHYSICAL_DEFENSE    8
+#define MAGICAL_POWER       9
+#define MAGICAL_DEFENSE     10
+#define CURRENT_HEALTH      11
+#define CURRENT_ENERGY      12
+#define NUM_CHARACTER_STATS 13
+#define NUM_MAJOR_STATS     3 // STRENGTH, AGILITY, and INTELLECT.
 
 /******************************************************************************
   Location-related Constants
@@ -139,13 +134,13 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define PEBBLE_OF_DEATH      4
 #define PEBBLE_OF_LIGHT      5
 #define PEBBLE_OF_DARKNESS   6
-#define DAGGER               7
-#define STAFF                8
-#define SWORD                9
-#define MACE                 10
-#define AXE                  11
-#define FLAIL                12
-#define BOW                  13
+#define BOW                  7
+#define DAGGER               8
+#define STAFF                9
+#define SWORD                10
+#define MACE                 11
+#define AXE                  12
+#define FLAIL                13
 #define SHIELD               14
 #define ROBE                 15
 #define HEAVY_ARMOR          16
@@ -153,7 +148,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_ITEM_TYPES       18
 #define NUM_PEBBLE_TYPES     7
 #define NUM_HEAVY_ITEM_TYPES 11 // Excludes Pebbles.
-#define FIRST_HEAVY_ITEM     DAGGER
+#define FIRST_HEAVY_ITEM     BOW
 #define MAX_HEAVY_ITEMS      4
 
 // Equip targets (i.e., places where an item may be equipped):
@@ -161,6 +156,34 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define LEFT_HAND         1
 #define RIGHT_HAND        2
 #define NUM_EQUIP_TARGETS 3
+
+// Constant status effects (via robe/armor/shield infusions):
+#define INCREASED_STRENGTH          0
+#define INCREASED_INTELLECT         1
+#define INCREASED_AGILITY           2
+#define INCREASED_HEALTH_REGEN      3
+#define BACKLASH_DAMAGE             4
+#define INCREASED_ENERGY_REGEN      5
+#define SPELL_ABSORPTION            6
+#define NUM_CONSTANT_STATUS_EFFECTS 7
+
+// Weapon infusion effects:
+#define DECREASE_INTELLECT 0
+#define DECREASE_AGILITY   1
+#define DECREASE_STRENGTH  2
+#define ABSORB_HEALTH      3
+#define WOUND              4
+#define STUN               5
+#define INTIMIDATE         6
+
+// Status effects:
+#define DECREASED_INTELLECT     0
+#define DECREASED_STRENGTH      1
+#define DECREASED_AGILITY       2
+#define STUNNED                 3
+#define DAMAGE_OVER_TIME        4
+#define INTIMIDATED             5
+#define NUM_TEMP_STATUS_EFFECTS 6
 
 /******************************************************************************
   Graphics-related Constants
@@ -244,7 +267,8 @@ typedef struct PlayerCharacter {
   GPoint position;
   int16_t direction,
           stats[NUM_CHARACTER_STATS],
-          status_effects[NUM_STATUS_EFFECTS],
+          constant_status_effects[NUM_CONSTANT_STATUS_EFFECTS],
+          temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
           pebbles[NUM_PEBBLE_TYPES],
           equipped_pebble,
           num_pebbles_found,
@@ -260,7 +284,7 @@ typedef struct NonPlayerCharacter {
   GPoint position;
   int16_t type,
           stats[NUM_CHARACTER_STATS],
-          status_effects[NUM_STATUS_EFFECTS],
+          temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
           item;
 } __attribute__((__packed__)) npc_t;
 
@@ -413,9 +437,11 @@ void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
 void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
-void assign_minor_stats(int16_t *stats, heavy_item_t *equipped_items);
+void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items);
 void add_item_to_inventory(const int16_t item_type);
 void equip_heavy_item(heavy_item_t *const item);
+void unequip_item_at(int16_t equip_target);
+bool player_is_using_magic_type(int16_t magic_type);
 void init_player(void);
 void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
