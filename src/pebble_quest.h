@@ -14,20 +14,19 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #include <pebble.h>
 
 /******************************************************************************
-  Game Mode Constants
+  Window/Menu Constants
 ******************************************************************************/
 
-#define ACTIVE_MODE          0
-#define NARRATION_MODE       1
-#define MAIN_MENU_MODE       2
-#define INVENTORY_MODE       3
-#define PEBBLE_OPTIONS_MODE  4
-#define PEBBLE_INFUSION_MODE 5
-#define LOOT_MODE            6
-#define REPLACE_ITEM_MODE    7
-#define SHOW_STATS_MODE      8
-#define LEVEL_UP_MODE        9
-#define NUM_GAME_MODES       10
+#define MAIN_MENU           0
+#define LEVEL_UP_MENU       1
+#define INVENTORY_MENU      2
+#define LOOT_MENU           3
+#define PEBBLE_OPTIONS_MENU 4
+#define HEAVY_ITEMS_MENU    5
+#define NARRATION_WINDOW    6
+#define GRAPHICS_WINDOW     7
+#define NUM_WINDOWS         8
+#define NUM_MENUS           6
 
 /******************************************************************************
   Player- and NPC-related Constants
@@ -220,8 +219,6 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MENU_HEADER_STR_LEN   23
 #define MENU_TITLE_STR_LEN    25
 #define MENU_SUBTITLE_STR_LEN 20
-#define MAIN_MENU_NUM_ROWS    3
-#define STATS_MENU_NUM_ROWS   (NUM_CHARACTER_STATS - 2)
 
 /******************************************************************************
   Button-related Constants
@@ -294,27 +291,19 @@ typedef struct Location {
   Global Variables
 ******************************************************************************/
 
-Window *g_main_menu_window,
-       *g_ad_hoc_menu_window,
-       *g_options_menu_window,
-       *g_heavy_items_menu_window,
-       *g_narration_window,
-       *g_graphics_window;
+Window *g_windows[NUM_WINDOWS];
+MenuLayer *g_menu_layers[NUM_MENUS];
 InverterLayer *g_inverter_layer;
-MenuLayer *g_main_menu_menu_layer,
-          *g_ad_hoc_menu_menu_layer,
-          *g_options_menu_menu_layer,
-          *g_heavy_items_menu_menu_layer;
 TextLayer *g_narration_text_layer;
 AppTimer *g_player_timer,
          *g_flash_timer;
 GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
-int16_t g_game_mode,
+int16_t g_current_window,
         g_current_narration,
         g_current_selection,
-        g_player_animation_mode;
+        g_player_current_animation;
 GPath *g_compass_path;
 location_t *g_location;
 player_t *g_player;
@@ -331,7 +320,6 @@ static const GPathInfo COMPASS_PATH_INFO = {
   Function Declarations
 ******************************************************************************/
 
-void set_game_mode(const int16_t mode);
 void set_player_direction(const int16_t new_direction);
 void move_player(const int16_t direction);
 void move_npc(npc_t *npc, const int16_t direction);
@@ -362,15 +350,55 @@ bool out_of_bounds(const GPoint cell);
 bool occupiable(const GPoint cell);
 bool touching(const GPoint cell, const GPoint cell_2);
 void show_narration(const int16_t narration);
-void show_window(Window *window, bool animated);
-static void menu_draw_header_callback(GContext* ctx,
+void show_window(const int16_t window, const bool animated);
+static void main_menu_draw_header_callback(GContext *ctx,
+                                           const Layer *cell_layer,
+                                           uint16_t section_index,
+                                           void *data);
+static void level_up_menu_draw_header_callback(GContext *ctx,
+                                               const Layer *cell_layer,
+                                               uint16_t section_index,
+                                               void *data);
+static void inventory_menu_draw_header_callback(GContext *ctx,
+                                                const Layer *cell_layer,
+                                                uint16_t section_index,
+                                                void *data);
+static void loot_menu_draw_header_callback(GContext *ctx,
                                       const Layer *cell_layer,
                                       uint16_t section_index,
                                       void *data);
-static void menu_draw_row_callback(GContext *ctx,
-                                   const Layer *cell_layer,
-                                   MenuIndex *cell_index,
-                                   void *data);
+static void pebble_options_menu_draw_header_callback(GContext *ctx,
+                                                     const Layer *cell_layer,
+                                                     uint16_t section_index,
+                                                     void *data);
+static void heavy_items_menu_draw_header_callback(GContext *ctx,
+                                                  const Layer *cell_layer,
+                                                  uint16_t section_index,
+                                                  void *data);
+static void main_menu_draw_row_callback(GContext *ctx,
+                                        const Layer *cell_layer,
+                                        MenuIndex *cell_index,
+                                        void *data);
+static void level_up_menu_draw_row_callback(GContext *ctx,
+                                            const Layer *cell_layer,
+                                            MenuIndex *cell_index,
+                                            void *data);
+static void inventory_menu_draw_row_callback(GContext *ctx,
+                                             const Layer *cell_layer,
+                                             MenuIndex *cell_index,
+                                             void *data);
+static void loot_menu_draw_row_callback(GContext *ctx,
+                                        const Layer *cell_layer,
+                                        MenuIndex *cell_index,
+                                        void *data);
+static void pebble_options_menu_draw_row_callback(GContext *ctx,
+                                                  const Layer *cell_layer,
+                                                  MenuIndex *cell_index,
+                                                  void *data);
+static void heavy_items_menu_draw_row_callback(GContext *ctx,
+                                               const Layer *cell_layer,
+                                               MenuIndex *cell_index,
+                                               void *data);
 void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data);
@@ -433,7 +461,7 @@ void strcat_magic_type(char *dest_str, const int16_t magic_type);
 void strcat_stat_name(char *dest_str, const int16_t stat);
 void strcat_stat_value(char *dest_str, const int16_t stat);
 void strcat_int(char *dest_str, int16_t integer);
-void add_item_to_inventory(const int16_t item_type);
+void add_current_selection_to_inventory(void);
 void equip_heavy_item(heavy_item_t *const item);
 void unequip_item_at(int16_t equip_target);
 bool player_is_using_magic_type(int16_t magic_type);
@@ -441,18 +469,12 @@ void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items);
 void init_player(void);
 void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
-void init_heavy_item(heavy_item_t *item, const int16_t n);
+void init_heavy_item(heavy_item_t *const item, const int16_t n);
 void init_wall_coords(void);
 void init_location(void);
 void deinit_location(void);
-void init_narration(void);
-void deinit_narration(void);
-void init_graphics(void);
-void deinit_graphics(void);
-void init_main_menu(void);
-void init_secondary_menus(void);
-void deinit_main_menu(void);
-void deinit_secondary_menus(void);
+void init_window(const int16_t window_index);
+void deinit_window(const int16_t window_index);
 void init(void);
 void deinit(void);
 int main(void);

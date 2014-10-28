@@ -12,50 +12,6 @@ Description: Function definitions for the 3D, first-person, fantasy RPG
 #include "pebble_quest.h"
 
 /******************************************************************************
-   Function: set_game_mode
-
-Description: Sets the current game mode according to a given mode value, then
-             shows the graphics window, narration window, or menu window (with
-             reloaded data) accordingly.
-
-     Inputs: mode - Integer representing the desired game mode.
-
-    Outputs: None.
-******************************************************************************/
-void set_game_mode(const int16_t mode)
-{
-  g_game_mode = mode;
-  if (mode == ACTIVE_MODE)
-  {
-    show_window(g_graphics_window, NOT_ANIMATED);
-  }
-  else if (mode == NARRATION_MODE)
-  {
-    show_narration(g_current_narration);
-  }
-  else if (g_game_mode == MAIN_MENU_MODE)
-  {
-    show_window(g_main_menu_window, NOT_ANIMATED);
-  }
-  else if (g_game_mode == PEBBLE_OPTIONS_MODE)
-  {
-    init_secondary_menus();
-    show_window(g_options_menu_window, ANIMATED);
-  }
-  else if (g_game_mode == PEBBLE_INFUSION_MODE ||
-           g_game_mode == REPLACE_ITEM_MODE)
-  {
-    init_secondary_menus();
-    show_window(g_heavy_items_menu_window, ANIMATED);
-  }
-  else // INVENTORY_MODE, SHOW_STATS_MODE, LOOT_MODE, or LEVEL_UP_MODE
-  {
-    init_secondary_menus();
-    show_window(g_ad_hoc_menu_window, ANIMATED);
-  }
-}
-
-/******************************************************************************
    Function: set_player_direction
 
 Description: Sets the player's orientation to a given direction and updates the
@@ -83,7 +39,7 @@ void set_player_direction(const int16_t new_direction)
       gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 4);
       break;
   }
-  layer_mark_dirty(window_get_root_layer(g_graphics_window));
+  layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
 
 /******************************************************************************
@@ -112,9 +68,11 @@ void move_player(const int16_t direction)
     // Check for loot:
     if (get_cell_type(destination) >= 0)
     {
-      set_game_mode(LOOT_MODE);
+      g_current_selection = get_cell_type(g_player->position);
+      show_window(LOOT_MENU, ANIMATED);
+      set_cell_type(g_player->position, EMPTY);
     }
-    layer_mark_dirty(window_get_root_layer(g_graphics_window));
+    layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
   }
 }
 
@@ -266,9 +224,9 @@ void damage_npc(npc_t *npc, int16_t damage)
     if (g_player->exp_points % 10 >= g_player->level)
     {
       g_player->level++;
-      set_game_mode(LEVEL_UP_MODE);
+      show_window(LEVEL_UP_MENU, NOT_ANIMATED);
       g_current_narration = LEVEL_UP_NARRATION;
-      set_game_mode(NARRATION_MODE);
+      show_window(NARRATION_WINDOW, NOT_ANIMATED);
     }
   }
 }
@@ -294,9 +252,9 @@ void adjust_player_current_health(const int16_t amount)
   }
   else if (g_player->stats[CURRENT_HEALTH] <= 0)
   {
-    set_game_mode(MAIN_MENU_MODE);
+    show_window(MAIN_MENU, NOT_ANIMATED);
     g_current_narration = DEATH_NARRATION;
-    set_game_mode(NARRATION_MODE);
+    show_window(NARRATION_WINDOW, NOT_ANIMATED);
   }
 }
 
@@ -976,29 +934,28 @@ void show_narration(const int16_t narration)
       break;
   }
   text_layer_set_text(g_narration_text_layer, narration_str);
-  show_window(g_narration_window, NOT_ANIMATED);
+  show_window(NARRATION_WINDOW, NOT_ANIMATED);
 }
 
 /******************************************************************************
    Function: show_window
 
-Description: Displays a given window. (Assumes that window has already been
-             initialized.)
+Description: Prepares and displays a given window.
 
-     Inputs: window   - Pointer to the desired window.
+     Inputs: window   - Integer representing the desired window.
              animated - If "true", the window will slide into view.
 
     Outputs: None.
 ******************************************************************************/
-void show_window(Window *window, bool animated)
+void show_window(const int16_t window, const bool animated)
 {
-  if (!window_stack_contains_window(window))
+  if (!window_stack_contains_window(g_windows[window]))
   {
-    window_stack_push(window, animated);
+    window_stack_push(g_windows[window], animated);
   }
   else
   {
-    while (window_stack_get_top_window() != window)
+    while (window_stack_get_top_window() != g_windows[window])
     {
       window_stack_pop(animated);
     }
@@ -1006,9 +963,9 @@ void show_window(Window *window, bool animated)
 }
 
 /******************************************************************************
-   Function: menu_draw_header_callback
+   Function: main_menu_draw_header_callback
 
-Description: Instructions for drawing each menu's header.
+Description: Instructions for drawing the main menu's header.
 
      Inputs: ctx           - Pointer to the associated context.
              cell_layer    - Pointer to the cell layer.
@@ -1017,59 +974,128 @@ Description: Instructions for drawing each menu's header.
 
     Outputs: None.
 ******************************************************************************/
-static void menu_draw_header_callback(GContext *ctx,
-                                      const Layer *cell_layer,
-                                      uint16_t section_index,
-                                      void *data)
+static void main_menu_draw_header_callback(GContext *ctx,
+                                           const Layer *cell_layer,
+                                           uint16_t section_index,
+                                           void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "PebbleQuest - Menu");
+}
+
+/******************************************************************************
+   Function: pebble_options_menu_draw_header_callback
+
+Description: Instructions for drawing the Pebble options menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void pebble_options_menu_draw_header_callback(GContext *ctx,
+                                                     const Layer *cell_layer,
+                                                     uint16_t section_index,
+                                                     void *data)
 {
   char header_str[MENU_HEADER_STR_LEN + 1] = "";
 
-  if (window_stack_get_top_window() == g_main_menu_window)
-  {
-    strcat(header_str, "PebbleQuest - Menu");
-  }
-  else if (window_stack_get_top_window() == g_options_menu_window)
-  {
-    strcat_item_name(header_str, g_current_selection);
-  }
-  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
-  {
-    if (g_game_mode == INVENTORY_MODE)
-    {
-      strcat(header_str, "Inventory");
-    }
-    else if (g_game_mode == LOOT_MODE)
-    {
-      strcat(header_str, "Loot");
-    }
-    else if (g_game_mode == SHOW_STATS_MODE)
-    {
-      strcat(header_str, "Character Stats");
-    }
-    else // if (g_game_mode == LEVEL_UP_MODE)
-    {
-      strcat(header_str, "Increase an Attribute");
-    }
-  }
-  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
-  {
-    if (g_game_mode == REPLACE_ITEM_MODE)
-    {
-      strcat(header_str, "Replace an item?");
-    }
-    else // if (g_game_mode == PEBBLE_INFUSION_MODE)
-    {
-      strcat(header_str, "Which item?");
-    }
-  }
-
+  strcat_item_name(header_str, g_current_selection);
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
 /******************************************************************************
-   Function: menu_draw_row_callback
+   Function: inventory_menu_draw_header_callback
 
-Description: Instructions for drawing the rows (cells) of each menu.
+Description: Instructions for drawing the inventory menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void inventory_menu_draw_header_callback(GContext *ctx,
+                                                const Layer *cell_layer,
+                                                uint16_t section_index,
+                                                void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "Inventory");
+}
+
+/******************************************************************************
+   Function: loot_menu_draw_header_callback
+
+Description: Instructions for drawing the loot menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void loot_menu_draw_header_callback(GContext *ctx,
+                                      const Layer *cell_layer,
+                                      uint16_t section_index,
+                                      void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "Loot");
+}
+
+/******************************************************************************
+   Function: level_up_menu_draw_header_callback
+
+Description: Instructions for drawing the level-up menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void level_up_menu_draw_header_callback(GContext *ctx,
+                                               const Layer *cell_layer,
+                                               uint16_t section_index,
+                                               void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "Increase an Attribute");
+}
+
+/******************************************************************************
+   Function: heavy_items_menu_draw_header_callback
+
+Description: Instructions for drawing the heavy items menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void heavy_items_menu_draw_header_callback(GContext *ctx,
+                                                  const Layer *cell_layer,
+                                                  uint16_t section_index,
+                                                  void *data)
+{
+  if (g_current_selection < FIRST_HEAVY_ITEM)
+  {
+    menu_cell_basic_header_draw(ctx, cell_layer, "Which item?");
+  }
+  else
+  {
+    menu_cell_basic_header_draw(ctx, cell_layer, "Replace an item?");
+  }
+}
+
+/******************************************************************************
+   Function: main_menu_draw_row_callback
+
+Description: Instructions for drawing each row (cell) of the main menu.
 
      Inputs: ctx        - Pointer to the associated context.
              cell_layer - Pointer to the layer of the cell to be drawn.
@@ -1078,110 +1104,198 @@ Description: Instructions for drawing the rows (cells) of each menu.
 
     Outputs: None.
 ******************************************************************************/
-static void menu_draw_row_callback(GContext *ctx,
-                                   const Layer *cell_layer,
-                                   MenuIndex *cell_index,
-                                   void *data)
+static void main_menu_draw_row_callback(GContext *ctx,
+                                        const Layer *cell_layer,
+                                        MenuIndex *cell_index,
+                                        void *data)
 {
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
-  int16_t item_type;
+
+  switch (cell_index->row)
+  {
+    case 0:
+      strcat(title_str, "Play");
+      strcat(subtitle_str, "Dungeon-crawl, baby!");
+      break;
+    case 1:
+      strcat(title_str, "Character Stats");
+      strcat(subtitle_str, "Strength, Agility...");
+      break;
+    default:
+      strcat(title_str, "Inventory");
+      strcat(subtitle_str, "Equip/infuse items.");
+      break;
+  }
+  menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
+}
+
+/******************************************************************************
+   Function: level_up_menu_draw_row_callback
+
+Description: Instructions for drawing each row (cell) of the level-up menu.
+
+     Inputs: ctx        - Pointer to the associated context.
+             cell_layer - Pointer to the layer of the cell to be drawn.
+             cell_index - Pointer to the index struct of the cell to be drawn.
+             data       - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void level_up_menu_draw_row_callback(GContext *ctx,
+                                            const Layer *cell_layer,
+                                            MenuIndex *cell_index,
+                                            void *data)
+{
+  char title_str[MENU_TITLE_STR_LEN + 1] = "";
+
+  strcat_stat_name(title_str, cell_index->row);
+  strcat_stat_value(title_str, cell_index->row);
+  strcat(title_str, "->");
+  strcat_int(title_str, g_player->stats[cell_index->row] + 1);
+  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
+}
+
+/******************************************************************************
+   Function: inventory_menu_draw_row_callback
+
+Description: Instructions for drawing each row (cell) of the inventory menu.
+
+     Inputs: ctx        - Pointer to the associated context.
+             cell_layer - Pointer to the layer of the cell to be drawn.
+             cell_index - Pointer to the index struct of the cell to be drawn.
+             data       - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void inventory_menu_draw_row_callback(GContext *ctx,
+                                             const Layer *cell_layer,
+                                             MenuIndex *cell_index,
+                                             void *data)
+{
+  char title_str[MENU_TITLE_STR_LEN + 1]       = "",
+       subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
   heavy_item_t *item;
+  int16_t item_type = get_nth_item_type(cell_index->row);
 
-  if (window_stack_get_top_window() == g_main_menu_window)
+  strcat_item_name(title_str, item_type);
+
+  // Pebbles:
+  if (item_type < FIRST_HEAVY_ITEM)
   {
-    switch (cell_index->row)
+    strcat(subtitle_str, "(");
+    strcat_int(subtitle_str, g_player->pebbles[item_type]);
+    strcat(subtitle_str, ")");
+    if (g_player->equipped_pebble == item_type)
     {
-      case 0:
-        strcat(title_str, "Play");
-        strcat(subtitle_str, "Dungeon-crawl, baby!");
-        break;
-      case 1:
-        strcat(title_str, "Character Stats");
-        strcat(subtitle_str, "Strength, Agility...");
-        break;
-      default:
-        strcat(title_str, "Inventory");
-        strcat(subtitle_str, "Equip/infuse items.");
-        break;
+      strcat(subtitle_str, " Equipped");
     }
   }
-  else if (window_stack_get_top_window() == g_options_menu_window)
-  {
-    switch (cell_index->row)
-    {
-      case 0:
-        strcat(title_str, "Equip");
-        break;
-      default:
-        strcat(title_str, "Infuse into Item");
-        break;
-    }
-  }
-  else if (window_stack_get_top_window() == g_ad_hoc_menu_window)
-  {
-    if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
-    {
-      strcat_item_name(title_str, get_cell_type(g_player->position));
-    }
-    else if (g_game_mode == SHOW_STATS_MODE ||
-             g_game_mode == LEVEL_UP_MODE   ||
-             g_game_mode == NARRATION_MODE)
-    {
-      strcat_stat_name(title_str, cell_index->row);
-      strcat_stat_value(title_str, cell_index->row);
-      if (g_game_mode == LEVEL_UP_MODE)
-      {
-        strcat(title_str, "->");
-        strcat_int(title_str, g_player->stats[cell_index->row] + 1);
-      }
-    }
-    else // INVENTORY_MODE
-    {
-      item_type = get_nth_item_type(cell_index->row);
-      strcat_item_name(title_str, item_type);
 
-      // Pebbles:
-      if (item_type < FIRST_HEAVY_ITEM)
-      {
-        if (g_player->equipped_pebble == item_type)
-        {
-          strcat(subtitle_str, "Equipped ");
-        }
-        strcat(subtitle_str, "(");
-        strcat_int(subtitle_str, g_player->pebbles[item_type]);
-        strcat(subtitle_str, ")");
-      }
-
-      // Heavy items:
-      else
-      {
-        item = g_player->heavy_items[cell_index->row -
-                                       get_num_pebble_types_owned()];
-        if (item->infused_pebble > NONE)
-        {
-          strcat_magic_type(title_str, item->infused_pebble);
-        }
-        if (g_player->equipped_heavy_items[get_equip_target(item->type)] ==
-              item)
-        {
-          strcat(subtitle_str, "Equipped");
-        }
-      }
-    }
-  }
-  else // if (window_stack_get_top_window() == g_heavy_items_menu_window)
+  // Heavy items:
+  else
   {
-    item = g_player->heavy_items[cell_index->row];
-    strcat_item_name(title_str, item->type);
+    item = g_player->heavy_items[cell_index->row -
+                                   get_num_pebble_types_owned()];
     if (item->infused_pebble > NONE)
     {
       strcat_magic_type(title_str, item->infused_pebble);
     }
-    if (g_player->equipped_heavy_items[get_equip_target(item->type)] == item)
+    if (g_player->equipped_heavy_items[get_equip_target(item->type)] ==
+          item)
     {
       strcat(subtitle_str, "Equipped");
     }
+  }
+  menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
+}
+
+/******************************************************************************
+   Function: loot_menu_draw_row_callback
+
+Description: Instructions for drawing each row (cell) of the loot menu.
+
+     Inputs: ctx        - Pointer to the associated context.
+             cell_layer - Pointer to the layer of the cell to be drawn.
+             cell_index - Pointer to the index struct of the cell to be drawn.
+             data       - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void loot_menu_draw_row_callback(GContext *ctx,
+                                        const Layer *cell_layer,
+                                        MenuIndex *cell_index,
+                                        void *data)
+{
+  char title_str[MENU_TITLE_STR_LEN + 1] = "";
+
+  strcat_item_name(title_str, get_cell_type(g_player->position));
+  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
+}
+
+/******************************************************************************
+   Function: pebble_options_menu_draw_row_callback
+
+Description: Instructions for drawing each row (cell) of the Pebble options
+             menu.
+
+     Inputs: ctx        - Pointer to the associated context.
+             cell_layer - Pointer to the layer of the cell to be drawn.
+             cell_index - Pointer to the index struct of the cell to be drawn.
+             data       - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void pebble_options_menu_draw_row_callback(GContext *ctx,
+                                                  const Layer *cell_layer,
+                                                  MenuIndex *cell_index,
+                                                  void *data)
+{
+  char title_str[MENU_TITLE_STR_LEN + 1] = "";
+
+  switch (cell_index->row)
+  {
+    case 0:
+      strcat(title_str, "Equip");
+      break;
+    default:
+      strcat(title_str, "Infuse into Item");
+      break;
+  }
+  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
+}
+
+/******************************************************************************
+   Function: heavy_items_menu_draw_row_callback
+
+Description: Instructions for drawing the rows (cells) of each "heavy items"
+             menu: the "replace item" menu and the infusion menu.
+
+     Inputs: ctx        - Pointer to the associated context.
+             cell_layer - Pointer to the layer of the cell to be drawn.
+             cell_index - Pointer to the index struct of the cell to be drawn.
+             data       - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void heavy_items_menu_draw_row_callback(GContext *ctx,
+                                               const Layer *cell_layer,
+                                               MenuIndex *cell_index,
+                                               void *data)
+{
+  char title_str[MENU_TITLE_STR_LEN + 1]       = "",
+       subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
+  heavy_item_t *item;
+
+  item = g_player->heavy_items[cell_index->row];
+  strcat_item_name(title_str, item->type);
+  if (item->infused_pebble > NONE)
+  {
+    strcat_magic_type(title_str, item->infused_pebble);
+  }
+  if (g_player->equipped_heavy_items[get_equip_target(item->type)] == item)
+  {
+    strcat(subtitle_str, "Equipped");
   }
 
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
@@ -1205,7 +1319,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   int16_t equip_target;
   bool old_item_was_equipped = false;
 
-  if (menu_layer == g_main_menu_menu_layer)
+  if (menu_layer == g_menu_layers[MAIN_MENU])
   {
     switch (cell_index->row)
     {
@@ -1213,119 +1327,129 @@ void menu_select_callback(MenuLayer *menu_layer,
         if (g_player->depth == 0)
         {
           init_location();
-          set_game_mode(ACTIVE_MODE);
+          show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
           g_current_narration = INTRO_NARRATION_1;
-          set_game_mode(NARRATION_MODE);
+          show_window(NARRATION_WINDOW, NOT_ANIMATED);
         }
         else
         {
-          set_game_mode(ACTIVE_MODE);
+          show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
         }
         break;
       case 1: // Character Stats
-        set_game_mode(SHOW_STATS_MODE);
+        
         break;
       default: // Inventory
-        set_game_mode(INVENTORY_MODE);
+        show_window(INVENTORY_MENU, ANIMATED);
         break;
     }
   }
-  else if (menu_layer == g_ad_hoc_menu_menu_layer)
+  else if (menu_layer == g_menu_layers[LEVEL_UP_MENU])
   {
-    // LEVEL_UP_MODE:
-    if (g_game_mode == NARRATION_MODE)
+    g_player->stats[cell_index->row]++;
+    assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
+    show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
+  }
+  else if (menu_layer == g_menu_layers[INVENTORY_MENU])
+  {
+    // Pebbles:
+    if (get_nth_item_type(cell_index->row) < FIRST_HEAVY_ITEM)
     {
-      g_player->stats[cell_index->row]++;
-      assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
-      set_game_mode(ACTIVE_MODE);
+      g_current_selection = get_nth_item_type(cell_index->row);
+      show_window(PEBBLE_OPTIONS_MENU, ANIMATED);
     }
-    // LOOT_MODE:
-    else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
+
+    // Heavy items:
+    else
     {
-      set_game_mode(ACTIVE_MODE);
-      add_item_to_inventory(get_cell_type(g_player->position));
-      set_cell_type(g_player->position, EMPTY);
-    }
-    // INVENTORY_MODE:
-    else if (g_game_mode == INVENTORY_MODE      ||
-             g_game_mode == PEBBLE_OPTIONS_MODE ||
-             g_game_mode == PEBBLE_INFUSION_MODE)
-    {
-      if (get_nth_item_type(cell_index->row) < FIRST_HEAVY_ITEM)
-      {
-        g_current_selection = get_nth_item_type(cell_index->row);
-        set_game_mode(PEBBLE_OPTIONS_MODE);
-      }
-      else
-      {
-        equip_heavy_item(g_player->heavy_items[cell_index->row -
-                                                get_num_pebble_types_owned()]);
-        menu_layer_reload_data(g_ad_hoc_menu_menu_layer);
-      }
+      equip_heavy_item(g_player->heavy_items[cell_index->row -
+                                              get_num_pebble_types_owned()]);
+      //menu_layer_reload_data(g_menu_layers[INVENTORY_MENU]);
     }
   }
-  else if (menu_layer == g_options_menu_menu_layer)
+  else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
-    // PEBBLE_OPTIONS_MODE:
+    show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
+    add_current_selection_to_inventory();
+  }
+  else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU])
+  {
     switch (cell_index->row)
     {
       case 0: // Equip
         unequip_item_at(RIGHT_HAND);
         g_player->equipped_pebble = g_current_selection;
-        set_game_mode(INVENTORY_MODE);
+        show_window(INVENTORY_MENU, ANIMATED);
         break;
       default: // Infuse into Item
-        set_game_mode(PEBBLE_INFUSION_MODE);
+        show_window(HEAVY_ITEMS_MENU, ANIMATED);
         break;
     }
   }
-  else if (g_game_mode == PEBBLE_INFUSION_MODE)
+  else // if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
-    // Ensure the item isn't already infused:
-    if (g_player->heavy_items[cell_index->row]->infused_pebble == NONE)
+    // "Infuse item" mode:
+    if (g_current_selection < FIRST_HEAVY_ITEM)
     {
-      // Infuse the item:
-      g_player->heavy_items[cell_index->row]->infused_pebble =
-        g_current_selection;
-
-      // Remove the Pebble from the pool of equippable/infusable Pebbles:
-      g_player->pebbles[g_current_selection]--;
-      if (g_player->equipped_pebble == g_current_selection &&
-          g_player->pebbles[g_current_selection] == 0)
+      // Ensure the item isn't already infused:
+      if (g_player->heavy_items[cell_index->row]->infused_pebble == NONE)
       {
-        g_player->equipped_pebble = NONE;
+        // Infuse the item:
+        g_player->heavy_items[cell_index->row]->infused_pebble =
+          g_current_selection;
+
+        // Remove the Pebble from the pool of equippable/infusable Pebbles:
+        g_player->pebbles[g_current_selection]--;
+        if (g_player->equipped_pebble == g_current_selection &&
+            g_player->pebbles[g_current_selection] == 0)
+        {
+          g_player->equipped_pebble = NONE;
+        }
+
+        // Return to the inventory menu, centered on the newly-infused item:
+        menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
+                                      (MenuIndex)
+                                      {
+                                        cell_index->row +
+                                          get_num_pebble_types_owned(),
+                                        0
+                                      },
+                                      MenuRowAlignCenter,
+                                      NOT_ANIMATED);
+        show_window(INVENTORY_MENU, ANIMATED);
+      }
+    }
+
+    // "Replace item" mode:
+    else
+    {
+      // If the item to be replaced is equipped, unequip it:
+      equip_target =
+        get_equip_target(g_player->heavy_items[cell_index->row]->type);
+      if (g_player->equipped_heavy_items[equip_target] ==
+            g_player->heavy_items[cell_index->row])
+      {
+        unequip_item_at(equip_target);
+        old_item_was_equipped = true;
       }
 
-      // Reassign minor stats, then return to the inventory menu:
-      assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
-      set_game_mode(INVENTORY_MODE);
-    }
-  }
-  else if (g_game_mode == REPLACE_ITEM_MODE)
-  {
-    // If the item to be replaced is equipped, unequip it:
-    equip_target =
-      get_equip_target(g_player->heavy_items[cell_index->row]->type);
-    if (g_player->equipped_heavy_items[equip_target] ==
-          g_player->heavy_items[cell_index->row])
-    {
-      unequip_item_at(equip_target);
-      old_item_was_equipped = true;
+      // Reinitialize the heavy item struct:
+      init_heavy_item(g_player->heavy_items[cell_index->row],
+                      g_current_selection);
+
+      // If old item was equipped, equip new one if it has the same equip target:
+      if (old_item_was_equipped &&
+          equip_target == get_equip_target(g_current_selection))
+      {
+        equip_heavy_item(g_player->heavy_items[cell_index->row]);
+      }
+
+      // Return to active gameplay:      
+      show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
     }
 
-    // Reinitialize the heavy item struct:
-    init_heavy_item(g_player->heavy_items[cell_index->row],
-                    g_current_selection);
-
-    // If old item was equipped, equip new one if it has the same equip target:
-    if (old_item_was_equipped &&
-        equip_target == get_equip_target(g_current_selection))
-    {
-      equip_heavy_item(g_player->heavy_items[cell_index->row]);
-    }
-
-    // Return to active gameplay:
-    set_game_mode(ACTIVE_MODE);
+    // In either mode, we want to reassign minor stats:
+    assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
   }
 }
 
@@ -1363,36 +1487,25 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
                                            uint16_t section_index,
                                            void *data)
 {
-  if (menu_layer == g_main_menu_menu_layer)
+  if (menu_layer == g_menu_layers[INVENTORY_MENU])
   {
-    return MAIN_MENU_NUM_ROWS;
+    return get_num_pebble_types_owned() + get_num_heavy_items_owned();
   }
-  else if (menu_layer == g_ad_hoc_menu_menu_layer)
+  else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
-    if (g_game_mode == LEVEL_UP_MODE)
-    {
-      return 3;
-    }
-    else if (g_game_mode == SHOW_STATS_MODE)
-    {
-      return STATS_MENU_NUM_ROWS;
-    }
-    else if (g_game_mode == LOOT_MODE || g_game_mode == REPLACE_ITEM_MODE)
-    {
-      return 1;
-    }
-    else // INVENTORY_MODE
-    {
-      return get_num_pebble_types_owned() + get_num_heavy_items_owned();
-    }
+    return get_num_heavy_items_owned();
   }
-  else if (menu_layer == g_options_menu_menu_layer)
+  else if (menu_layer == g_menu_layers[LOOT_MENU])
+  {
+    return 1;
+  }
+  else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU])
   {
     return 2;
   }
-  else // if (menu_layer == g_heavy_items_menu_menu_layer)
+  else // MAIN_MENU or LEVEL_UP_MENU
   {
-    return get_num_heavy_items_owned();
+    return 3;
   }
 }
 
@@ -1460,7 +1573,7 @@ void draw_scene(Layer *layer, GContext *ctx)
   }
 
   // Draw applicable weapon fire:
-  if (g_player_animation_mode > 0)
+  if (g_player_current_animation > 0)
   {
     draw_player_action(ctx);
   }
@@ -2405,17 +2518,17 @@ Description: Called when the player timer reaches zero.
 ******************************************************************************/
 static void player_timer_callback(void *data)
 {
-  if (g_game_mode != ACTIVE_MODE)
+  if (g_current_window != GRAPHICS_WINDOW)
   {
     return;
   }
-  else if (--g_player_animation_mode > 0)
+  else if (--g_player_current_animation > 0)
   {
     g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
                                         player_timer_callback,
                                         NULL);
   }
-  layer_mark_dirty(window_get_root_layer(g_graphics_window));
+  layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
 
 /******************************************************************************
@@ -2429,10 +2542,9 @@ Description: Called when the graphics window appears.
 ******************************************************************************/
 static void graphics_window_appear(Window *window)
 {
-  deinit_secondary_menus();
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
-  g_player_animation_mode = 0;
-  g_game_mode             = ACTIVE_MODE;
+  g_player_current_animation = 0;
+  g_current_window           = GRAPHICS_WINDOW;
 }
 
 /******************************************************************************
@@ -2446,8 +2558,7 @@ Description: Called when the main menu appears.
 ******************************************************************************/
 static void main_menu_appear(Window *window)
 {
-  g_game_mode = MAIN_MENU_MODE;
-  deinit_secondary_menus();
+  g_current_window = MAIN_MENU;
 }
 
 /******************************************************************************
@@ -2464,7 +2575,7 @@ Description: The graphics window's single repeating click handler for the "up"
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
                                         void *context)
 {
-  if (g_game_mode == ACTIVE_MODE)
+  if (g_current_window == GRAPHICS_WINDOW)
   {
     move_player(g_player->direction);
   }
@@ -2483,7 +2594,7 @@ Description: The graphics window's multi-click handler for the "up" button.
 ******************************************************************************/
 void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context)
 {
-  if (g_game_mode == ACTIVE_MODE)
+  if (g_current_window == GRAPHICS_WINDOW)
   {
     set_player_direction(get_direction_to_the_left(g_player->direction));
   }
@@ -2503,7 +2614,7 @@ Description: The graphics window's single repeating click handler for the
 void graphics_down_single_repeating_click(ClickRecognizerRef recognizer,
                                           void *context)
 {
-  if (g_game_mode == ACTIVE_MODE)
+  if (g_current_window == GRAPHICS_WINDOW)
   {
     move_player(get_opposite_direction(g_player->direction));
   }
@@ -2522,7 +2633,7 @@ Description: The graphics window's multi-click handler for the "down" button.
 ******************************************************************************/
 void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context)
 {
-  if (g_game_mode == ACTIVE_MODE)
+  if (g_current_window == GRAPHICS_WINDOW)
   {
     set_player_direction(get_direction_to_the_right(g_player->direction));
   }
@@ -2547,7 +2658,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
   npc_t *npc;
   //Window *window = (Window *) context;
 
-  if (g_game_mode == ACTIVE_MODE)
+  if (g_current_window == GRAPHICS_WINDOW)
   {
     // Check for a targeted NPC:
     cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
@@ -2597,7 +2708,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       }
     }
 
-    layer_mark_dirty(window_get_root_layer(g_graphics_window));
+    layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
   }
 }
 
@@ -2695,7 +2806,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 {
   int16_t i;
 
-  if (g_game_mode == ACTIVE_MODE)
+  if (g_current_window == GRAPHICS_WINDOW)
   {
     // Handle NPC behavior:
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
@@ -2722,7 +2833,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     adjust_player_current_energy(MIN_REGEN +
                     g_player->constant_status_effects[INCREASED_ENERGY_REGEN]);
 
-    layer_mark_dirty(window_get_root_layer(g_graphics_window));
+    layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
   }
 }
 
@@ -2738,9 +2849,9 @@ Description: Handles PebbleQuest going out of, or coming back into, focus
 ******************************************************************************/
 void app_focus_handler(const bool in_focus)
 {
-  if (!in_focus && g_game_mode == ACTIVE_MODE)
+  if (!in_focus && g_current_window == GRAPHICS_WINDOW)
   {
-    set_game_mode(MAIN_MENU_MODE);
+    show_window(MAIN_MENU, NOT_ANIMATED);
   }
 }
 
@@ -2975,40 +3086,42 @@ void strcat_int(char *dest_str, int16_t integer)
 }
 
 /******************************************************************************
-   Function: add_item_to_inventory
+   Function: add_current_selection_to_inventory
 
-Description: Adds an item of a given type to the player's inventory. If it's a
-             heavy item and there's no more room for heavy items, the "replace
-             item" menu will be shown.
+Description: Adds an item of type "g_current_selection" to the player's
+             inventory. If it's a heavy item and there's no more room for heavy
+             items, the "replace item" menu will be shown.
 
-     Inputs: item_type - The type of item to be added.
+     Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void add_item_to_inventory(const int16_t item_type)
+void add_current_selection_to_inventory(void)
 {
   int16_t i;
 
-  if (item_type < FIRST_HEAVY_ITEM)
+  // Pebbles:
+  if (g_current_selection < FIRST_HEAVY_ITEM)
   {
-    g_player->pebbles[item_type]++;
+    g_player->pebbles[g_current_selection]++;
     g_player->num_pebbles_found++;
   }
+
+  // Heavy items:
   else
   {
     for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
     {
       if (g_player->heavy_items[i]->type == NONE)
       {
-        init_heavy_item(g_player->heavy_items[i], item_type);
+        init_heavy_item(g_player->heavy_items[i], g_current_selection);
 
         return;
       }
     }
 
     // If we reach this point, the player's heavy item array is full:
-    g_current_selection = item_type;
-    set_game_mode(REPLACE_ITEM_MODE);
+    show_window(HEAVY_ITEMS_MENU, ANIMATED);
   }
 }
 
@@ -3184,15 +3297,16 @@ void init_player(void)
   {
     g_player->equipped_heavy_items[i] = NULL;
   }
-  add_item_to_inventory(DAGGER);
-  add_item_to_inventory(ROBE);
+
+  // Add starting inventory items:
+  init_heavy_item(g_player->heavy_items[0], DAGGER);
+  init_heavy_item(g_player->heavy_items[1], ROBE);
   equip_heavy_item(g_player->heavy_items[0]);
   equip_heavy_item(g_player->heavy_items[1]);
-  add_item_to_inventory(HEAVY_ARMOR);
-  for (i = 0; i < 60; ++i)
-  {
-    add_item_to_inventory(PEBBLE_OF_LIGHTNING);
-  }
+
+  // For testing purposes:
+  init_heavy_item(g_player->heavy_items[2], HEAVY_ARMOR);
+  g_player->pebbles[PEBBLE_OF_LIGHTNING] = 200;
 }
 
 /******************************************************************************
@@ -3209,15 +3323,11 @@ void deinit_player(void)
 {
   int16_t i;
 
-  if (g_player != NULL)
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-    {
-      free(g_player->heavy_items[i]);
-    }
-    free(g_player);
-    g_player = NULL;
+    free(g_player->heavy_items[i]);
   }
+  free(g_player);
 }
 
 /******************************************************************************
@@ -3238,17 +3348,19 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
 
   npc->type     = type;
   npc->position = position;
-  npc->item     = rand() % NUM_ITEM_TYPES;
-  for (i = 0; i < NUM_MAJOR_STATS; ++i)
-  {
-    g_player->stats[i] = g_player->level / 3 + 1;
-  }
+  npc->item     = NONE;
   for (i = 0; i < NUM_TEMP_STATUS_EFFECTS; ++i)
   {
     npc->temp_status_effects[i] = 0;
   }
 
-  // Adjust for each NPC type's weaknesses/strengths:
+  // Set major stats to default values:
+  for (i = 0; i < NUM_MAJOR_STATS; ++i)
+  {
+    g_player->stats[i] = g_player->level / 3 + 1;
+  }
+
+  // Adjust major stats (and assign an "item") according to the NPC's type:
   if (type == ORC     ||
       type == WARRIOR ||
       type == BEAR    ||
@@ -3256,18 +3368,23 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
       type == TROLL)
   {
     npc->stats[STRENGTH] *= 2;
+    npc->item = rand() % NUM_ITEM_TYPES;
   }
   if (type == THIEF   ||
       type == WARRIOR ||
       type == GOBLIN)
   {
     npc->stats[AGILITY] *= 2;
+    npc->item = rand() % NUM_ITEM_TYPES;
   }
   if (type == ARCHMAGE ||
       type == MAGE)
   {
     npc->stats[INTELLECT] *= 2;
+    npc->item = rand() % NUM_PEBBLE_TYPES;
   }
+
+  // Finally, assign minor stats according to major stat values:
   assign_minor_stats(npc->stats, NULL);
 }
 
@@ -3281,7 +3398,7 @@ Description: Initializes a new heavy item struct according to a given type.
 
     Outputs: None.
 ******************************************************************************/
-void init_heavy_item(heavy_item_t *item, const int16_t type)
+void init_heavy_item(heavy_item_t *const item, const int16_t type)
 {
   item->type           = type;
   item->infused_pebble = NONE;
@@ -3476,245 +3593,182 @@ void deinit_location(void)
 {
   int16_t i;
 
-  if (g_location != NULL)
+  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
+    free(g_location->npcs[i]);
+  }
+  free(g_location);
+}
+
+/******************************************************************************
+   Function: init_window
+
+Description: Initializes the window at a given index of the "g_windows" array.
+
+     Inputs: window_index - Integer indicating which window to initialize.
+
+    Outputs: None.
+******************************************************************************/
+void init_window(const int16_t window_index)
+{
+  g_windows[window_index] = window_create();
+  window_set_background_color(g_windows[window_index], GColorBlack);
+
+  // Menu windows:
+  if (window_index < NUM_MENUS)
+  {
+    g_menu_layers[window_index] = menu_layer_create(FULL_SCREEN_FRAME);
+    layer_add_child(window_get_root_layer(g_windows[window_index]),
+                    menu_layer_get_layer(g_menu_layers[window_index]));
+    menu_layer_set_click_config_onto_window(g_menu_layers[window_index],
+                                            g_windows[window_index]);
+
+    // Main menu:
+    if (window_index == MAIN_MENU)
     {
-      free(g_location->npcs[i]);
+      window_set_window_handlers(g_windows[window_index], (WindowHandlers)
+      {
+        .appear = main_menu_appear,
+      });
+      menu_layer_set_callbacks(g_menu_layers[window_index],
+                               NULL,
+                               (MenuLayerCallbacks)
+      {
+        .get_header_height = menu_get_header_height_callback,
+        .draw_header       = main_menu_draw_header_callback,
+        .get_num_rows      = menu_get_num_rows_callback,
+        .draw_row          = main_menu_draw_row_callback,
+        .select_click      = menu_select_callback,
+      });
     }
-    free(g_location);
-    g_location = NULL;
+
+    // Level-up menu:
+    else if (window_index == LEVEL_UP_MENU)
+    {
+      menu_layer_set_callbacks(g_menu_layers[window_index],
+                               NULL,
+                               (MenuLayerCallbacks)
+      {
+        .get_header_height = menu_get_header_height_callback,
+        .draw_header       = level_up_menu_draw_header_callback,
+        .get_num_rows      = menu_get_num_rows_callback,
+        .draw_row          = level_up_menu_draw_row_callback,
+        .select_click      = menu_select_callback,
+      });
+    }
+
+    // Inventory menu:
+    else if (window_index == INVENTORY_MENU)
+    {
+      menu_layer_set_callbacks(g_menu_layers[window_index],
+                               NULL,
+                               (MenuLayerCallbacks)
+      {
+        .get_header_height = menu_get_header_height_callback,
+        .draw_header       = inventory_menu_draw_header_callback,
+        .get_num_rows      = menu_get_num_rows_callback,
+        .draw_row          = inventory_menu_draw_row_callback,
+        .select_click      = menu_select_callback,
+      });
+    }
+
+    // Loot menu:
+    else if (window_index == LOOT_MENU)
+    {
+      menu_layer_set_callbacks(g_menu_layers[window_index],
+                               NULL,
+                               (MenuLayerCallbacks)
+      {
+        .get_header_height = menu_get_header_height_callback,
+        .draw_header       = loot_menu_draw_header_callback,
+        .get_num_rows      = menu_get_num_rows_callback,
+        .draw_row          = loot_menu_draw_row_callback,
+        .select_click      = menu_select_callback,
+      });
+    }
+
+    // Pebble options menu:
+    else if (window_index == PEBBLE_OPTIONS_MENU)
+    {
+      menu_layer_set_callbacks(g_menu_layers[window_index],
+                               NULL,
+                               (MenuLayerCallbacks)
+      {
+        .get_header_height = menu_get_header_height_callback,
+        .draw_header       = pebble_options_menu_draw_header_callback,
+        .get_num_rows      = menu_get_num_rows_callback,
+        .draw_row          = pebble_options_menu_draw_row_callback,
+        .select_click      = menu_select_callback,
+      });
+    }
+
+    // Heavy items menu:
+    else if (window_index == HEAVY_ITEMS_MENU)
+    {
+      menu_layer_set_callbacks(g_menu_layers[window_index],
+                               NULL,
+                               (MenuLayerCallbacks)
+      {
+        .get_header_height = menu_get_header_height_callback,
+        .draw_header       = heavy_items_menu_draw_header_callback,
+        .get_num_rows      = menu_get_num_rows_callback,
+        .draw_row          = heavy_items_menu_draw_row_callback,
+        .select_click      = menu_select_callback,
+      });
+    }
   }
-}
 
-/******************************************************************************
-   Function: init_narration
+  // Narration window:
+  else if (window_index == NARRATION_WINDOW)
+  {
+    window_set_click_config_provider(g_windows[window_index],
+                                     narration_click_config_provider);
+    g_narration_text_layer = text_layer_create(NARRATION_TEXT_LAYER_FRAME);
+    text_layer_set_background_color(g_narration_text_layer, GColorBlack);
+    text_layer_set_text_color(g_narration_text_layer, GColorWhite);
+    text_layer_set_font(g_narration_text_layer, NARRATION_FONT);
+    text_layer_set_text_alignment(g_narration_text_layer, GTextAlignmentLeft);
+    layer_add_child(window_get_root_layer(g_windows[window_index]),
+                    text_layer_get_layer(g_narration_text_layer));
+  }
 
-Description: Initializes the narration window.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void init_narration(void)
-{
-  g_narration_window = window_create();
-  window_set_background_color(g_narration_window, GColorBlack);
-  window_set_click_config_provider(g_narration_window,
-                                   narration_click_config_provider);
-  g_narration_text_layer = text_layer_create(NARRATION_TEXT_LAYER_FRAME);
-  text_layer_set_background_color(g_narration_text_layer, GColorBlack);
-  text_layer_set_text_color(g_narration_text_layer, GColorWhite);
-  text_layer_set_font(g_narration_text_layer, NARRATION_FONT);
-  text_layer_set_text_alignment(g_narration_text_layer, GTextAlignmentLeft);
-  layer_add_child(window_get_root_layer(g_narration_window),
-                  text_layer_get_layer(g_narration_text_layer));
-}
-
-/******************************************************************************
-   Function: deinit_narration
-
-Description: Deinitializes the narration window.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void deinit_narration(void)
-{
-  text_layer_destroy(g_narration_text_layer);
-  window_destroy(g_narration_window);
-}
-
-/******************************************************************************
-   Function: init_graphics
-
-Description: Initializes the graphics window.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void init_graphics(void)
-{
   // Graphics window:
-  g_graphics_window = window_create();
-  window_set_background_color(g_graphics_window, GColorBlack);
-  window_set_window_handlers(g_graphics_window, (WindowHandlers)
+  else if (window_index == GRAPHICS_WINDOW)
   {
-    .appear = graphics_window_appear,
-  });
-  window_set_click_config_provider(g_graphics_window,
-                                   (ClickConfigProvider)
-                                     graphics_click_config_provider);
-  layer_set_update_proc(window_get_root_layer(g_graphics_window), draw_scene);
-
-  // Graphics frame inverter (for the "flash" effect):
-  g_inverter_layer = inverter_layer_create(GRAPHICS_FRAME);
-  layer_add_child(window_get_root_layer(g_graphics_window),
-                  inverter_layer_get_layer(g_inverter_layer));
-
-  // Tick timer subscription:
-  tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
-}
-
-/******************************************************************************
-   Function: deinit_graphics
-
-Description: Deinitializes the graphics window.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void deinit_graphics(void)
-{
-  inverter_layer_destroy(g_inverter_layer);
-  window_destroy(g_graphics_window);
-}
-
-/******************************************************************************
-   Function: init_main_menu
-
-Description: Initializes the main menu.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void init_main_menu(void)
-{
-  g_main_menu_window     = window_create();
-  window_set_window_handlers(g_main_menu_window, (WindowHandlers)
-  {
-    .appear = main_menu_appear,
-  });
-  g_main_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
-  menu_layer_set_callbacks(g_main_menu_menu_layer, NULL, (MenuLayerCallbacks)
-  {
-    .get_header_height = menu_get_header_height_callback,
-    .draw_header       = menu_draw_header_callback,
-    .get_num_rows      = menu_get_num_rows_callback,
-    .draw_row          = menu_draw_row_callback,
-    .select_click      = menu_select_callback,
-  });
-  layer_add_child(window_get_root_layer(g_main_menu_window),
-                  menu_layer_get_layer(g_main_menu_menu_layer));
-  menu_layer_set_click_config_onto_window(g_main_menu_menu_layer,
-                                          g_main_menu_window);
-}
-
-/******************************************************************************
-   Function: init_secondary_menus
-
-Description: Initializes the secondary menus.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void init_secondary_menus(void)
-{
-  if (g_ad_hoc_menu_window == NULL)
-  {
-    // Ad hoc menu window:
-    g_ad_hoc_menu_window     = window_create();
-    g_ad_hoc_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
-    menu_layer_set_callbacks(g_ad_hoc_menu_menu_layer, NULL, (MenuLayerCallbacks)
+    window_set_window_handlers(g_windows[window_index], (WindowHandlers)
     {
-      .get_header_height = menu_get_header_height_callback,
-      .draw_header       = menu_draw_header_callback,
-      .get_num_rows      = menu_get_num_rows_callback,
-      .draw_row          = menu_draw_row_callback,
-      .select_click      = menu_select_callback,
+      .appear = graphics_window_appear,
     });
-    layer_add_child(window_get_root_layer(g_ad_hoc_menu_window),
-                    menu_layer_get_layer(g_ad_hoc_menu_menu_layer));
-    menu_layer_set_click_config_onto_window(g_ad_hoc_menu_menu_layer,
-                                            g_ad_hoc_menu_window);
+    window_set_click_config_provider(g_windows[window_index],
+                                     (ClickConfigProvider)
+                                       graphics_click_config_provider);
+    layer_set_update_proc(window_get_root_layer(g_windows[window_index]),
+                          draw_scene);
 
-    // Options menu window:
-    g_options_menu_window     = window_create();
-    g_options_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
-    menu_layer_set_callbacks(g_options_menu_menu_layer,
-                             NULL,
-                             (MenuLayerCallbacks)
-    {
-      .get_header_height = menu_get_header_height_callback,
-      .draw_header       = menu_draw_header_callback,
-      .get_num_rows      = menu_get_num_rows_callback,
-      .draw_row          = menu_draw_row_callback,
-      .select_click      = menu_select_callback,
-    });
-    layer_add_child(window_get_root_layer(g_options_menu_window),
-                    menu_layer_get_layer(g_options_menu_menu_layer));
-    menu_layer_set_click_config_onto_window(g_options_menu_menu_layer,
-                                            g_options_menu_window);
-
-    // Heavy items menu window:
-    g_heavy_items_menu_window     = window_create();
-    g_heavy_items_menu_menu_layer = menu_layer_create(FULL_SCREEN_FRAME);
-    menu_layer_set_callbacks(g_heavy_items_menu_menu_layer,
-                             NULL,
-                             (MenuLayerCallbacks)
-    {
-      .get_header_height = menu_get_header_height_callback,
-      .draw_header       = menu_draw_header_callback,
-      .get_num_rows      = menu_get_num_rows_callback,
-      .draw_row          = menu_draw_row_callback,
-      .select_click      = menu_select_callback,
-    });
-    layer_add_child(window_get_root_layer(g_heavy_items_menu_window),
-                    menu_layer_get_layer(g_heavy_items_menu_menu_layer));
-    menu_layer_set_click_config_onto_window(g_heavy_items_menu_menu_layer,
-                                            g_heavy_items_menu_window);
+    // Graphics frame inverter (for the "flash" effect):
+    g_inverter_layer = inverter_layer_create(GRAPHICS_FRAME);
+    layer_add_child(window_get_root_layer(g_windows[window_index]),
+                    inverter_layer_get_layer(g_inverter_layer));
   }
 }
 
 /******************************************************************************
-   Function: deinit_main_menu
+   Function: deinit_window
 
-Description: Deinitializes the main menu.
+Description: Deinitializes the window at a given index of the "g_windows"
+             array.
 
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void deinit_main_menu(void)
-{
-  menu_layer_destroy(g_main_menu_menu_layer);
-  window_destroy(g_main_menu_window);
-  menu_layer_destroy(g_ad_hoc_menu_menu_layer);
-  window_destroy(g_ad_hoc_menu_window);
-  menu_layer_destroy(g_options_menu_menu_layer);
-  window_destroy(g_options_menu_window);
-  menu_layer_destroy(g_heavy_items_menu_menu_layer);
-  window_destroy(g_heavy_items_menu_window);
-}
-
-/******************************************************************************
-   Function: deinit_secondary_menus
-
-Description: Deinitializes the secondary menus.
-
-     Inputs: None.
+     Inputs: window_index - Integer indicating which window to deinitialize.
 
     Outputs: None.
 ******************************************************************************/
-void deinit_secondary_menus(void)
+void deinit_window(const int16_t window_index)
 {
-  if (g_ad_hoc_menu_window)
+  if (window_index < NUM_MENUS)
   {
-    menu_layer_destroy(g_ad_hoc_menu_menu_layer);
-    window_destroy(g_ad_hoc_menu_window);
-    menu_layer_destroy(g_options_menu_menu_layer);
-    window_destroy(g_options_menu_window);
-    menu_layer_destroy(g_heavy_items_menu_menu_layer);
-    window_destroy(g_heavy_items_menu_window);
-
-    // To indicate all secondary menus are deinitialized:
-    g_ad_hoc_menu_window = NULL;
+    menu_layer_destroy(g_menu_layers[window_index]);
   }
+  window_destroy(g_windows[window_index]);
 }
 
 /******************************************************************************
@@ -3732,24 +3786,11 @@ void init(void)
 
   srand(time(NULL));
 
-  // Initialize and present the main menu:
-  init_main_menu();
-  set_game_mode(MAIN_MENU_MODE);
-
-  // To indicate secondary menus are not yet initialized:
-  g_ad_hoc_menu_window = NULL;
-
   // Initialize the compass:
   g_compass_path = gpath_create(&COMPASS_PATH_INFO);
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
-
-  // Initialize other major windows, etc.:
-  init_narration();
-  init_graphics();
-  init_wall_coords();
-  app_focus_service_subscribe(app_focus_handler);
 
   // Load saved data (or initialize brand new player and location structs):
   g_player = malloc(sizeof(player_t));
@@ -3788,6 +3829,16 @@ void init(void)
     init_player();
     init_location();
   }
+
+  // Initialize all windows, etc., then show the main menu:
+  for (i = 0; i < NUM_WINDOWS; ++i)
+  {
+    init_window(i);
+  }
+  init_wall_coords();
+  show_window(MAIN_MENU, ANIMATED);
+  app_focus_service_subscribe(app_focus_handler);
+  tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 }
 
 /******************************************************************************
@@ -3802,6 +3853,10 @@ Description: Deinitializes the PebbleQuest app.
 void deinit(void)
 {
   int16_t i;
+
+  // Unsubscribe from relevant services:
+  tick_timer_service_unsubscribe();
+  app_focus_service_unsubscribe();
 
   // Save player and location data to persistent storage:
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
@@ -3823,13 +3878,15 @@ void deinit(void)
                      g_location,
                      sizeof(location_t));
 
-  // Now deinitialize everything:
-  deinit_narration();
-  deinit_graphics();
-  deinit_secondary_menus();
-  deinit_main_menu();
+  // Finally, deinitialize everything:
   deinit_location();
   deinit_player();
+  text_layer_destroy(g_narration_text_layer);
+  inverter_layer_destroy(g_inverter_layer);
+  for (i = 0; i < NUM_WINDOWS; ++i)
+  {
+    deinit_window(i);
+  }
 }
 
 /******************************************************************************
