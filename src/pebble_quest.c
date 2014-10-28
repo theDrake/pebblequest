@@ -960,6 +960,7 @@ void show_window(const int16_t window, const bool animated)
       window_stack_pop(animated);
     }
   }
+  g_current_window = window;
 }
 
 /******************************************************************************
@@ -3703,7 +3704,7 @@ void init_window(const int16_t window_index)
     }
 
     // Heavy items menu:
-    else if (window_index == HEAVY_ITEMS_MENU)
+    else // if (window_index == HEAVY_ITEMS_MENU)
     {
       menu_layer_set_callbacks(g_menu_layers[window_index],
                                NULL,
@@ -3733,7 +3734,7 @@ void init_window(const int16_t window_index)
   }
 
   // Graphics window:
-  else if (window_index == GRAPHICS_WINDOW)
+  else // if (window_index == GRAPHICS_WINDOW)
   {
     window_set_window_handlers(g_windows[window_index], (WindowHandlers)
     {
