@@ -3769,6 +3769,14 @@ void deinit_window(const int16_t window_index)
   {
     menu_layer_destroy(g_menu_layers[window_index]);
   }
+  else if (window_index == NARRATION_WINDOW)
+  {
+    text_layer_destroy(g_narration_text_layer);
+  }
+  else // if (window_index == GRAPHICS_WINDOW)
+  {
+    inverter_layer_destroy(g_inverter_layer);
+  }
   window_destroy(g_windows[window_index]);
 }
 
@@ -3786,12 +3794,6 @@ void init(void)
   int16_t i;
 
   srand(time(NULL));
-
-  // Initialize the compass:
-  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
-  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
-                                       GRAPHICS_FRAME_HEIGHT +
-                                         STATUS_BAR_HEIGHT / 2));
 
   // Load saved data (or initialize brand new player and location structs):
   g_player = malloc(sizeof(player_t));
@@ -3837,9 +3839,13 @@ void init(void)
     init_window(i);
   }
   init_wall_coords();
-  show_window(MAIN_MENU, ANIMATED);
+  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
+  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
+                                       GRAPHICS_FRAME_HEIGHT +
+                                         STATUS_BAR_HEIGHT / 2));
   app_focus_service_subscribe(app_focus_handler);
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+  show_window(MAIN_MENU, ANIMATED);
 }
 
 /******************************************************************************
@@ -3882,8 +3888,6 @@ void deinit(void)
   // Finally, deinitialize everything:
   deinit_location();
   deinit_player();
-  text_layer_destroy(g_narration_text_layer);
-  inverter_layer_destroy(g_inverter_layer);
   for (i = 0; i < NUM_WINDOWS; ++i)
   {
     deinit_window(i);
