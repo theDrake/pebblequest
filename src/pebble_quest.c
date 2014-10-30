@@ -33,7 +33,7 @@ void set_player_direction(const int16_t new_direction)
       gpath_rotate_to(g_compass_path, 0);
       break;
     case EAST:
-      gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE * 0.75);
+      gpath_rotate_to(g_compass_path, (TRIG_MAX_ANGLE * 3) / 4);
       break;
     default: // case WEST:
       gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 4);
@@ -55,12 +55,7 @@ void move_player(const int16_t direction)
 {
   GPoint destination = get_cell_farther_away(g_player->position, direction, 1);
 
-  // Check for the exit:
-  if (get_cell_type(g_player->position) == EXIT)
-  {
-    init_location();
-  }
-  else if (occupiable(destination))
+  if (occupiable(destination))
   {
     // Shift the player's position:
     g_player->position = destination;
@@ -72,6 +67,13 @@ void move_player(const int16_t direction)
       show_window(LOOT_MENU, ANIMATED);
       set_cell_type(g_player->position, EMPTY);
     }
+
+    // Check for an exit:
+    else if (get_cell_type(destination) == EXIT)
+    {
+      init_location();
+    }
+
     layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
   }
 }
@@ -3794,6 +3796,13 @@ void init(void)
   int16_t i;
 
   srand(time(NULL));
+  g_current_window = MAIN_MENU;
+
+  // Set up the compass graphic:
+  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
+  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
+                                       GRAPHICS_FRAME_HEIGHT +
+                                         STATUS_BAR_HEIGHT / 2));
 
   // Load saved data (or initialize brand new player and location structs):
   g_player = malloc(sizeof(player_t));
@@ -3839,13 +3848,9 @@ void init(void)
     init_window(i);
   }
   init_wall_coords();
-  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
-  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
-                                       GRAPHICS_FRAME_HEIGHT +
-                                         STATUS_BAR_HEIGHT / 2));
+  show_window(MAIN_MENU, ANIMATED);
   app_focus_service_subscribe(app_focus_handler);
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
-  show_window(MAIN_MENU, ANIMATED);
 }
 
 /******************************************************************************
