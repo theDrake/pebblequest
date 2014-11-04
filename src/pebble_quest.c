@@ -3357,13 +3357,19 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
     npc->temp_status_effects[i] = 0;
   }
 
-  // Set major stats to default values:
+  // Set major stats according to current dungeon depth:
   for (i = 0; i < NUM_MAJOR_STATS; ++i)
   {
-    g_player->stats[i] = g_player->level / 3 + 1;
+    g_player->stats[i] = g_player->depth / 3 + 1;
   }
 
   // Adjust major stats (and assign an "item") according to the NPC's type:
+  if (type == ARCHMAGE ||
+      type == MAGE)
+  {
+    npc->stats[INTELLECT] *= 2;
+    npc->item = rand() % NUM_PEBBLE_TYPES;
+  }
   if (type == ORC     ||
       type == WARRIOR ||
       type == BEAR    ||
@@ -3371,20 +3377,19 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
       type == TROLL)
   {
     npc->stats[STRENGTH] *= 2;
-    npc->item = rand() % NUM_ITEM_TYPES;
   }
   if (type == THIEF   ||
       type == WARRIOR ||
       type == GOBLIN)
   {
     npc->stats[AGILITY] *= 2;
-    npc->item = rand() % NUM_ITEM_TYPES;
   }
-  if (type == ARCHMAGE ||
-      type == MAGE)
+  if (type == ORC     ||
+      type == GOBLIN  ||
+      type == WARRIOR ||
+      type == THIEF)
   {
-    npc->stats[INTELLECT] *= 2;
-    npc->item = rand() % NUM_PEBBLE_TYPES;
+    npc->item = rand() % NUM_ITEM_TYPES;
   }
 
   // Finally, assign minor stats according to major stat values:
