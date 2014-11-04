@@ -3360,7 +3360,7 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   // Set major stats according to current dungeon depth:
   for (i = 0; i < NUM_MAJOR_STATS; ++i)
   {
-    g_player->stats[i] = g_player->depth / 3 + 1;
+    npc->stats[i] = g_player->depth / 3 + 1;
   }
 
   // Adjust major stats (and assign an "item") according to the NPC's type:
