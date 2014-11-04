@@ -3798,13 +3798,15 @@ void init(void)
   srand(time(NULL));
   g_current_window = MAIN_MENU;
 
-  // Set up the compass graphic:
+  // Set up graphics window and graphics-related variables:
+  init_window(GRAPHICS_WINDOW);
   g_compass_path = gpath_create(&COMPASS_PATH_INFO);
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
+  init_wall_coords();
 
-  // Load saved data (or initialize brand new player and location structs):
+  // Allocate memory for the player and location structs:
   g_player = malloc(sizeof(player_t));
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
@@ -3815,6 +3817,8 @@ void init(void)
   {
     g_location->npcs[i] = malloc(sizeof(npc_t));
   }
+
+  // Load saved data or initialize brand new player and location structs:
   if (persist_exists(STORAGE_KEY))
   {
     for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
@@ -3842,13 +3846,14 @@ void init(void)
     init_location();
   }
 
-  // Initialize all windows, etc., then show the main menu:
-  for (i = 0; i < NUM_WINDOWS; ++i)
+  // Initialize all other windows and display the main menu:
+  for (i = 0; i < GRAPHICS_WINDOW; ++i)
   {
     init_window(i);
   }
-  init_wall_coords();
-  show_window(MAIN_MENU, ANIMATED);
+  show_window(GRAPHICS_WINDOW, ANIMATED);
+
+  // Subscribe to relevant services:
   app_focus_service_subscribe(app_focus_handler);
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 }
