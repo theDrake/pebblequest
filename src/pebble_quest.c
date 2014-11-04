@@ -3851,7 +3851,7 @@ void init(void)
   {
     init_window(i);
   }
-  show_window(GRAPHICS_WINDOW, ANIMATED);
+  show_window(MAIN_MENU, ANIMATED);
 
   // Subscribe to relevant services:
   app_focus_service_subscribe(app_focus_handler);
