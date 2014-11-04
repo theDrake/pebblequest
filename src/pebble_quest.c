@@ -227,8 +227,7 @@ void damage_npc(npc_t *npc, int16_t damage)
     {
       g_player->level++;
       show_window(LEVEL_UP_MENU, NOT_ANIMATED);
-      g_current_narration = LEVEL_UP_NARRATION;
-      show_window(NARRATION_WINDOW, NOT_ANIMATED);
+      show_narration(LEVEL_UP_NARRATION);
     }
   }
 }
@@ -255,8 +254,7 @@ void adjust_player_current_health(const int16_t amount)
   else if (g_player->stats[CURRENT_HEALTH] <= 0)
   {
     show_window(MAIN_MENU, NOT_ANIMATED);
-    g_current_narration = DEATH_NARRATION;
-    show_window(NARRATION_WINDOW, NOT_ANIMATED);
+    show_narration(DEATH_NARRATION);
   }
 }
 
@@ -903,6 +901,7 @@ void show_narration(const int16_t narration)
 {
   static char narration_str[NARRATION_STR_LEN + 1];
 
+  g_current_narration = narration;
   switch (narration)
   {
     case INTRO_NARRATION_1: // Total chars: 82
@@ -1331,8 +1330,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         {
           init_location();
           show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
-          g_current_narration = INTRO_NARRATION_1;
-          show_window(NARRATION_WINDOW, NOT_ANIMATED);
+          show_narration(INTRO_NARRATION_1);
         }
         else
         {
@@ -1360,6 +1358,10 @@ void menu_select_callback(MenuLayer *menu_layer,
     {
       g_current_selection = get_nth_item_type(cell_index->row);
       show_window(PEBBLE_OPTIONS_MENU, ANIMATED);
+      menu_layer_set_selected_index(g_menu_layers[PEBBLE_OPTIONS_MENU],
+                                    (MenuIndex) {0, 0},
+                                    MenuRowAlignNone,
+                                    NOT_ANIMATED);
     }
 
     // Heavy items:
@@ -1367,7 +1369,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     {
       equip_heavy_item(g_player->heavy_items[cell_index->row -
                                               get_num_pebble_types_owned()]);
-      //menu_layer_reload_data(g_menu_layers[INVENTORY_MENU]);
+      menu_layer_reload_data(g_menu_layers[INVENTORY_MENU]);
     }
   }
   else if (menu_layer == g_menu_layers[LOOT_MENU])
@@ -1410,6 +1412,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         }
 
         // Return to the inventory menu, centered on the newly-infused item:
+        show_window(INVENTORY_MENU, ANIMATED);
         menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
                                       (MenuIndex)
                                       {
@@ -1419,7 +1422,6 @@ void menu_select_callback(MenuLayer *menu_layer,
                                       },
                                       MenuRowAlignCenter,
                                       NOT_ANIMATED);
-        show_window(INVENTORY_MENU, ANIMATED);
       }
     }
 
@@ -2755,18 +2757,17 @@ void graphics_click_config_provider(void *context)
 }
 
 /******************************************************************************
-   Function: narration_select_single_click
+   Function: narration_single_click
 
-Description: The narration window's single-click handler for the "select"
-             button. Hides the narration window.
+Description: The narration window's single-click handler for all buttons. Shows
+             the next narration, if any, or hides the narration window.
 
      Inputs: recognizer - The click recognizer.
              context    - Pointer to the associated context.
 
     Outputs: None.
 ******************************************************************************/
-void narration_select_single_click(ClickRecognizerRef recognizer,
-                                   void *context)
+void narration_single_click(ClickRecognizerRef recognizer, void *context)
 {
   if (g_current_narration == INTRO_NARRATION_1 ||
       g_current_narration == INTRO_NARRATION_2)
@@ -2790,8 +2791,10 @@ Description: Button-click configurations for the narration window.
 ******************************************************************************/
 void narration_click_config_provider(void *context)
 {
-  window_single_click_subscribe(BUTTON_ID_SELECT,
-                                narration_select_single_click);
+  window_single_click_subscribe(BUTTON_ID_SELECT, narration_single_click);
+  window_single_click_subscribe(BUTTON_ID_UP, narration_single_click);
+  window_single_click_subscribe(BUTTON_ID_DOWN, narration_single_click);
+  window_single_click_subscribe(BUTTON_ID_BACK, narration_single_click);
 }
 
 /******************************************************************************

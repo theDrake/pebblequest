@@ -453,7 +453,7 @@ void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context);
 void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                                             void *context);
 void graphics_click_config_provider(void *context);
-void narration_select_single_click(ClickRecognizerRef recognizer, void *context);
+void narration_single_click(ClickRecognizerRef recognizer, void *context);
 void narration_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
 void strcat_item_name(char *dest_str, const int16_t item_type);
