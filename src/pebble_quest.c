@@ -3615,7 +3615,6 @@ Description: Initializes the window at a given index of the "g_windows" array.
 void init_window(const int16_t window_index)
 {
   g_windows[window_index] = window_create();
-  window_set_background_color(g_windows[window_index], GColorBlack);
 
   // Menu windows:
   if (window_index < NUM_MENUS)
@@ -3724,6 +3723,7 @@ void init_window(const int16_t window_index)
   // Narration window:
   else if (window_index == NARRATION_WINDOW)
   {
+    window_set_background_color(g_windows[window_index], GColorBlack);
     window_set_click_config_provider(g_windows[window_index],
                                      narration_click_config_provider);
     g_narration_text_layer = text_layer_create(NARRATION_TEXT_LAYER_FRAME);
@@ -3738,6 +3738,7 @@ void init_window(const int16_t window_index)
   // Graphics window:
   else // if (window_index == GRAPHICS_WINDOW)
   {
+    window_set_background_color(g_windows[window_index], GColorBlack);
     window_set_window_handlers(g_windows[window_index], (WindowHandlers)
     {
       .appear = graphics_window_appear,
