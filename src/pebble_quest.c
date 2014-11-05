@@ -950,6 +950,17 @@ Description: Prepares and displays a given window.
 ******************************************************************************/
 void show_window(const int16_t window, const bool animated)
 {
+  // If it's a menu, reload menu data and scroll to the top:
+  if (window < NUM_MENUS)
+  {
+    menu_layer_reload_data(g_menu_layers[window]);
+    menu_layer_set_selected_index(g_menu_layers[window],
+                                  (MenuIndex) {0, 0},
+                                  MenuRowAlignCenter,
+                                  NOT_ANIMATED);
+  }
+
+  // Show the window:
   if (!window_stack_contains_window(g_windows[window]))
   {
     window_stack_push(g_windows[window], animated);
@@ -1153,7 +1164,7 @@ static void level_up_menu_draw_row_callback(GContext *ctx,
 
   strcat_stat_name(title_str, cell_index->row);
   strcat_stat_value(title_str, cell_index->row);
-  strcat(title_str, "->");
+  strcat(title_str, " -> ");
   strcat_int(title_str, g_player->stats[cell_index->row] + 1);
   menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
 }
@@ -1231,7 +1242,7 @@ static void loot_menu_draw_row_callback(GContext *ctx,
 {
   char title_str[MENU_TITLE_STR_LEN + 1] = "";
 
-  strcat_item_name(title_str, get_cell_type(g_player->position));
+  strcat_item_name(title_str, g_current_selection);
   menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
 }
 
@@ -1358,17 +1369,13 @@ void menu_select_callback(MenuLayer *menu_layer,
     {
       g_current_selection = get_nth_item_type(cell_index->row);
       show_window(PEBBLE_OPTIONS_MENU, ANIMATED);
-      menu_layer_set_selected_index(g_menu_layers[PEBBLE_OPTIONS_MENU],
-                                    (MenuIndex) {0, 0},
-                                    MenuRowAlignNone,
-                                    NOT_ANIMATED);
     }
 
     // Heavy items:
     else
     {
       equip_heavy_item(g_player->heavy_items[cell_index->row -
-                                              get_num_pebble_types_owned()]);
+                                               get_num_pebble_types_owned()]);
       menu_layer_reload_data(g_menu_layers[INVENTORY_MENU]);
     }
   }
@@ -1384,7 +1391,8 @@ void menu_select_callback(MenuLayer *menu_layer,
       case 0: // Equip
         unequip_item_at(RIGHT_HAND);
         g_player->equipped_pebble = g_current_selection;
-        show_window(INVENTORY_MENU, ANIMATED);
+        //assign_minor_stats()???
+        show_window(INVENTORY_MENU, NOT_ANIMATED);
         break;
       default: // Infuse into Item
         show_window(HEAVY_ITEMS_MENU, ANIMATED);
@@ -1412,13 +1420,13 @@ void menu_select_callback(MenuLayer *menu_layer,
         }
 
         // Return to the inventory menu, centered on the newly-infused item:
-        show_window(INVENTORY_MENU, ANIMATED);
+        show_window(INVENTORY_MENU, NOT_ANIMATED);
         menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
                                       (MenuIndex)
                                       {
+                                        0,
                                         cell_index->row +
-                                          get_num_pebble_types_owned(),
-                                        0
+                                          get_num_pebble_types_owned()
                                       },
                                       MenuRowAlignCenter,
                                       NOT_ANIMATED);
@@ -3222,9 +3230,8 @@ void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items)
   int16_t i;
 
   // Set minor stats according to major stats (STRENGTH, AGILITY, INTELLECT):
-  stats[CURRENT_HEALTH]   = stats[MAX_HEALTH]   = stats[STRENGTH] * 10;
-  stats[CURRENT_ENERGY]   = stats[MAX_ENERGY]   = stats[INTELLECT] * 5 +
-                                                    stats[AGILITY] * 5;
+  stats[MAX_HEALTH]       = stats[STRENGTH] * 10;
+  stats[MAX_ENERGY]       = stats[INTELLECT] * 5 + stats[AGILITY] * 5;
   stats[PHYSICAL_POWER]   = stats[STRENGTH] + stats[AGILITY] / 2;
   stats[PHYSICAL_DEFENSE] = stats[AGILITY] + stats[STRENGTH] / 2;
   stats[MAGICAL_POWER]    = stats[INTELLECT] + stats[AGILITY] / 2;
@@ -3313,6 +3320,11 @@ void init_player(void)
   // For testing purposes:
   init_heavy_item(g_player->heavy_items[2], HEAVY_ARMOR);
   g_player->pebbles[PEBBLE_OF_LIGHTNING] = 200;
+
+  // Finally, assign minor stats according to major stats and equipment:
+  assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
+  g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
+  g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
 }
 
 /******************************************************************************
@@ -3397,6 +3409,8 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
 
   // Finally, assign minor stats according to major stat values:
   assign_minor_stats(npc->stats, NULL);
+  npc->stats[CURRENT_HEALTH] = npc->stats[MAX_HEALTH];
+  npc->stats[CURRENT_ENERGY] = npc->stats[MAX_ENERGY];
 }
 
 /******************************************************************************
