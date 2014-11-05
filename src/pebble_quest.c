@@ -64,7 +64,7 @@ void move_player(const int16_t direction)
     if (get_cell_type(destination) >= 0)
     {
       g_current_selection = get_cell_type(g_player->position);
-      show_window(LOOT_MENU, ANIMATED);
+      show_window(LOOT_MENU, NOT_ANIMATED);
       set_cell_type(g_player->position, EMPTY);
     }
 
