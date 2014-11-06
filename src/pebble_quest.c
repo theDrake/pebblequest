@@ -906,15 +906,19 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
                             "By David C. Drake:\ndavidcdrake.com");
       break;
-    case DEATH_NARRATION: // Total chars: 54
-      strcpy(narration_str, "\nAlas, yet another hero has perished in the "
-                            "dank, dark depths.");
+    case INTRO_NARRATION_4: // Total chars: 91
+      strcpy(narration_str, "      CONTROLS\nForward: \"Up\"\nBack: \"Down\"\n"
+                            "Left: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
+                            "\"Select\"");
+      break;
+    case DEATH_NARRATION: // Total chars: 68
+      strcpy(narration_str, "Alas, you have perished in the dank, dark depths,"
+                            " never to be found.");
       init_player();
       init_location();
       break;
     case STATS_NARRATION_1: // Total chars: ??
-      strcpy(narration_str, "         STATS");
-      strcat(narration_str, "\nLevel: ");
+      strcpy(narration_str, "Level: ");
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
       strcat_int(narration_str, g_player->depth);
@@ -926,17 +930,16 @@ void show_narration(const int16_t narration)
       }
       break;
     case STATS_NARRATION_2: // Total chars: ??
-      strcpy(narration_str, "         STATS");
+      strcpy(narration_str, "");
       for (i = NUM_MAJOR_STATS; i < NUM_CHARACTER_STATS; ++i)
       {
-        strcat(narration_str, "\n");
         strcat_stat_name(narration_str, i);
         strcat_stat_value(narration_str, i);
+        strcat(narration_str, "\n");
       }
       break;
     case STATS_NARRATION_3: // Total chars: ??
-      strcpy(narration_str, "         STATS");
-      strcat(narration_str, "\nPebbles found: ");
+      strcpy(narration_str, "Pebbles found: ");
       strcat_int(narration_str, g_player->num_pebbles_found);
       strcat(narration_str, "\nKills: ");
       strcat_int(narration_str, g_player->num_kills);
@@ -1070,7 +1073,7 @@ static void loot_menu_draw_header_callback(GContext *ctx,
                                       uint16_t section_index,
                                       void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Loot");
+  menu_cell_basic_header_draw(ctx, cell_layer, "Loot!");
 }
 
 /******************************************************************************
@@ -2809,8 +2812,8 @@ Description: The narration window's single-click handler for all buttons. Shows
 ******************************************************************************/
 void narration_single_click(ClickRecognizerRef recognizer, void *context)
 {
-  if (g_current_narration < INTRO_NARRATION_3 ||
-      (g_current_narration > INTRO_NARRATION_3 &&
+  if (g_current_narration < INTRO_NARRATION_4 ||
+      (g_current_narration > INTRO_NARRATION_4 &&
        g_current_narration < STATS_NARRATION_3))
   {
     show_narration(++g_current_narration);
