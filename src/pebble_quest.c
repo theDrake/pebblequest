@@ -916,22 +916,45 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
                             "By David C. Drake:\ndavidcdrake.com");
       break;
-    case LEVEL_UP_NARRATION: // Total chars: 55
-      strcpy(narration_str, "\n  You have gained"
-                            "\n        a level of"
-                            "\n      experience!");
+    case DEATH_NARRATION: // Total chars: 54
+      strcpy(narration_str, "\nAlas, another adventurer has fallen in the "
+                            "dank, dark depths of ");
+      init_player();
+      init_location();
       break;
-    default: // case DEATH_NARRATION: Total chars: 57~??
-      strcpy(narration_str, "You have fallen.\n\nLevel: ");
+    case STATS_NARRATION_1: // Total chars: ??
+      strcpy(narration_str, "Level: ");
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
       strcat_int(narration_str, g_player->depth);
-      strcat(narration_str, "\nPebbles: ");
+      for (i = 0; i < NUM_MAJOR_STATS; ++i)
+      {
+        strcat_stat_name(i);
+        strcat_stat_value(i);
+      }
+      break;
+    case STATS_NARRATION_2: // Total chars: ??
+      for (i = NUM_MAJOR_STATS; i < NUM_CHARACTER_STATS; ++i)
+      {
+        strcat_stat_name(i);
+        strcat_stat_value(i);
+      }
+      break;
+    case STATS_NARRATION_3: // Total chars: ??
+      strcat(narration_str, "\nPebbles found: ");
       strcat_int(narration_str, g_player->num_pebbles_found);
       strcat(narration_str, "\nKills: ");
       strcat_int(narration_str, g_player->num_kills);
-      init_player();
-      init_location();
+      if (g_player->stats[CURRENT_HEALTH] <= 0)
+      {
+        init_player();
+        init_location();      
+      }
+      break;
+    default: // case LEVEL_UP_NARRATION: // Total chars: 55
+      strcpy(narration_str, "\n  You have gained"
+                            "\n        a level of"
+                            "\n      experience!");
       break;
   }
   text_layer_set_text(g_narration_text_layer, narration_str);
@@ -993,26 +1016,6 @@ static void main_menu_draw_header_callback(GContext *ctx,
                                            void *data)
 {
   menu_cell_basic_header_draw(ctx, cell_layer, "PebbleQuest - Menu");
-}
-
-/******************************************************************************
-   Function: stats_menu_draw_header_callback
-
-Description: Instructions for drawing the stats menu's header.
-
-     Inputs: ctx           - Pointer to the associated context.
-             cell_layer    - Pointer to the cell layer.
-             section_index - Section number of the header to be drawn.
-             data          - Pointer to additional data (not used).
-
-    Outputs: None.
-******************************************************************************/
-static void stats_menu_draw_header_callback(GContext *ctx,
-                                            const Layer *cell_layer,
-                                            uint16_t section_index,
-                                            void *data)
-{
-  menu_cell_basic_header_draw(ctx, cell_layer, "Character Stats");
 }
 
 /******************************************************************************
@@ -1222,30 +1225,6 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
 }
 
 /******************************************************************************
-   Function: stats_menu_draw_row_callback
-
-Description: Instructions for drawing each row (cell) of the stats menu.
-
-     Inputs: ctx        - Pointer to the associated context.
-             cell_layer - Pointer to the layer of the cell to be drawn.
-             cell_index - Pointer to the index struct of the cell to be drawn.
-             data       - Pointer to additional data (not used).
-
-    Outputs: None.
-******************************************************************************/
-static void stats_menu_draw_row_callback(GContext *ctx,
-                                         const Layer *cell_layer,
-                                         MenuIndex *cell_index,
-                                         void *data)
-{
-  char title_str[MENU_TITLE_STR_LEN + 1] = "";
-
-  strcat_stat_name(title_str, cell_index->row);
-  strcat_stat_value(title_str, cell_index->row);
-  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
-}
-
-/******************************************************************************
    Function: level_up_menu_draw_row_callback
 
 Description: Instructions for drawing each row (cell) of the level-up menu.
@@ -1398,7 +1377,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         show_window(INVENTORY_MENU, ANIMATED);
         break;
       default: // Character Stats
-        show_window(STATS_MENU, ANIMATED);
+        show_narration(STATS_NARRATION);
         break;
     }
   }
@@ -1445,7 +1424,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         break;
     }
   }
-  else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
+  else // if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
     // "Infuse item" mode:
     if (g_current_selection < FIRST_HEAVY_ITEM)
@@ -1553,10 +1532,6 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
     return get_num_heavy_items_owned();
-  }
-  else if (menu_layer == g_menu_layers[STATS_MENU])
-  {
-    return STATS_MENU_NUM_ROWS;
   }
   else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
@@ -2835,8 +2810,9 @@ Description: The narration window's single-click handler for all buttons. Shows
 ******************************************************************************/
 void narration_single_click(ClickRecognizerRef recognizer, void *context)
 {
-  if (g_current_narration == INTRO_NARRATION_1 ||
-      g_current_narration == INTRO_NARRATION_2)
+  if (g_current_narration < INTRO_NARRATION_3 ||
+      (g_current_narration > INTRO_NARRATION_3 &&
+       g_current_narration < STATS_NARRATION_3))
   {
     show_narration(++g_current_narration);
   }
@@ -3736,21 +3712,6 @@ void init_window(const int16_t window_index)
         .draw_header       = inventory_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = inventory_menu_draw_row_callback,
-        .select_click      = menu_select_callback,
-      });
-    }
-
-    // Stats menu:
-    else if (window_index == STATS_MENU)
-    {
-      menu_layer_set_callbacks(g_menu_layers[window_index],
-                               NULL,
-                               (MenuLayerCallbacks)
-      {
-        .get_header_height = menu_get_header_height_callback,
-        .draw_header       = stats_menu_draw_header_callback,
-        .get_num_rows      = menu_get_num_rows_callback,
-        .draw_row          = stats_menu_draw_row_callback,
         .select_click      = menu_select_callback,
       });
     }

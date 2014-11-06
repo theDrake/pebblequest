@@ -19,15 +19,14 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 
 #define MAIN_MENU           0
 #define INVENTORY_MENU      1
-#define STATS_MENU          2
-#define LEVEL_UP_MENU       3
-#define LOOT_MENU           4
-#define PEBBLE_OPTIONS_MENU 5
-#define HEAVY_ITEMS_MENU    6
-#define NARRATION_WINDOW    7
-#define GRAPHICS_WINDOW     8
-#define NUM_WINDOWS         9
-#define NUM_MENUS           7
+#define LEVEL_UP_MENU       2
+#define LOOT_MENU           3
+#define PEBBLE_OPTIONS_MENU 4
+#define HEAVY_ITEMS_MENU    5
+#define NARRATION_WINDOW    6
+#define GRAPHICS_WINDOW     7
+#define NUM_WINDOWS         8
+#define NUM_MENUS           6
 
 /******************************************************************************
   Player- and NPC-related Constants
@@ -111,13 +110,16 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 
-// Narration types:
+// Narration types (ordering matters for multi-page narrations):
 #define INTRO_NARRATION_1   0
 #define INTRO_NARRATION_2   1
 #define INTRO_NARRATION_3   2
-#define LEVEL_UP_NARRATION  3
-#define DEATH_NARRATION     4
-#define NUM_NARRATION_TYPES 5
+#define DEATH_NARRATION     3
+#define STATS_NARRATION_1   4
+#define STATS_NARRATION_2   5
+#define STATS_NARRATION_3   6
+#define LEVEL_UP_NARRATION  7
+#define NUM_NARRATION_TYPES 8
 
 /******************************************************************************
   Pebble- and Item-related Constants
@@ -221,7 +223,6 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MENU_HEADER_STR_LEN   23
 #define MENU_TITLE_STR_LEN    25
 #define MENU_SUBTITLE_STR_LEN 20
-#define STATS_MENU_NUM_ROWS   NUM_CHARACTER_STATS // Or up to 16?
 
 /******************************************************************************
   Button-related Constants
@@ -362,10 +363,6 @@ static void inventory_menu_draw_header_callback(GContext *ctx,
                                                 const Layer *cell_layer,
                                                 uint16_t section_index,
                                                 void *data);
-static void stats_menu_draw_header_callback(GContext *ctx,
-                                            const Layer *cell_layer,
-                                            uint16_t section_index,
-                                            void *data);
 static void level_up_menu_draw_header_callback(GContext *ctx,
                                                const Layer *cell_layer,
                                                uint16_t section_index,
@@ -390,10 +387,6 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
                                              const Layer *cell_layer,
                                              MenuIndex *cell_index,
                                              void *data);
-static void stats_menu_draw_row_callback(GContext *ctx,
-                                         const Layer *cell_layer,
-                                         MenuIndex *cell_index,
-                                         void *data);
 static void level_up_menu_draw_row_callback(GContext *ctx,
                                             const Layer *cell_layer,
                                             MenuIndex *cell_index,
