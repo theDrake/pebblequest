@@ -57,21 +57,24 @@ void move_player(const int16_t direction)
 
   if (occupiable(destination))
   {
-    // Shift the player's position:
-    g_player->position = destination;
-
     // Check for loot:
     if (get_cell_type(destination) >= 0)
     {
-      g_current_selection = get_cell_type(g_player->position);
+      g_current_selection = get_cell_type(destination);
       show_window(LOOT_MENU, NOT_ANIMATED);
-      set_cell_type(g_player->position, EMPTY);
+      set_cell_type(destination, EMPTY);
     }
 
     // Check for an exit:
     else if (get_cell_type(destination) == EXIT)
     {
       init_location();
+    }
+
+    // Shift the player's position:
+    else
+    {
+      g_player->position = destination;
     }
 
     layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
@@ -924,24 +927,29 @@ void show_narration(const int16_t narration)
       init_location();
       break;
     case STATS_NARRATION_1: // Total chars: ??
-      strcpy(narration_str, "Level: ");
+      strcpy(narration_str, "CHARACTER STATS");
+      strcat(narration_str, "Level: ");
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
       strcat_int(narration_str, g_player->depth);
       for (i = 0; i < NUM_MAJOR_STATS; ++i)
       {
+        strcat(narration_str, "\n");
         strcat_stat_name(narration_str, i);
         strcat_stat_value(narration_str, i);
       }
       break;
     case STATS_NARRATION_2: // Total chars: ??
+      strcpy(narration_str, "CHARACTER STATS");
       for (i = NUM_MAJOR_STATS; i < NUM_CHARACTER_STATS; ++i)
       {
         strcat_stat_name(narration_str, i);
         strcat_stat_value(narration_str, i);
+        strcat(narration_str, "\n");
       }
       break;
     case STATS_NARRATION_3: // Total chars: ??
+      strcpy(narration_str, "CHARACTER STATS");
       strcat(narration_str, "\nPebbles found: ");
       strcat_int(narration_str, g_player->num_pebbles_found);
       strcat(narration_str, "\nKills: ");
@@ -1363,15 +1371,11 @@ void menu_select_callback(MenuLayer *menu_layer,
     switch (cell_index->row)
     {
       case 0: // Play
-        if (g_player->depth == 0)
+        show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
+        if (g_player->depth == 1 &&
+            get_cell_type(g_player->position) == ENTRANCE)
         {
-          init_location();
-          show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
           show_narration(INTRO_NARRATION_1);
-        }
-        else
-        {
-          show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
         }
         break;
       case 1: // Inventory
@@ -3411,12 +3415,11 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   // Set major stats according to current dungeon depth:
   for (i = 0; i < NUM_MAJOR_STATS; ++i)
   {
-    npc->stats[i] = g_player->depth / 3 + 1;
+    npc->stats[i] = g_player->depth;
   }
 
   // Adjust major stats (and assign an "item") according to the NPC's type:
-  if (type == ARCHMAGE ||
-      type == MAGE)
+  if (type == MAGE)
   {
     npc->stats[INTELLECT] *= 2;
     npc->item = rand() % NUM_PEBBLE_TYPES;
@@ -3634,6 +3637,9 @@ void init_location(void)
       builder_direction = rand() % NUM_DIRECTIONS;
     }
   }
+
+  // Add an evil wizard at the exit point:
+  add_new_npc(MAGE, builder_position);
 
   // Finally, set the entrance to ENTRANCE and increment the player's depth:
   set_cell_type(g_player->position, ENTRANCE);

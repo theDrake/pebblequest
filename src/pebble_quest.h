@@ -40,25 +40,21 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
-#define ARCHMAGE        0
-#define MAGE            1
-#define THIEF           2
-#define WARRIOR         3
-#define BAT             4
-#define WOLF            5
-#define BEAR            6
-#define GOBLIN          7
-#define ORC             8
-#define OGRE            9
-#define TROLL           10
-#define SLIME           11
-#define SKELETON        12
-#define ZOMBIE          13
-#define WRAITH          14
-#define FIRE_ELEMENTAL  15
-#define ICE_ELEMENTAL   16
-#define STORM_ELEMENTAL 17
-#define NUM_NPC_TYPES   18
+#define MAGE            0
+#define THIEF           1
+#define WARRIOR         2
+#define WOLF            3
+#define BEAR            4
+#define GOBLIN          5
+#define ORC             6
+#define OGRE            7
+#define TROLL           8
+#define SLIME           9
+#define SKELETON        10
+#define ZOMBIE          11
+#define WRAITH          12
+#define ELEMENTAL       13
+#define NUM_NPC_TYPES   14
 
 // Character stats:
 #define STRENGTH            0
@@ -106,7 +102,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Narration-related Constants
 ******************************************************************************/
 
-#define NARRATION_STR_LEN          90
+#define NARRATION_STR_LEN          100
 #define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 
