@@ -311,20 +311,6 @@ void add_new_npc(const int16_t npc_type, const GPoint position)
 }
 
 /******************************************************************************
-   Function: get_random_npc_type
-
-Description: Returns a random NPC type.
-
-     Inputs: None.
-
-    Outputs: Integer representing an NPC type.
-******************************************************************************/
-int16_t get_random_npc_type(void)
-{
-  return rand() % NUM_NPC_TYPES;
-}
-
-/******************************************************************************
    Function: get_npc_spawn_point
 
 Description: Returns a suitable NPC spawn point, outside the player's sphere of
@@ -921,14 +907,14 @@ void show_narration(const int16_t narration)
                             "By David C. Drake:\ndavidcdrake.com");
       break;
     case DEATH_NARRATION: // Total chars: 54
-      strcpy(narration_str, "\nAlas, another adventurer has fallen in the "
-                            "dank, dark depths of ");
+      strcpy(narration_str, "\nAlas, yet another hero has perished in the "
+                            "dank, dark depths.");
       init_player();
       init_location();
       break;
     case STATS_NARRATION_1: // Total chars: ??
-      strcpy(narration_str, "CHARACTER STATS");
-      strcat(narration_str, "Level: ");
+      strcpy(narration_str, "         STATS");
+      strcat(narration_str, "\nLevel: ");
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
       strcat_int(narration_str, g_player->depth);
@@ -940,16 +926,16 @@ void show_narration(const int16_t narration)
       }
       break;
     case STATS_NARRATION_2: // Total chars: ??
-      strcpy(narration_str, "CHARACTER STATS");
+      strcpy(narration_str, "         STATS");
       for (i = NUM_MAJOR_STATS; i < NUM_CHARACTER_STATS; ++i)
       {
+        strcat(narration_str, "\n");
         strcat_stat_name(narration_str, i);
         strcat_stat_value(narration_str, i);
-        strcat(narration_str, "\n");
       }
       break;
     case STATS_NARRATION_3: // Total chars: ??
-      strcpy(narration_str, "CHARACTER STATS");
+      strcpy(narration_str, "         STATS");
       strcat(narration_str, "\nPebbles found: ");
       strcat_int(narration_str, g_player->num_pebbles_found);
       strcat(narration_str, "\nKills: ");
@@ -1423,6 +1409,14 @@ void menu_select_callback(MenuLayer *menu_layer,
         g_player->equipped_pebble = g_current_selection;
         //assign_minor_stats()???
         show_window(INVENTORY_MENU, NOT_ANIMATED);
+        menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
+                                      (MenuIndex)
+                                      {
+                                        0,
+                                        g_current_selection
+                                      },
+                                      MenuRowAlignCenter,
+                                      NOT_ANIMATED);
         break;
       default: // Infuse into Item
         show_window(HEAVY_ITEMS_MENU, ANIMATED);
@@ -2877,7 +2871,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     // Generate new NPCs periodically (does nothing if the NPC array is full):
     if (rand() % 10 == 0)
     {
-      add_new_npc(get_random_npc_type(), get_npc_spawn_point());
+      // This may create any NPC type except MAGE:
+      add_new_npc(rand() % (NUM_NPC_TYPES - 1), get_npc_spawn_point());
     }
 
     // Handle player stat recovery:
@@ -3550,8 +3545,7 @@ void init_location(void)
   int16_t i, j, builder_direction;
   GPoint builder_position;
 
-  // Set the primary NPC type and remove any preexisting NPCs:
-  g_location->primary_npc_type = rand() % NUM_NPC_TYPES;
+  // Remove any preexisting NPCs:
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
     g_location->npcs[i]->type = NONE;

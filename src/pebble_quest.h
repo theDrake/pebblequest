@@ -40,21 +40,25 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
-#define MAGE            0
-#define THIEF           1
-#define WARRIOR         2
-#define WOLF            3
-#define BEAR            4
-#define GOBLIN          5
-#define ORC             6
-#define OGRE            7
-#define TROLL           8
-#define SLIME           9
-#define SKELETON        10
-#define ZOMBIE          11
-#define WRAITH          12
-#define ELEMENTAL       13
-#define NUM_NPC_TYPES   14
+#define WOLF            0
+#define BEAR            1
+#define GOBLIN          2
+#define ORC             3
+#define OGRE            4
+#define TROLL           5
+#define SLIME           6
+#define WORM            7
+#define SKELETON        8
+#define ZOMBIE          9
+#define WRAITH          10
+#define VAMPIRE         11
+#define DEMON           12
+#define DRAGON          13
+#define ELEMENTAL       14
+#define THIEF           15
+#define WARRIOR         16
+#define MAGE            17
+#define NUM_NPC_TYPES   18
 
 // Character stats:
 #define STRENGTH            0
@@ -210,7 +214,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define SMALL_CORNER_RADIUS      3
 #define NINETY_DEGREES           (TRIG_MAX_ANGLE / 4)
 #define DEFAULT_ROTATION_RATE    (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event
-#define ELLIPSE_RADIUS_RATIO     0.4 // (vertical radius) / (horizontal radius)
+#define ELLIPSE_RADIUS_RATIO     0.4
 
 /******************************************************************************
   Menu-related Constants
@@ -282,8 +286,7 @@ typedef struct NonPlayerCharacter {
 } __attribute__((__packed__)) npc_t;
 
 typedef struct Location {
-  int16_t map[MAP_WIDTH][MAP_HEIGHT],
-          primary_npc_type;
+  int16_t map[MAP_WIDTH][MAP_HEIGHT];
   npc_t *npcs[MAX_NPCS_AT_ONE_TIME];
 } __attribute__((__packed__)) location_t;
 
@@ -329,7 +332,6 @@ void damage_npc(npc_t *npc, int16_t damage);
 void adjust_player_current_health(const int16_t amount);
 void adjust_player_current_mp(const int16_t amount);
 void add_new_npc(const int16_t npc_type, const GPoint position);
-int16_t get_random_npc_type(void);
 GPoint get_npc_spawn_point(void);
 GPoint get_floor_center_point(const int16_t depth, const int16_t position);
 GPoint get_cell_farther_away(const GPoint reference_point,
