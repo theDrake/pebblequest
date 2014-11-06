@@ -899,6 +899,7 @@ Description: Displays desired narration text via the narration window.
 ******************************************************************************/
 void show_narration(const int16_t narration)
 {
+  int16_t i;
   static char narration_str[NARRATION_STR_LEN + 1];
 
   g_current_narration = narration;
@@ -929,15 +930,15 @@ void show_narration(const int16_t narration)
       strcat_int(narration_str, g_player->depth);
       for (i = 0; i < NUM_MAJOR_STATS; ++i)
       {
-        strcat_stat_name(i);
-        strcat_stat_value(i);
+        strcat_stat_name(narration_str, i);
+        strcat_stat_value(narration_str, i);
       }
       break;
     case STATS_NARRATION_2: // Total chars: ??
       for (i = NUM_MAJOR_STATS; i < NUM_CHARACTER_STATS; ++i)
       {
-        strcat_stat_name(i);
-        strcat_stat_value(i);
+        strcat_stat_name(narration_str, i);
+        strcat_stat_value(narration_str, i);
       }
       break;
     case STATS_NARRATION_3: // Total chars: ??
@@ -948,7 +949,7 @@ void show_narration(const int16_t narration)
       if (g_player->stats[CURRENT_HEALTH] <= 0)
       {
         init_player();
-        init_location();      
+        init_location();
       }
       break;
     default: // case LEVEL_UP_NARRATION: // Total chars: 55
@@ -1377,7 +1378,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         show_window(INVENTORY_MENU, ANIMATED);
         break;
       default: // Character Stats
-        show_narration(STATS_NARRATION);
+        show_narration(STATS_NARRATION_1);
         break;
     }
   }
