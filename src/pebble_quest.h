@@ -221,7 +221,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MENU_HEADER_STR_LEN   23
 #define MENU_TITLE_STR_LEN    25
 #define MENU_SUBTITLE_STR_LEN 20
-#define STATS_MENU_NUM_ROWS   16
+#define STATS_MENU_NUM_ROWS   NUM_CHARACTER_STATS // Or up to 16?
 
 /******************************************************************************
   Button-related Constants
@@ -358,14 +358,18 @@ static void main_menu_draw_header_callback(GContext *ctx,
                                            const Layer *cell_layer,
                                            uint16_t section_index,
                                            void *data);
-static void level_up_menu_draw_header_callback(GContext *ctx,
-                                               const Layer *cell_layer,
-                                               uint16_t section_index,
-                                               void *data);
 static void inventory_menu_draw_header_callback(GContext *ctx,
                                                 const Layer *cell_layer,
                                                 uint16_t section_index,
                                                 void *data);
+static void stats_menu_draw_header_callback(GContext *ctx,
+                                            const Layer *cell_layer,
+                                            uint16_t section_index,
+                                            void *data);
+static void level_up_menu_draw_header_callback(GContext *ctx,
+                                               const Layer *cell_layer,
+                                               uint16_t section_index,
+                                               void *data);
 static void loot_menu_draw_header_callback(GContext *ctx,
                                       const Layer *cell_layer,
                                       uint16_t section_index,
@@ -382,14 +386,18 @@ static void main_menu_draw_row_callback(GContext *ctx,
                                         const Layer *cell_layer,
                                         MenuIndex *cell_index,
                                         void *data);
-static void level_up_menu_draw_row_callback(GContext *ctx,
-                                            const Layer *cell_layer,
-                                            MenuIndex *cell_index,
-                                            void *data);
 static void inventory_menu_draw_row_callback(GContext *ctx,
                                              const Layer *cell_layer,
                                              MenuIndex *cell_index,
                                              void *data);
+static void stats_menu_draw_row_callback(GContext *ctx,
+                                         const Layer *cell_layer,
+                                         MenuIndex *cell_index,
+                                         void *data);
+static void level_up_menu_draw_row_callback(GContext *ctx,
+                                            const Layer *cell_layer,
+                                            MenuIndex *cell_index,
+                                            void *data);
 static void loot_menu_draw_row_callback(GContext *ctx,
                                         const Layer *cell_layer,
                                         MenuIndex *cell_index,

@@ -1266,8 +1266,6 @@ static void level_up_menu_draw_row_callback(GContext *ctx,
 
   strcat_stat_name(title_str, cell_index->row);
   strcat_stat_value(title_str, cell_index->row);
-  strcat(title_str, " -> ");
-  strcat_int(title_str, g_player->stats[cell_index->row] + 1);
   menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
 }
 
