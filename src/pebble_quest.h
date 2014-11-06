@@ -18,15 +18,16 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 ******************************************************************************/
 
 #define MAIN_MENU           0
-#define LEVEL_UP_MENU       1
-#define INVENTORY_MENU      2
-#define LOOT_MENU           3
-#define PEBBLE_OPTIONS_MENU 4
-#define HEAVY_ITEMS_MENU    5
-#define NARRATION_WINDOW    6
-#define GRAPHICS_WINDOW     7
-#define NUM_WINDOWS         8
-#define NUM_MENUS           6
+#define INVENTORY_MENU      1
+#define STATS_MENU          2
+#define LEVEL_UP_MENU       3
+#define LOOT_MENU           4
+#define PEBBLE_OPTIONS_MENU 5
+#define HEAVY_ITEMS_MENU    6
+#define NARRATION_WINDOW    7
+#define GRAPHICS_WINDOW     8
+#define NUM_WINDOWS         9
+#define NUM_MENUS           7
 
 /******************************************************************************
   Player- and NPC-related Constants
@@ -211,6 +212,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define SMALL_CORNER_RADIUS      3
 #define NINETY_DEGREES           (TRIG_MAX_ANGLE / 4)
 #define DEFAULT_ROTATION_RATE    (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event
+#define ELLIPSE_RADIUS_RATIO     0.4 // (vertical radius) / (horizontal radius)
 
 /******************************************************************************
   Menu-related Constants
@@ -219,6 +221,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MENU_HEADER_STR_LEN   23
 #define MENU_TITLE_STR_LEN    25
 #define MENU_SUBTITLE_STR_LEN 20
+#define STATS_MENU_NUM_ROWS   16
 
 /******************************************************************************
   Button-related Constants

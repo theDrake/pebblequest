@@ -996,9 +996,9 @@ static void main_menu_draw_header_callback(GContext *ctx,
 }
 
 /******************************************************************************
-   Function: pebble_options_menu_draw_header_callback
+   Function: stats_menu_draw_header_callback
 
-Description: Instructions for drawing the Pebble options menu's header.
+Description: Instructions for drawing the stats menu's header.
 
      Inputs: ctx           - Pointer to the associated context.
              cell_layer    - Pointer to the cell layer.
@@ -1007,15 +1007,32 @@ Description: Instructions for drawing the Pebble options menu's header.
 
     Outputs: None.
 ******************************************************************************/
-static void pebble_options_menu_draw_header_callback(GContext *ctx,
-                                                     const Layer *cell_layer,
-                                                     uint16_t section_index,
-                                                     void *data)
+static void stats_menu_draw_header_callback(GContext *ctx,
+                                            const Layer *cell_layer,
+                                            uint16_t section_index,
+                                            void *data)
 {
-  char header_str[MENU_HEADER_STR_LEN + 1] = "";
+  menu_cell_basic_header_draw(ctx, cell_layer, "Character Stats");
+}
 
-  strcat_item_name(header_str, g_current_selection);
-  menu_cell_basic_header_draw(ctx, cell_layer, header_str);
+/******************************************************************************
+   Function: level_up_menu_draw_header_callback
+
+Description: Instructions for drawing the level-up menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void level_up_menu_draw_header_callback(GContext *ctx,
+                                               const Layer *cell_layer,
+                                               uint16_t section_index,
+                                               void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "Increase an Attribute");
 }
 
 /******************************************************************************
@@ -1059,9 +1076,9 @@ static void loot_menu_draw_header_callback(GContext *ctx,
 }
 
 /******************************************************************************
-   Function: level_up_menu_draw_header_callback
+   Function: pebble_options_menu_draw_header_callback
 
-Description: Instructions for drawing the level-up menu's header.
+Description: Instructions for drawing the Pebble options menu's header.
 
      Inputs: ctx           - Pointer to the associated context.
              cell_layer    - Pointer to the cell layer.
@@ -1070,12 +1087,15 @@ Description: Instructions for drawing the level-up menu's header.
 
     Outputs: None.
 ******************************************************************************/
-static void level_up_menu_draw_header_callback(GContext *ctx,
-                                               const Layer *cell_layer,
-                                               uint16_t section_index,
-                                               void *data)
+static void pebble_options_menu_draw_header_callback(GContext *ctx,
+                                                     const Layer *cell_layer,
+                                                     uint16_t section_index,
+                                                     void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Increase an Attribute");
+  char header_str[MENU_HEADER_STR_LEN + 1] = "";
+
+  strcat_item_name(header_str, g_current_selection);
+  menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
 /******************************************************************************
@@ -1095,14 +1115,18 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
                                                   uint16_t section_index,
                                                   void *data)
 {
+  char header_str[MENU_HEADER_STR_LEN + 1] = "";
+
   if (g_current_selection < FIRST_HEAVY_ITEM)
   {
-    menu_cell_basic_header_draw(ctx, cell_layer, "Which item?");
+    strcat(header_str, "Infuse");
   }
   else
   {
-    menu_cell_basic_header_draw(ctx, cell_layer, "Replace an item?");
+    strcat(header_str, "Replace");
   }
+  strcat(header_str, " an item?");
+  menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
 /******************************************************************************
@@ -1132,41 +1156,15 @@ static void main_menu_draw_row_callback(GContext *ctx,
       strcat(subtitle_str, "Dungeon-crawl, baby!");
       break;
     case 1:
-      strcat(title_str, "Character Stats");
-      strcat(subtitle_str, "Strength, Agility...");
-      break;
-    default:
       strcat(title_str, "Inventory");
       strcat(subtitle_str, "Equip/infuse items.");
       break;
+    default:
+      strcat(title_str, "Character Stats");
+      strcat(subtitle_str, "Strength, Agility...");
+      break;
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
-}
-
-/******************************************************************************
-   Function: level_up_menu_draw_row_callback
-
-Description: Instructions for drawing each row (cell) of the level-up menu.
-
-     Inputs: ctx        - Pointer to the associated context.
-             cell_layer - Pointer to the layer of the cell to be drawn.
-             cell_index - Pointer to the index struct of the cell to be drawn.
-             data       - Pointer to additional data (not used).
-
-    Outputs: None.
-******************************************************************************/
-static void level_up_menu_draw_row_callback(GContext *ctx,
-                                            const Layer *cell_layer,
-                                            MenuIndex *cell_index,
-                                            void *data)
-{
-  char title_str[MENU_TITLE_STR_LEN + 1] = "";
-
-  strcat_stat_name(title_str, cell_index->row);
-  strcat_stat_value(title_str, cell_index->row);
-  strcat(title_str, " -> ");
-  strcat_int(title_str, g_player->stats[cell_index->row] + 1);
-  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
 }
 
 /******************************************************************************
@@ -1221,6 +1219,56 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
     }
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
+}
+
+/******************************************************************************
+   Function: stats_menu_draw_row_callback
+
+Description: Instructions for drawing each row (cell) of the stats menu.
+
+     Inputs: ctx        - Pointer to the associated context.
+             cell_layer - Pointer to the layer of the cell to be drawn.
+             cell_index - Pointer to the index struct of the cell to be drawn.
+             data       - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void stats_menu_draw_row_callback(GContext *ctx,
+                                         const Layer *cell_layer,
+                                         MenuIndex *cell_index,
+                                         void *data)
+{
+  char title_str[MENU_TITLE_STR_LEN + 1] = "";
+
+  strcat_stat_name(title_str, cell_index->row);
+  strcat_stat_value(title_str, cell_index->row);
+  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
+}
+
+/******************************************************************************
+   Function: level_up_menu_draw_row_callback
+
+Description: Instructions for drawing each row (cell) of the level-up menu.
+
+     Inputs: ctx        - Pointer to the associated context.
+             cell_layer - Pointer to the layer of the cell to be drawn.
+             cell_index - Pointer to the index struct of the cell to be drawn.
+             data       - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void level_up_menu_draw_row_callback(GContext *ctx,
+                                            const Layer *cell_layer,
+                                            MenuIndex *cell_index,
+                                            void *data)
+{
+  char title_str[MENU_TITLE_STR_LEN + 1] = "";
+
+  strcat_stat_name(title_str, cell_index->row);
+  strcat_stat_value(title_str, cell_index->row);
+  strcat(title_str, " -> ");
+  strcat_int(title_str, g_player->stats[cell_index->row] + 1);
+  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
 }
 
 /******************************************************************************
@@ -1348,11 +1396,11 @@ void menu_select_callback(MenuLayer *menu_layer,
           show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
         }
         break;
-      case 1: // Character Stats
-        
-        break;
-      default: // Inventory
+      case 1: // Inventory
         show_window(INVENTORY_MENU, ANIMATED);
+        break;
+      default: // Character Stats
+        show_window(STATS_MENU, ANIMATED);
         break;
     }
   }
@@ -1399,7 +1447,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         break;
     }
   }
-  else // if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
+  else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
     // "Infuse item" mode:
     if (g_current_selection < FIRST_HEAVY_ITEM)
@@ -1507,6 +1555,10 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
     return get_num_heavy_items_owned();
+  }
+  else if (menu_layer == g_menu_layers[STATS_MENU])
+  {
+    return STATS_MENU_NUM_ROWS;
   }
   else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
@@ -1882,8 +1934,16 @@ void draw_cell_contents(GContext *ctx,
                       get_cell_type(cell) == ENTRANCE                ?
                         GRAPHICS_FRAME_HEIGHT - floor_center_point.y :
                         floor_center_point.y),
-               drawing_unit * 3,
-               drawing_unit,
+               ELLIPSE_RADIUS_RATIO *
+                 (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
+                  g_back_wall_coords[depth][position][TOP_LEFT].x),
+               depth == 0                                    ?
+                 ELLIPSE_RADIUS_RATIO *
+                  (GRAPHICS_FRAME_HEIGHT -
+                   g_back_wall_coords[depth][position][BOTTOM_RIGHT].y) :
+                 ELLIPSE_RADIUS_RATIO *
+                    (g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y -
+                     g_back_wall_coords[depth][position][BOTTOM_RIGHT].y),
                GColorBlack);
 
   // If there's no NPC, check for loot, then we're done:
@@ -3319,7 +3379,8 @@ void init_player(void)
 
   // For testing purposes:
   init_heavy_item(g_player->heavy_items[2], HEAVY_ARMOR);
-  g_player->pebbles[PEBBLE_OF_LIGHTNING] = 200;
+  g_current_selection = PEBBLE_OF_LIGHTNING;
+  add_current_selection_to_inventory();
 
   // Finally, assign minor stats according to major stats and equipment:
   assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
@@ -3666,21 +3727,6 @@ void init_window(const int16_t window_index)
       });
     }
 
-    // Level-up menu:
-    else if (window_index == LEVEL_UP_MENU)
-    {
-      menu_layer_set_callbacks(g_menu_layers[window_index],
-                               NULL,
-                               (MenuLayerCallbacks)
-      {
-        .get_header_height = menu_get_header_height_callback,
-        .draw_header       = level_up_menu_draw_header_callback,
-        .get_num_rows      = menu_get_num_rows_callback,
-        .draw_row          = level_up_menu_draw_row_callback,
-        .select_click      = menu_select_callback,
-      });
-    }
-
     // Inventory menu:
     else if (window_index == INVENTORY_MENU)
     {
@@ -3692,6 +3738,36 @@ void init_window(const int16_t window_index)
         .draw_header       = inventory_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = inventory_menu_draw_row_callback,
+        .select_click      = menu_select_callback,
+      });
+    }
+
+    // Stats menu:
+    else if (window_index == STATS_MENU)
+    {
+      menu_layer_set_callbacks(g_menu_layers[window_index],
+                               NULL,
+                               (MenuLayerCallbacks)
+      {
+        .get_header_height = menu_get_header_height_callback,
+        .draw_header       = stats_menu_draw_header_callback,
+        .get_num_rows      = menu_get_num_rows_callback,
+        .draw_row          = stats_menu_draw_row_callback,
+        .select_click      = menu_select_callback,
+      });
+    }
+
+    // Level-up menu:
+    else if (window_index == LEVEL_UP_MENU)
+    {
+      menu_layer_set_callbacks(g_menu_layers[window_index],
+                               NULL,
+                               (MenuLayerCallbacks)
+      {
+        .get_header_height = menu_get_header_height_callback,
+        .draw_header       = level_up_menu_draw_header_callback,
+        .get_num_rows      = menu_get_num_rows_callback,
+        .draw_row          = level_up_menu_draw_row_callback,
         .select_click      = menu_select_callback,
       });
     }
