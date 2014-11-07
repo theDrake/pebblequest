@@ -906,14 +906,14 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
                             "By David C. Drake:\ndavidcdrake.com");
       break;
-    case INTRO_NARRATION_4: // Total chars: 91
-      strcpy(narration_str, "      CONTROLS\nForward: \"Up\"\nBack: \"Down\"\n"
-                            "Left: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
-                            "\"Select\"");
+    case INTRO_NARRATION_4: // Total chars: 94
+      strcpy(narration_str, "         CONTROLS\nForward: \"Up\"\nBack: "
+                            "\"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\n"
+                            "Attack: \"Select\"");
       break;
-    case DEATH_NARRATION: // Total chars: 68
-      strcpy(narration_str, "Alas, you have perished in the dank, dark depths,"
-                            " never to be found.");
+    case DEATH_NARRATION: // Total chars: 69
+      strcpy(narration_str, "\nAlas, you have perished in the dank, dark "
+                            "depths, never to be found.");
       init_player();
       init_location();
       break;
@@ -922,6 +922,8 @@ void show_narration(const int16_t narration)
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
       strcat_int(narration_str, g_player->depth);
+      strcat(narration_str, "Pebbles found: ");
+      strcat_int(narration_str, g_player->num_pebbles_found);
       for (i = 0; i < NUM_MAJOR_STATS; ++i)
       {
         strcat(narration_str, "\n");
@@ -939,9 +941,7 @@ void show_narration(const int16_t narration)
       }
       break;
     case STATS_NARRATION_3: // Total chars: ??
-      strcpy(narration_str, "Pebbles found: ");
-      strcat_int(narration_str, g_player->num_pebbles_found);
-      strcat(narration_str, "\nKills: ");
+      strcpy(narration_str, "\nKills: ");
       strcat_int(narration_str, g_player->num_kills);
       if (g_player->stats[CURRENT_HEALTH] <= 0)
       {
@@ -1379,6 +1379,8 @@ void menu_select_callback(MenuLayer *menu_layer,
   {
     g_player->stats[cell_index->row]++;
     assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
+    g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
+    g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
     show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
   }
   else if (menu_layer == g_menu_layers[INVENTORY_MENU])
@@ -3416,32 +3418,59 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
     npc->stats[i] = g_player->depth;
   }
 
-  // Adjust major stats (and assign an "item") according to the NPC's type:
-  if (type == MAGE)
-  {
-    npc->stats[INTELLECT] *= 2;
-    npc->item = rand() % NUM_PEBBLE_TYPES;
-  }
-  if (type == ORC     ||
-      type == WARRIOR ||
-      type == BEAR    ||
-      type == OGRE    ||
-      type == TROLL)
+  // Check for increased strength:
+  if (type == ORC        ||
+      type == WARRIOR    ||
+      type == BEAR       ||
+      type == OGRE       ||
+      type == TROLL      ||
+      type == LIZARD_MAN ||
+      type == MINOTAUR   ||
+      type == MUMMY      ||
+      type == DEMON      ||
+      type == DRAGON     ||
+      type == VAMPIRE)
   {
     npc->stats[STRENGTH] *= 2;
   }
-  if (type == THIEF   ||
-      type == WARRIOR ||
-      type == GOBLIN)
+
+  // Check for increased agility:
+  if (type == GOBLIN  ||
+      type == WOLF    ||
+      type == THIEF   ||
+      type == DEMON   ||
+      type == DRAGON  ||
+      type == VAMPIRE)
   {
     npc->stats[AGILITY] *= 2;
   }
-  if (type == ORC     ||
-      type == GOBLIN  ||
-      type == WARRIOR ||
+
+  // Check for increased intellect:
+  if (type == MAGE    ||
+      type == VAMPIRE ||
+      type == DRAGON  ||
+      type == DEMON   ||
+      type == ELEMENTAL)
+  {
+    npc->stats[INTELLECT] *= 2;
+  }
+
+  // Some NPCs have a 50% chance of carrying a random item:
+  if (type == ORC        ||
+      type == GOBLIN     ||
+      type == SKELETON   ||
+      type == LIZARD_MAN ||
+      type == VAMPIRE    ||
+      type == WARRIOR    ||
       type == THIEF)
   {
-    npc->item = rand() % NUM_ITEM_TYPES;
+    npc->item = rand() % 2 ? NONE : RANDOM_ITEM; // Excludes Pebbles.
+  }
+
+  // Mages are the only NPCs to carry Pebbles:
+  if (type == MAGE)
+  {
+    npc->item = rand() % NUM_PEBBLE_TYPES;
   }
 
   // Finally, assign minor stats according to major stat values:
@@ -3592,7 +3621,7 @@ void init_location(void)
     // Add random loot or simply make the cell EMPTY:
     if (rand() % 20 == 0)
     {
-      set_cell_type(builder_position, rand() % NUM_ITEM_TYPES);
+      set_cell_type(builder_position, RANDOM_ITEM); // Excludes Pebbles.
     }
     else
     {

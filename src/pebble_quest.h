@@ -40,25 +40,30 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
-#define WOLF            0
-#define BEAR            1
-#define GOBLIN          2
-#define ORC             3
-#define OGRE            4
-#define TROLL           5
-#define SLIME           6
-#define WORM            7
-#define SKELETON        8
-#define ZOMBIE          9
-#define WRAITH          10
-#define VAMPIRE         11
-#define DEMON           12
-#define DRAGON          13
-#define ELEMENTAL       14
-#define THIEF           15
-#define WARRIOR         16
-#define MAGE            17
-#define NUM_NPC_TYPES   18
+#define OOZE            0
+#define WORM            1
+#define INSECT          2
+#define WOLF            3
+#define BEAR            4
+#define GOBLIN          5
+#define ORC             6
+#define OGRE            7
+#define TROLL           8
+#define LIZARD_MAN      9
+#define MINOTAUR        10
+#define SKELETON        11
+#define ZOMBIE          12
+#define MUMMY           13
+#define WRAITH          14
+#define VAMPIRE         15
+#define DEMON           16
+#define DRAGON          17
+#define FLOATING_EYE    18
+#define ELEMENTAL       19
+#define THIEF           20
+#define WARRIOR         21
+#define MAGE            22
+#define NUM_NPC_TYPES   23
 
 // Character stats:
 #define STRENGTH            0
@@ -150,6 +155,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_HEAVY_ITEM_TYPES 11 // Excludes Pebbles.
 #define FIRST_HEAVY_ITEM     BOW
 #define MAX_HEAVY_ITEMS      4
+#define RANDOM_ITEM          (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
 
 // Equip targets (i.e., places where an item may be equipped):
 #define BODY              0
