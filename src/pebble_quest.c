@@ -1937,11 +1937,20 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 2,
                          GCornersTop);
     }
-
     return;
   }
 
+  // For some NPCs, we want to increase the drawing unit:
+  if (npc->type == BEAR  ||
+      npc->type == OGRE  ||
+      npc->type == TROLL ||
+      npc->type == MINOTAUR)
+  {
+    drawing_unit += 1;
+  }
+
   // Draw the NPC:
+  graphics_context_set_fill_color(ctx, GColorBlack);
   else if (npc->type == WOLF || npc->type == BEAR)
   {
     // Legs:
@@ -2011,7 +2020,7 @@ void draw_cell_contents(GContext *ctx,
                        drawing_unit / 2,
                        GCornersAll);
   }
-  else if (npc->type == SLIME)
+  else if (npc->type == OOZE)
   {
     // Body:
     graphics_fill_circle(ctx,
