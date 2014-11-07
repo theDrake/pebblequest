@@ -275,8 +275,6 @@ typedef struct PlayerCharacter {
           temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
           pebbles[NUM_PEBBLE_TYPES],
           equipped_pebble,
-          num_pebbles_found,
-          num_kills,
           exp_points,
           level,
           depth;

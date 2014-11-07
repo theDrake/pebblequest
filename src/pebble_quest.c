@@ -216,7 +216,6 @@ void damage_npc(npc_t *npc, int16_t damage)
   if (npc->stats[CURRENT_HEALTH] <= 0)
   {
     npc->type = NONE;
-    g_player->num_kills++;
 
     // If the NPC had an item, leave it behind as loot:
     if (npc->item > NONE)
@@ -918,12 +917,10 @@ void show_narration(const int16_t narration)
       init_location();
       break;
     case STATS_NARRATION_1: // Total chars: ??
-      strcpy(narration_str, "Level: ");
+      strcpy(narration_str, "          STATS\nLevel: ");
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
       strcat_int(narration_str, g_player->depth);
-      strcat(narration_str, "Pebbles found: ");
-      strcat_int(narration_str, g_player->num_pebbles_found);
       for (i = 0; i < NUM_MAJOR_STATS; ++i)
       {
         strcat(narration_str, "\n");
@@ -941,8 +938,7 @@ void show_narration(const int16_t narration)
       }
       break;
     case STATS_NARRATION_3: // Total chars: ??
-      strcpy(narration_str, "\nKills: ");
-      strcat_int(narration_str, g_player->num_kills);
+      strcpy(narration_str, "Status effects: ");
       if (g_player->stats[CURRENT_HEALTH] <= 0)
       {
         init_player();
@@ -3180,7 +3176,6 @@ void add_current_selection_to_inventory(void)
   if (g_current_selection < FIRST_HEAVY_ITEM)
   {
     g_player->pebbles[g_current_selection]++;
-    g_player->num_pebbles_found++;
   }
 
   // Heavy items:
@@ -3342,12 +3337,10 @@ void init_player(void)
 {
   int16_t i;
 
-  g_player->level             = 1;
-  g_player->exp_points        = 0;
-  g_player->depth             = 0;
-  g_player->num_pebbles_found = 0;
-  g_player->num_kills         = 0;
-  g_player->equipped_pebble   = NONE;
+  g_player->level           = 1;
+  g_player->exp_points      = 0;
+  g_player->depth           = 0;
+  g_player->equipped_pebble = NONE;
   for (i = 0; i < NUM_MAJOR_STATS; ++i)
   {
     g_player->stats[i] = DEFAULT_MAJOR_STAT_VALUE;
