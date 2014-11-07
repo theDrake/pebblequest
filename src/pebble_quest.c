@@ -1951,7 +1951,7 @@ void draw_cell_contents(GContext *ctx,
 
   // Draw the NPC:
   graphics_context_set_fill_color(ctx, GColorBlack);
-  else if (npc->type == WOLF || npc->type == BEAR)
+  if (npc->type == WOLF || npc->type == BEAR)
   {
     // Legs:
     graphics_fill_rect(ctx,
