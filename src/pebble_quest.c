@@ -1949,7 +1949,7 @@ void draw_cell_contents(GContext *ctx,
                                drawing_unit * 2,
                                drawing_unit),
                          drawing_unit / 2,
-                         GCornersNone);
+                         GCornerNone);
     }
     return;
   }
