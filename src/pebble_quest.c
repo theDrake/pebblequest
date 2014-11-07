@@ -1914,7 +1914,7 @@ void draw_cell_contents(GContext *ctx,
                ELLIPSE_RADIUS_RATIO *
                  (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
                   g_back_wall_coords[depth][position][TOP_LEFT].x),
-               depth == 0                                    ?
+               depth == 0                                               ?
                  ELLIPSE_RADIUS_RATIO *
                   (GRAPHICS_FRAME_HEIGHT -
                    g_back_wall_coords[depth][position][BOTTOM_RIGHT].y) :
@@ -1936,6 +1936,20 @@ void draw_cell_contents(GContext *ctx,
                                drawing_unit * 4),
                          drawing_unit / 2,
                          GCornersTop);
+      graphics_context_set_stroke_color(ctx, GColorBlack);
+      graphics_draw_line(ctx,
+                         GPoint(floor_center_point.x - drawing_unit * 2,
+                                floor_center_point.y - drawing_unit * 3),
+                         GPoint(floor_center_point.x + drawing_unit * 2,
+                                floor_center_point.y - drawing_unit * 3));
+      graphics_context_set_fill_color(ctx, GColorBlack);
+      graphics_fill_rect(ctx,
+                         GRect(floor_center_point.x - drawing_unit,
+                               floor_center_point.y - drawing_unit * 3,
+                               drawing_unit * 2,
+                               drawing_unit),
+                         drawing_unit / 2,
+                         GCornersNone);
     }
     return;
   }
