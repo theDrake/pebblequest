@@ -905,10 +905,10 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
                             "By David C. Drake:\ndavidcdrake.com");
       break;
-    case INTRO_NARRATION_4: // Total chars: 94
-      strcpy(narration_str, "         CONTROLS\nForward: \"Up\"\nBack: "
-                            "\"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\n"
-                            "Attack: \"Select\"");
+    case INTRO_NARRATION_4: // Total chars: 92
+      strcpy(narration_str, "       CONTROLS\nForward: \"Up\"\nBack: \"Down\""
+                            "\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
+                            "\"Select\"");
       break;
     case DEATH_NARRATION: // Total chars: 69
       strcpy(narration_str, "\nAlas, you have perished in the dank, dark "
@@ -917,7 +917,7 @@ void show_narration(const int16_t narration)
       init_location();
       break;
     case STATS_NARRATION_1: // Total chars: ??
-      strcpy(narration_str, "          STATS\nLevel: ");
+      strcpy(narration_str, "           STATS\nLevel: ");
       strcat_int(narration_str, g_player->level);
       strcat(narration_str, "\nDepth: ");
       strcat_int(narration_str, g_player->depth);
@@ -1881,7 +1881,8 @@ void draw_cell_contents(GContext *ctx,
                         const int16_t depth,
                         const int16_t position)
 {
-  int16_t drawing_unit; // Reference variable for drawing contents at depth.
+  int16_t i,
+          drawing_unit; // Reference variable for drawing contents at depth.
   GPoint floor_center_point;
   npc_t *npc = get_npc_at(cell);
 
@@ -1938,14 +1939,21 @@ void draw_cell_contents(GContext *ctx,
                                 floor_center_point.y - drawing_unit * 3),
                          GPoint(floor_center_point.x + drawing_unit * 2,
                                 floor_center_point.y - drawing_unit * 3));
-      graphics_context_set_fill_color(ctx, GColorBlack);
+      /*graphics_context_set_fill_color(ctx, GColorBlack);
       graphics_fill_rect(ctx,
-                         GRect(floor_center_point.x - drawing_unit,
+                         GRect(floor_center_point.x - drawing_unit * 2,
                                floor_center_point.y - drawing_unit * 3,
-                               drawing_unit * 2,
+                               drawing_unit * 4,
                                drawing_unit),
-                         drawing_unit / 2,
+                         NO_CORNER_RADIUS,
                          GCornerNone);
+      graphics_fill_rect(ctx,
+                         GRect(floor_center_point.x - drawing_unit / 2,
+                               floor_center_point.y - drawing_unit * 3,
+                               drawing_unit,
+                               drawing_unit * 2),
+                         NO_CORNER_RADIUS,
+                         GCornerNone);*/
     }
     return;
   }
@@ -1961,7 +1969,7 @@ void draw_cell_contents(GContext *ctx,
 
   // Draw the NPC:
   graphics_context_set_fill_color(ctx, GColorBlack);
-  if (npc->type == WOLF || npc->type == BEAR)
+  if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2030,38 +2038,27 @@ void draw_cell_contents(GContext *ctx,
                        drawing_unit / 2,
                        GCornersAll);
   }
-  else if (npc->type == OOZE)
+  else if (npc->type == OOZE      ||
+           npc->type == WORM      ||
+           npc->type == INSECT    ||
+           npc->type == ELEMENTAL ||
+           npc->type == FLOATING_EYE)
   {
-    // Body:
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x,
-                                floor_center_point.y - drawing_unit * 2),
-                         drawing_unit * 2);
-
-    // Head:
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x,
-                                floor_center_point.y - drawing_unit * 6),
-                         drawing_unit * 4);
-
-    // Eyes:
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 7,
-                             drawing_unit * 2,
-                             drawing_unit),
-                       drawing_unit / 2,
-                       GCornersAll);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit,
-                             floor_center_point.y - drawing_unit * 7,
-                             drawing_unit * 2,
-                             drawing_unit),
-                       drawing_unit / 2,
-                       GCornersAll);
+    for (i = 0;
+         i < drawing_unit * 10;
+         i += drawing_unit * (2 + time(NULL) % 2))
+    {
+      graphics_fill_circle(ctx,
+                           GPoint(floor_center_point.x - i,
+                                  floor_center_point.y - i),
+                           drawing_unit * (2 + time(NULL) % 2));
+      graphics_fill_circle(ctx,
+                           GPoint(floor_center_point.x + i,
+                                  floor_center_point.y - i),
+                           drawing_unit * (2 + time(NULL) % 2));
+    }
   }
-  else // if (npc->type == ORC)
+  else // if (npc->type == [humanoid])
   {
     // Legs:
     draw_shaded_quad(ctx,
@@ -2948,9 +2945,6 @@ void strcat_item_name(char *dest_str, const int16_t item_type)
   {
     switch(item_type)
     {
-      /*case KEY:
-        strcat(dest_str, "Key");
-        break;*/
       case DAGGER:
         strcat(dest_str, "Dagger");
         break;
