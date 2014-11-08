@@ -224,7 +224,8 @@ void damage_npc(npc_t *npc, int16_t damage)
     }
 
     // Apply experience points and check for a "level up":
-    g_player->exp_points += 5; // get_exp_bonus(npc);
+    g_player->exp_points += (npc->stats[STRENGTH] + npc->stats[AGILITY] +
+                             npc->stats[INTELLECT]) / 3;
     if (g_player->exp_points % 10 >= g_player->level)
     {
       g_player->level++;
@@ -917,10 +918,12 @@ void show_narration(const int16_t narration)
       init_location();
       break;
     case STATS_NARRATION_1: // Total chars: ??
-      strcpy(narration_str, "           STATS\nLevel: ");
-      strcat_int(narration_str, g_player->level);
-      strcat(narration_str, "\nDepth: ");
+      strcpy(narration_str, "Depth: ");
       strcat_int(narration_str, g_player->depth);
+      strcat(narration_str, "\nXP: ");
+      strcat_int(narration_str, g_player->exp_points);
+      strcat(narration_str, "\nLevel: ");
+      strcat_int(narration_str, g_player->level);
       for (i = 0; i < NUM_MAJOR_STATS; ++i)
       {
         strcat(narration_str, "\n");
