@@ -971,10 +971,6 @@ void show_window(const int16_t window, const bool animated)
   if (window < NUM_MENUS)
   {
     menu_layer_reload_data(g_menu_layers[window]);
-    menu_layer_set_selected_index(g_menu_layers[window],
-                                  (MenuIndex) {0, 0},
-                                  MenuRowAlignCenter,
-                                  NOT_ANIMATED);
   }
 
   // Show the window:
@@ -1410,14 +1406,6 @@ void menu_select_callback(MenuLayer *menu_layer,
         g_player->equipped_pebble = g_current_selection;
         //assign_minor_stats()???
         show_window(INVENTORY_MENU, NOT_ANIMATED);
-        menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
-                                      (MenuIndex)
-                                      {
-                                        0,
-                                        g_current_selection
-                                      },
-                                      MenuRowAlignCenter,
-                                      NOT_ANIMATED);
         break;
       default: // Infuse into Item
         show_window(HEAVY_ITEMS_MENU, ANIMATED);
@@ -1925,7 +1913,15 @@ void draw_cell_contents(GContext *ctx,
   {
     if (get_cell_type(cell) >= 0) // Loot!
     {
-      draw_shaded_quad(ctx,
+      graphics_context_set_fill_color(ctx, GColorWhite);
+      graphics_fill_rect(ctx,
+                         GRect(floor_center_point.x - drawing_unit * 2,
+                               floor_center_point.y - drawing_unit * 4,
+                               drawing_unit * 4,
+                               drawing_unit * 4),
+                         drawing_unit / 2,
+                         GCornersTop);
+      /*draw_shaded_quad(ctx,
                        GPoint(floor_center_point.x - drawing_unit * 2,
                               floor_center_point.y - drawing_unit * 3),
                        GPoint(floor_center_point.x - drawing_unit * 2,
@@ -1938,14 +1934,6 @@ void draw_cell_contents(GContext *ctx,
                                 10,
                               g_back_wall_coords[depth][position][TOP_LEFT].y -
                                 10));
-      /*graphics_context_set_fill_color(ctx, GColorWhite);
-      graphics_fill_rect(ctx,
-                         GRect(floor_center_point.x - drawing_unit * 2,
-                               floor_center_point.y - drawing_unit * 4,
-                               drawing_unit * 4,
-                               drawing_unit * 4),
-                         drawing_unit / 2,
-                         GCornersTop);
       graphics_context_set_stroke_color(ctx, GColorBlack);
       graphics_draw_line(ctx,
                          GPoint(floor_center_point.x - drawing_unit * 2,
