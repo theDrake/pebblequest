@@ -1903,27 +1903,14 @@ void draw_cell_contents(GContext *ctx,
   {
     if (get_cell_type(cell) >= 0) // Loot!
     {
-      draw_shaded_quad(ctx,
-                       GPoint(floor_center_point.x - drawing_unit * 2,
-                              floor_center_point.y - drawing_unit * 3),
-                       GPoint(floor_center_point.x - drawing_unit * 2,
-                              floor_center_point.y),
-                       GPoint(floor_center_point.x + drawing_unit * 2,
-                              floor_center_point.y - drawing_unit * 3),
-                       GPoint(floor_center_point.x + drawing_unit * 2,
-                              floor_center_point.y),
-                       GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
-                                10,
-                              g_back_wall_coords[depth][position][TOP_LEFT].y -
-                                10));
-      /*graphics_context_set_fill_color(ctx, GColorWhite);
+      graphics_context_set_fill_color(ctx, GColorWhite);
       graphics_fill_rect(ctx,
                          GRect(floor_center_point.x - drawing_unit * 2,
                                floor_center_point.y - drawing_unit * 2.5,
                                drawing_unit * 4,
                                drawing_unit * 2.5),
                          drawing_unit / 2,
-                         GCornersTop);*/
+                         GCornersTop);
     }
     return;
   }
