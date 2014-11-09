@@ -324,52 +324,17 @@ Description: Returns a suitable NPC spawn point, outside the player's sphere of
 ******************************************************************************/
 GPoint get_npc_spawn_point(void)
 {
-  int16_t i, j, direction;
-  bool checked_left, checked_right;
-  GPoint spawn_point, spawn_point2;
+  int16_t i, j;
+  GPoint spawn_point;
 
-  for (i = 0, direction = rand() % NUM_DIRECTIONS;
-       i < NUM_DIRECTIONS;
-       ++i, direction = (direction + 1 == NUM_DIRECTIONS ? NORTH :
-                                                           direction + 1))
+  for (i = 0; i < NUM_DIRECTIONS; ++i)
   {
     spawn_point = get_cell_farther_away(g_player->position,
-                                        direction,
+                                        i,
                                         MAX_VISIBILITY_DEPTH);
-    if (out_of_bounds(spawn_point))
-    {
-      continue;
-    }
     if (occupiable(spawn_point))
     {
       return spawn_point;
-    }
-    for (j = 1; j < MAX_VISIBILITY_DEPTH - 1; ++j)
-    {
-      checked_left = checked_right = false;
-      do
-      {
-        // Check to the left:
-        if (checked_right || rand() % 2)
-        {
-          spawn_point2 = get_cell_farther_away(spawn_point,
-                                          get_direction_to_the_left(direction),
-                                          j);
-          checked_left = true;
-        }
-        // Check to the right:
-        else if (!checked_right)
-        {
-          spawn_point2 = get_cell_farther_away(spawn_point,
-                                         get_direction_to_the_right(direction),
-                                         j);
-          checked_right = true;
-        }
-        if (occupiable(spawn_point2))
-        {
-          return spawn_point2;
-        }
-      } while (!checked_left || !checked_right);
     }
   }
 
@@ -920,7 +885,7 @@ void show_narration(const int16_t narration)
     case STATS_NARRATION_1: // Total chars: ??
       strcpy(narration_str, "Depth: ");
       strcat_int(narration_str, g_player->depth);
-      strcat(narration_str, "\nXP: ");
+      strcat(narration_str, "\nExp.: ");
       strcat_int(narration_str, g_player->exp_points);
       strcat(narration_str, "\nLevel: ");
       strcat_int(narration_str, g_player->level);
@@ -939,9 +904,6 @@ void show_narration(const int16_t narration)
         strcat_stat_value(narration_str, i);
         strcat(narration_str, "\n");
       }
-      break;
-    case STATS_NARRATION_3: // Total chars: ??
-      strcpy(narration_str, "Status effects: ");
       if (g_player->stats[CURRENT_HEALTH] <= 0)
       {
         init_player();
@@ -974,6 +936,10 @@ void show_window(const int16_t window, const bool animated)
   if (window < NUM_MENUS)
   {
     menu_layer_reload_data(g_menu_layers[window]);
+    menu_layer_set_selected_index(g_menu_layers[window],
+                                  (MenuIndex) {0, 0},
+                                  MenuRowAlignCenter,
+                                  NOT_ANIMATED);
   }
 
   // Show the window:
@@ -1028,7 +994,7 @@ static void level_up_menu_draw_header_callback(GContext *ctx,
                                                uint16_t section_index,
                                                void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Increase an Attribute");
+  menu_cell_basic_header_draw(ctx, cell_layer, "Increase an Attribute!");
 }
 
 /******************************************************************************
@@ -1347,7 +1313,7 @@ void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data)
 {
-  int16_t equip_target;
+  int16_t i, equip_target;
   bool old_item_was_equipped = false;
 
   if (menu_layer == g_menu_layers[MAIN_MENU])
@@ -1409,6 +1375,17 @@ void menu_select_callback(MenuLayer *menu_layer,
         g_player->equipped_pebble = g_current_selection;
         //assign_minor_stats()???
         show_window(INVENTORY_MENU, NOT_ANIMATED);
+        for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
+        {
+          if (get_nth_item_type(i) == g_current_selection)
+          {
+            menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
+                                          (MenuIndex) {0, i},
+                                          MenuRowAlignCenter,
+                                          NOT_ANIMATED);
+            break;
+          }
+        }
         break;
       default: // Infuse into Item
         show_window(HEAVY_ITEMS_MENU, ANIMATED);
@@ -1872,8 +1849,7 @@ void draw_cell_contents(GContext *ctx,
                         const int16_t depth,
                         const int16_t position)
 {
-  int16_t i,
-          drawing_unit; // Reference variable for drawing contents at depth.
+  int16_t drawing_unit; // Reference variable for drawing contents at depth.
   GPoint floor_center_point;
   npc_t *npc = get_npc_at(cell);
 
@@ -1916,15 +1892,7 @@ void draw_cell_contents(GContext *ctx,
   {
     if (get_cell_type(cell) >= 0) // Loot!
     {
-      graphics_context_set_fill_color(ctx, GColorWhite);
-      graphics_fill_rect(ctx,
-                         GRect(floor_center_point.x - drawing_unit * 2,
-                               floor_center_point.y - drawing_unit * 4,
-                               drawing_unit * 4,
-                               drawing_unit * 4),
-                         drawing_unit / 2,
-                         GCornersTop);
-      /*draw_shaded_quad(ctx,
+      draw_shaded_quad(ctx,
                        GPoint(floor_center_point.x - drawing_unit * 2,
                               floor_center_point.y - drawing_unit * 3),
                        GPoint(floor_center_point.x - drawing_unit * 2,
@@ -1937,43 +1905,30 @@ void draw_cell_contents(GContext *ctx,
                                 10,
                               g_back_wall_coords[depth][position][TOP_LEFT].y -
                                 10));
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-      graphics_draw_line(ctx,
-                         GPoint(floor_center_point.x - drawing_unit * 2,
-                                floor_center_point.y - drawing_unit * 3),
-                         GPoint(floor_center_point.x + drawing_unit * 2,
-                                floor_center_point.y - drawing_unit * 3));
-      graphics_context_set_fill_color(ctx, GColorBlack);
+      /*graphics_context_set_fill_color(ctx, GColorWhite);
       graphics_fill_rect(ctx,
                          GRect(floor_center_point.x - drawing_unit * 2,
-                               floor_center_point.y - drawing_unit * 3,
+                               floor_center_point.y - drawing_unit * 2.5,
                                drawing_unit * 4,
-                               drawing_unit),
-                         NO_CORNER_RADIUS,
-                         GCornerNone);
-      graphics_fill_rect(ctx,
-                         GRect(floor_center_point.x - drawing_unit / 2,
-                               floor_center_point.y - drawing_unit * 3,
-                               drawing_unit,
-                               drawing_unit * 2),
-                         NO_CORNER_RADIUS,
-                         GCornerNone);*/
+                               drawing_unit * 2.5),
+                         drawing_unit / 2,
+                         GCornersTop);*/
     }
     return;
   }
 
   // For some NPCs, we want to increase the drawing unit:
-  if (npc->type == BEAR  ||
+  /*if (npc->type == BEAR  ||
       npc->type == OGRE  ||
       npc->type == TROLL ||
       npc->type == MINOTAUR)
   {
     drawing_unit += 1;
-  }
+  }*/
 
   // Draw the NPC:
   graphics_context_set_fill_color(ctx, GColorBlack);
-  if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
+  /*if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2048,24 +2003,31 @@ void draw_cell_contents(GContext *ctx,
            npc->type == ELEMENTAL ||
            npc->type == FLOATING_EYE)
   {
-    for (i = 0;
-         i < drawing_unit * 10;
-         i += drawing_unit * (2 + time(NULL) % 2))
-    {
-      graphics_fill_circle(ctx,
-                           GPoint(floor_center_point.x - i,
-                                  floor_center_point.y - i),
-                           drawing_unit * (2 + time(NULL) % 2));
-      graphics_fill_circle(ctx,
-                           GPoint(floor_center_point.x + i,
-                                  floor_center_point.y - i),
-                           drawing_unit * (2 + time(NULL) % 2));
-    }
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x,
+                                floor_center_point.y - drawing_unit * 2),
+                         drawing_unit + time(NULL) % 2);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x - drawing_unit * 2,
+                                floor_center_point.y - drawing_unit * 2),
+                         drawing_unit + time(NULL) % 2);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x + drawing_unit * 2,
+                                floor_center_point.y - drawing_unit * 3),
+                         drawing_unit + time(NULL) % 2);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x - drawing_unit,
+                                floor_center_point.y - drawing_unit * 4),
+                         drawing_unit + time(NULL) % 2);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x,
+                                floor_center_point.y - drawing_unit * 5),
+                         drawing_unit + time(NULL) % 2);
   }
   else // if (npc->type == [humanoid])
   {
     // Legs:
-    draw_shaded_quad(ctx,
+    */draw_shaded_quad(ctx,
                      GPoint(floor_center_point.x - drawing_unit * 2,
                             floor_center_point.y - drawing_unit * 3),
                      GPoint(floor_center_point.x - drawing_unit * 2,
@@ -2165,7 +2127,7 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 4);
-  }
+  //}
 }
 
 /******************************************************************************
@@ -2836,7 +2798,7 @@ void narration_single_click(ClickRecognizerRef recognizer, void *context)
 {
   if (g_current_narration < INTRO_NARRATION_4 ||
       (g_current_narration > INTRO_NARRATION_4 &&
-       g_current_narration < STATS_NARRATION_3))
+       g_current_narration < STATS_NARRATION_2))
   {
     show_narration(++g_current_narration);
   }
@@ -3433,7 +3395,7 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   }
 
   // Check for increased strength:
-  if (type == ORC        ||
+  /*if (type == ORC        ||
       type == WARRIOR    ||
       type == BEAR       ||
       type == OGRE       ||
@@ -3441,7 +3403,6 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
       type == LIZARD_MAN ||
       type == MINOTAUR   ||
       type == MUMMY      ||
-      type == DEMON      ||
       type == DRAGON     ||
       type == VAMPIRE)
   {
@@ -3452,7 +3413,7 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   if (type == GOBLIN  ||
       type == WOLF    ||
       type == THIEF   ||
-      type == DEMON   ||
+      type == IMP     ||
       type == DRAGON  ||
       type == VAMPIRE)
   {
@@ -3463,13 +3424,13 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   if (type == MAGE    ||
       type == VAMPIRE ||
       type == DRAGON  ||
-      type == DEMON   ||
+      type == IMP     ||
       type == ELEMENTAL)
   {
     npc->stats[INTELLECT] *= 2;
-  }
+  }*/
 
-  // Some NPCs have a 50% chance of carrying a random item:
+  // Some NPCs have a chance of carrying a random item:
   if (type == ORC        ||
       type == GOBLIN     ||
       type == SKELETON   ||
