@@ -324,7 +324,7 @@ Description: Returns a suitable NPC spawn point, outside the player's sphere of
 ******************************************************************************/
 GPoint get_npc_spawn_point(void)
 {
-  int16_t i, j;
+  int16_t i;
   GPoint spawn_point;
 
   for (i = 0; i < NUM_DIRECTIONS; ++i)
@@ -871,8 +871,8 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
                             "By David C. Drake:\ndavidcdrake.com");
       break;
-    case INTRO_NARRATION_4: // Total chars: 92
-      strcpy(narration_str, "       CONTROLS\nForward: \"Up\"\nBack: \"Down\""
+    case INTRO_NARRATION_4: // Total chars: 93
+      strcpy(narration_str, "        CONTROLS\nForward: \"Up\"\nBack: \"Down\""
                             "\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
                             "\"Select\"");
       break;
@@ -1450,8 +1450,18 @@ void menu_select_callback(MenuLayer *menu_layer,
         equip_heavy_item(g_player->heavy_items[cell_index->row]);
       }
 
-      // Return to active gameplay:      
-      show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
+      // Show inventory menu to provide an opportunity to adjust equipment:
+      window_stack_pop(NOT_ANIMATED);
+      show_window(INVENTORY_MENU, NOT_ANIMATED);
+      menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
+                                    (MenuIndex)
+                                    {
+                                      0,
+                                      cell_index->row +
+                                        get_num_pebble_types_owned()
+                                    },
+                                    MenuRowAlignCenter,
+                                    NOT_ANIMATED);
     }
 
     // In either mode, we want to reassign minor stats:
@@ -3146,7 +3156,15 @@ void add_current_selection_to_inventory(void)
       if (g_player->heavy_items[i]->type == NONE)
       {
         init_heavy_item(g_player->heavy_items[i], g_current_selection);
-
+        show_window(INVENTORY_MENU, NOT_ANIMATED);
+        menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
+                                      (MenuIndex)
+                                      {
+                                        0,
+                                        i + get_num_pebble_types_owned()
+                                      },
+                                      MenuRowAlignCenter,
+                                      NOT_ANIMATED);
         return;
       }
     }
