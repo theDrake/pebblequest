@@ -113,7 +113,7 @@ Description: Determines what a given NPC should do.
 ******************************************************************************/
 void determine_npc_behavior(npc_t *npc)
 {
-  if (touching(npc->position, g_player->position))
+  if (time(NULL) % 2 && touching(npc->position, g_player->position))
   {
     damage_player(npc->stats[PHYSICAL_POWER] -
                     g_player->stats[PHYSICAL_DEFENSE]);
@@ -3193,6 +3193,12 @@ void equip_heavy_item(heavy_item_t *const item)
   if (item->type == BOW)
   {
     unequip_item_at(LEFT_HAND);
+  }
+  else if (item->type == SHIELD                       &&
+           g_player->equipped_heavy_items[RIGHT_HAND] &&
+           g_player->equipped_heavy_items[RIGHT_HAND]->type == BOW)
+  {
+    unequip_item_at(RIGHT_HAND);
   }
 
   // Equip the heavy item and adjust major and minor stats accordingly:
