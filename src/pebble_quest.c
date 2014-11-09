@@ -224,9 +224,9 @@ void damage_npc(npc_t *npc, int16_t damage)
     }
 
     // Apply experience points and check for a "level up":
-    g_player->exp_points += (npc->stats[STRENGTH] + npc->stats[AGILITY] +
-                             npc->stats[INTELLECT]) / 3;
-    if (g_player->exp_points % 10 >= g_player->level)
+    g_player->exp_points += npc->stats[STRENGTH] + npc->stats[AGILITY] +
+                            npc->stats[INTELLECT];
+    if (g_player->exp_points / 10 >= g_player->level)
     {
       g_player->level++;
       show_window(LEVEL_UP_MENU, NOT_ANIMATED);
@@ -1342,7 +1342,8 @@ void menu_select_callback(MenuLayer *menu_layer,
     assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
     g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
     g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
-    show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
+    window_stack_pop(NOT_ANIMATED);
+    show_narration(STATS_NARRATION_1);
   }
   else if (menu_layer == g_menu_layers[INVENTORY_MENU])
   {
@@ -3349,11 +3350,6 @@ void init_player(void)
   init_heavy_item(g_player->heavy_items[1], ROBE);
   equip_heavy_item(g_player->heavy_items[0]);
   equip_heavy_item(g_player->heavy_items[1]);
-
-  // For testing purposes:
-  init_heavy_item(g_player->heavy_items[2], HEAVY_ARMOR);
-  g_current_selection = PEBBLE_OF_LIGHTNING;
-  add_current_selection_to_inventory();
 
   // Finally, assign minor stats according to major stats and equipment:
   assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
