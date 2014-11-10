@@ -264,9 +264,18 @@ typedef struct HeavyItem {
           infused_pebble;
 } __attribute__((__packed__)) heavy_item_t;
 
+typedef struct NonPlayerCharacter {
+  GPoint position;
+  int16_t type,
+          stats[NUM_CHARACTER_STATS],
+          temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
+          item;
+} __attribute__((__packed__)) npc_t;
+
 typedef struct PlayerCharacter {
   GPoint position;
   int16_t direction,
+          map[MAP_WIDTH][MAP_HEIGHT],
           stats[NUM_CHARACTER_STATS],
           constant_status_effects[NUM_CONSTANT_STATUS_EFFECTS],
           temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
@@ -277,20 +286,8 @@ typedef struct PlayerCharacter {
           depth;
   heavy_item_t *heavy_items[MAX_HEAVY_ITEMS], // Clothing, armor, and weapons.
                *equipped_heavy_items[NUM_EQUIP_TARGETS];
-} __attribute__((__packed__)) player_t;
-
-typedef struct NonPlayerCharacter {
-  GPoint position;
-  int16_t type,
-          stats[NUM_CHARACTER_STATS],
-          temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
-          item;
-} __attribute__((__packed__)) npc_t;
-
-typedef struct Location {
-  int16_t map[MAP_WIDTH][MAP_HEIGHT];
   npc_t *npcs[MAX_NPCS_AT_ONE_TIME];
-} __attribute__((__packed__)) location_t;
+} __attribute__((__packed__)) player_t;
 
 /******************************************************************************
   Global Variables
@@ -310,7 +307,6 @@ int16_t g_current_window,
         g_current_selection,
         g_player_current_animation;
 GPath *g_compass_path;
-location_t *g_location;
 player_t *g_player;
 
 static const GPathInfo COMPASS_PATH_INFO = {
@@ -345,6 +341,7 @@ int16_t get_direction_to_the_right(const int16_t reference_direction);
 int16_t get_opposite_direction(const int16_t direction);
 int16_t get_nth_item_type(const int16_t n);
 int16_t get_num_pebble_types_owned(void);
+int16_t get_inventory_row_for_pebble(const int16_t pebble_type);
 int16_t get_num_heavy_items_owned(void);
 int16_t get_equip_target(const int16_t item_type);
 int16_t get_cell_type(const GPoint cell);
@@ -476,7 +473,6 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position);
 void init_heavy_item(heavy_item_t *const item, const int16_t n);
 void init_wall_coords(void);
 void init_location(void);
-void deinit_location(void);
 void init_window(const int16_t window_index);
 void deinit_window(const int16_t window_index);
 void init(void);

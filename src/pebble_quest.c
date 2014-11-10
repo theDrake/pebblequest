@@ -284,10 +284,10 @@ void adjust_player_current_energy(const int16_t amount)
 /******************************************************************************
    Function: add_new_npc
 
-Description: Creates an NPC of a given type at a given location and adds it to
-             the current location's linked list of NPCs. (If this would exceed
-             the max. number of NPCs at one time, or if the given position
-             isn't occupiable, a new NPC is not created.)
+Description: Creates an NPC of a given type at a given position and adds it to
+             the player's linked list of NPCs. (If this would exceed the max.
+             number of NPCs at one time, or if the given position isn't
+             occupiable, a new NPC is not created.)
 
      Inputs: npc_type - Desired type for the new NPC.
              position - Desired spawn point for the new NPC.
@@ -302,9 +302,9 @@ void add_new_npc(const int16_t npc_type, const GPoint position)
   {
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      if (g_location->npcs[i]->type == NONE)
+      if (g_player->npcs[i]->type == NONE)
       {
-        init_npc(g_location->npcs[i], npc_type, position);
+        init_npc(g_player->npcs[i], npc_type, position);
       }
     }
   }
@@ -678,6 +678,33 @@ int16_t get_num_pebble_types_owned(void)
 }
 
 /******************************************************************************
+   Function: get_inventory_row_for_pebble
+
+Description: Returns the row where a given Pebble type will be displayed in the
+             inventory menu (which depends on how many Pebble types the player
+             currently owns).
+
+     Inputs: pebble_type - Integer representing the Pebble type of interest.
+
+    Outputs: Integer indicating the inventory row where the Pebble type will be
+             found (starting from zero).
+******************************************************************************/
+int16_t get_inventory_row_for_pebble(const int16_t pebble_type)
+{
+  int16_t i;
+
+  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
+  {
+    if (get_nth_item_type(i) == pebble_type)
+    {
+      return i;
+    }
+  }
+
+  return 0;
+}
+
+/******************************************************************************
    Function: get_num_heavy_items_owned
 
 Description: Returns the number of heavy items in the player's inventory.
@@ -741,7 +768,7 @@ int16_t get_cell_type(const GPoint cell)
     return SOLID;
   }
 
-  return g_location->map[cell.x][cell.y];
+  return g_player->map[cell.x][cell.y];
 }
 
 /******************************************************************************
@@ -757,7 +784,7 @@ Description: Sets the cell at a given set of coordinates to a given type.
 ******************************************************************************/
 void set_cell_type(GPoint cell, const int16_t type)
 {
-  g_location->map[cell.x][cell.y] = type;
+  g_player->map[cell.x][cell.y] = type;
 }
 
 /******************************************************************************
@@ -776,10 +803,10 @@ npc_t *get_npc_at(const GPoint cell)
 
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    if (g_location->npcs[i]->type > NONE &&
-        gpoint_equal(&(g_location->npcs[i]->position), &cell))
+    if (g_player->npcs[i]->type > NONE &&
+        gpoint_equal(&(g_player->npcs[i]->position), &cell))
     {
-      return g_location->npcs[i];
+      return g_player->npcs[i];
     }
   }
 
@@ -879,8 +906,6 @@ void show_narration(const int16_t narration)
     case DEATH_NARRATION: // Total chars: 69
       strcpy(narration_str, "\nAlas, you have perished in the dank, dark "
                             "depths, never to be found.");
-      init_player();
-      init_location();
       break;
     case STATS_NARRATION_1: // Total chars: ??
       strcpy(narration_str, "Depth: ");
@@ -907,7 +932,6 @@ void show_narration(const int16_t narration)
       if (g_player->stats[CURRENT_HEALTH] <= 0)
       {
         init_player();
-        init_location();
       }
       break;
     default: // case LEVEL_UP_NARRATION: // Total chars: 55
@@ -932,7 +956,7 @@ Description: Prepares and displays a given window.
 ******************************************************************************/
 void show_window(const int16_t window, const bool animated)
 {
-  // If it's a menu, reload menu data and scroll to the top:
+  // If it's a menu, reload menu data and set to the appropriate index:
   if (window < NUM_MENUS)
   {
     menu_layer_reload_data(g_menu_layers[window]);
@@ -940,6 +964,13 @@ void show_window(const int16_t window, const bool animated)
                                   (MenuIndex) {0, 0},
                                   MenuRowAlignCenter,
                                   NOT_ANIMATED);
+    if (window == MAIN_MENU)
+    {
+      menu_layer_set_selected_index(g_menu_layers[window],
+                                    (MenuIndex) {0, g_current_selection},
+                                    MenuRowAlignCenter,
+                                    NOT_ANIMATED);
+    }
   }
 
   // Show the window:
@@ -1313,7 +1344,7 @@ void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data)
 {
-  int16_t i, equip_target;
+  int16_t equip_target;
   bool old_item_was_equipped = false;
 
   if (menu_layer == g_menu_layers[MAIN_MENU])
@@ -1329,6 +1360,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         }
         break;
       case 1: // Inventory
+        g_current_selection = 0; // To scroll menu to the top.
         show_window(INVENTORY_MENU, ANIMATED);
         break;
       default: // Character Stats
@@ -1375,18 +1407,9 @@ void menu_select_callback(MenuLayer *menu_layer,
         unequip_item_at(RIGHT_HAND);
         g_player->equipped_pebble = g_current_selection;
         //assign_minor_stats()???
+        g_current_selection =
+          get_inventory_row_for_pebble(g_current_selection);
         show_window(INVENTORY_MENU, NOT_ANIMATED);
-        for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
-        {
-          if (get_nth_item_type(i) == g_current_selection)
-          {
-            menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
-                                          (MenuIndex) {0, i},
-                                          MenuRowAlignCenter,
-                                          NOT_ANIMATED);
-            break;
-          }
-        }
         break;
       default: // Infuse into Item
         show_window(HEAVY_ITEMS_MENU, ANIMATED);
@@ -1414,16 +1437,8 @@ void menu_select_callback(MenuLayer *menu_layer,
         }
 
         // Return to the inventory menu, centered on the newly-infused item:
+        g_current_selection = cell_index->row + get_num_pebble_types_owned();
         show_window(INVENTORY_MENU, NOT_ANIMATED);
-        menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
-                                      (MenuIndex)
-                                      {
-                                        0,
-                                        cell_index->row +
-                                          get_num_pebble_types_owned()
-                                      },
-                                      MenuRowAlignCenter,
-                                      NOT_ANIMATED);
       }
     }
 
@@ -1452,17 +1467,8 @@ void menu_select_callback(MenuLayer *menu_layer,
       }
 
       // Show inventory menu to provide an opportunity to adjust equipment:
-      window_stack_pop(NOT_ANIMATED);
+      g_current_selection = cell_index->row + get_num_pebble_types_owned();
       show_window(INVENTORY_MENU, NOT_ANIMATED);
-      menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
-                                    (MenuIndex)
-                                    {
-                                      0,
-                                      cell_index->row +
-                                        get_num_pebble_types_owned()
-                                    },
-                                    MenuRowAlignCenter,
-                                    NOT_ANIMATED);
     }
 
     // In either mode, we want to reassign minor stats:
@@ -2843,9 +2849,9 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     // Handle NPC behavior:
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      if (g_location->npcs[i]->type > NONE)
+      if (g_player->npcs[i]->type > NONE)
       {
-        determine_npc_behavior(g_location->npcs[i]);
+        determine_npc_behavior(g_player->npcs[i]);
         if (g_player->stats[CURRENT_HEALTH] <= 0)
         {
           return;
@@ -3119,8 +3125,10 @@ void strcat_int(char *dest_str, int16_t integer)
    Function: add_current_selection_to_inventory
 
 Description: Adds an item of type "g_current_selection" to the player's
-             inventory. If it's a heavy item and there's no more room for heavy
-             items, the "replace item" menu will be shown.
+             inventory then displays the inventory menu to provide an
+             opportunity to infuse items and adjust equipment. If it's a heavy
+             item and there's no more room for heavy items, the "replace item"
+             menu will be shown.
 
      Inputs: None.
 
@@ -3134,6 +3142,8 @@ void add_current_selection_to_inventory(void)
   if (g_current_selection < FIRST_HEAVY_ITEM)
   {
     g_player->pebbles[g_current_selection]++;
+    g_current_selection = get_inventory_row_for_pebble(g_current_selection);
+    show_window(INVENTORY_MENU, NOT_ANIMATED);
   }
 
   // Heavy items:
@@ -3144,15 +3154,8 @@ void add_current_selection_to_inventory(void)
       if (g_player->heavy_items[i]->type == NONE)
       {
         init_heavy_item(g_player->heavy_items[i], g_current_selection);
+        g_current_selection = i + get_num_pebble_types_owned();
         show_window(INVENTORY_MENU, NOT_ANIMATED);
-        menu_layer_set_selected_index(g_menu_layers[INVENTORY_MENU],
-                                      (MenuIndex)
-                                      {
-                                        0,
-                                        i + get_num_pebble_types_owned()
-                                      },
-                                      MenuRowAlignCenter,
-                                      NOT_ANIMATED);
         return;
       }
     }
@@ -3344,10 +3347,13 @@ void init_player(void)
   equip_heavy_item(g_player->heavy_items[0]);
   equip_heavy_item(g_player->heavy_items[1]);
 
-  // Finally, assign minor stats according to major stats and equipment:
+  // Assign minor stats according to major stats and equipment:
   assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
   g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
   g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
+
+  // Finally, set up a new location:
+  init_location();
 }
 
 /******************************************************************************
@@ -3367,6 +3373,10 @@ void deinit_player(void)
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
     free(g_player->heavy_items[i]);
+  }
+  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
+  {
+    free(g_player->npcs[i]);
   }
   free(g_player);
 }
@@ -3547,8 +3557,7 @@ void init_wall_coords(void)
 /******************************************************************************
    Function: init_location
 
-Description: Initializes the global location struct according to the player's
-             current depth.
+Description: Initializes the "map" array.
 
      Inputs: None.
 
@@ -3562,7 +3571,7 @@ void init_location(void)
   // Remove any preexisting NPCs:
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    g_location->npcs[i]->type = NONE;
+    g_player->npcs[i]->type = NONE;
   }
 
   // Now set each cell to solid:
@@ -3570,7 +3579,7 @@ void init_location(void)
   {
     for (j = 0; j < MAP_HEIGHT; ++j)
     {
-      g_location->map[i][j] = SOLID;
+      g_player->map[i][j] = SOLID;
     }
   }
 
@@ -3652,27 +3661,6 @@ void init_location(void)
   // Finally, set the entrance to ENTRANCE and increment the player's depth:
   set_cell_type(g_player->position, ENTRANCE);
   g_player->depth++;
-}
-
-/******************************************************************************
-   Function: deinit_location
-
-Description: Deinitializes the global location struct, freeing associated
-             memory.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void deinit_location(void)
-{
-  int16_t i;
-
-  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
-  {
-    free(g_location->npcs[i]);
-  }
-  free(g_location);
 }
 
 /******************************************************************************
@@ -3879,19 +3867,18 @@ void init(void)
                                          STATUS_BAR_HEIGHT / 2));
   init_wall_coords();
 
-  // Allocate memory for the player and location structs:
+  // Allocate memory for the player struct:
   g_player = malloc(sizeof(player_t));
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
     g_player->heavy_items[i] = malloc(sizeof(heavy_item_t));
   }
-  g_location = malloc(sizeof(location_t));
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    g_location->npcs[i] = malloc(sizeof(npc_t));
+    g_player->npcs[i] = malloc(sizeof(npc_t));
   }
 
-  // Load saved data or initialize brand new player and location structs:
+  // Load saved data or initialize a brand new player struct:
   if (persist_exists(STORAGE_KEY))
   {
     for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
@@ -3900,23 +3887,19 @@ void init(void)
                         g_player->heavy_items[i],
                         sizeof(heavy_item_t));
     }
-    persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS,
-                      g_player,
-                      sizeof(player_t));
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i + 1,
-                        g_location->npcs[i],
+      persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i,
+                        g_player->npcs[i],
                         sizeof(npc_t));
     }
-    persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME + 1,
-                      g_location,
-                      sizeof(location_t));
+    persist_read_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME,
+                      g_player,
+                      sizeof(player_t));
   }
   else
   {
     init_player();
-    init_location();
   }
 
   // Initialize all other windows and display the main menu:
@@ -3948,28 +3931,24 @@ void deinit(void)
   tick_timer_service_unsubscribe();
   app_focus_service_unsubscribe();
 
-  // Save player and location data to persistent storage:
+  // Save player data to persistent storage:
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
     persist_write_data(STORAGE_KEY + i,
                        g_player->heavy_items[i],
                        sizeof(heavy_item_t));
   }
-  persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS,
-                     g_player,
-                     sizeof(player_t));
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i + 1,
-                       g_location->npcs[i],
+    persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + i,
+                       g_player->npcs[i],
                        sizeof(npc_t));
   }
-  persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME + 1,
-                     g_location,
-                     sizeof(location_t));
+  persist_write_data(STORAGE_KEY + MAX_HEAVY_ITEMS + MAX_NPCS_AT_ONE_TIME,
+                     g_player,
+                     sizeof(player_t));
 
   // Finally, deinitialize everything:
-  deinit_location();
   deinit_player();
   for (i = 0; i < NUM_WINDOWS; ++i)
   {
