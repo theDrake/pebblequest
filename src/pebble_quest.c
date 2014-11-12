@@ -901,14 +901,13 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "The Elderstone was sundered long ago, splintering"
                             " into countless Pebbles of Power.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 83
-      strcpy(narration_str, "You've descended into a vast dungeon where the "
+    case INTRO_NARRATION_2: // Total chars: 85
+      strcpy(narration_str, "You have descended into a vast dungeon where the "
                             "Pebbles are guarded by evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 102
-      strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest, by "
-                            "David C. Drake!\ndavidcdrake.com/\n"
-                            "           pebblequest");
+    case INTRO_NARRATION_3: // Total chars: 90
+      strcpy(narration_str, "Welcome, hero, to PebbleQuest!\nBy David C. Drake"
+                            ":\ndavidcdrake.com/\n            pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
       strcpy(narration_str, "        CONTROLS\nForward: \"Up\"\nBack: \"Down\""
@@ -2696,9 +2695,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       npc = get_npc_at(cell);
 
       // If we've found an NPC or the attack isn't ranged, we're done:
-      if (npc != NULL ||
-          (g_player->equipped_pebble == NONE &&
-           get_heavy_item_equipped_at(RIGHT_HAND)->type != BOW))
+      if (npc != NULL || g_player->equipped_pebble == NONE)
       {
         break;
       }
@@ -2939,9 +2936,6 @@ void strcat_item_name(char *dest_str, const int16_t item_type)
       case FLAIL:
         strcat(dest_str, "Flail");
         break;
-      case BOW:
-        strcat(dest_str, "Bow");
-        break;
       case SHIELD:
         strcat(dest_str, "Shield");
         break;
@@ -3175,7 +3169,9 @@ void add_current_selection_to_inventory(void)
 /******************************************************************************
    Function: equip_heavy_item
 
-Description: Equips a given heavy item to its appropriate equip target.
+Description: Equips a given heavy item to its appropriate equip target,
+             unequipping the previously equipped item (if any), then adjusts
+             constant status effects and minor stats accordingly.
 
      Inputs: heavy_item - Pointer to the heavy item to be equipped.
 
@@ -3183,20 +3179,7 @@ Description: Equips a given heavy item to its appropriate equip target.
 ******************************************************************************/
 void equip_heavy_item(heavy_item_t *const heavy_item)
 {
-  // Unequip the previously equipped item(s), if any:
   unequip_item_at(heavy_item->equip_target);
-  if (heavy_item->type == BOW)
-  {
-    unequip_item_at(LEFT_HAND);
-  }
-  else if (heavy_item->type == SHIELD             &&
-           get_heavy_item_equipped_at(RIGHT_HAND) &&
-           get_heavy_item_equipped_at(RIGHT_HAND)->type == BOW)
-  {
-    unequip_item_at(RIGHT_HAND);
-  }
-
-  // Equip the heavy item and adjust major and minor stats accordingly:
   heavy_item->equipped = true;
   if (heavy_item->equip_target < RIGHT_HAND &&
       heavy_item->infused_pebble > NONE)
@@ -3209,7 +3192,8 @@ void equip_heavy_item(heavy_item_t *const heavy_item)
 /******************************************************************************
    Function: unequip_item_at
 
-Description: Unequips the equipped item (if any) at a given equip target.
+Description: Unequips the equipped item (if any) at a given equip target, then
+             adjusts constant status effects and minor stats accordingly.
 
      Inputs: equip_target - Integer representing the equip target (BODY,
                             LEFT_HAND, or RIGHT_HAND) that is to be emptied.
@@ -3287,7 +3271,7 @@ void adjust_minor_stats(void)
   // Apply weapon/armor effects:
   if (get_heavy_item_equipped_at(RIGHT_HAND))
   {
-    // Weapons (excluding the bow):
+    // Weapons:
     for (i = DAGGER;
          i <= get_heavy_item_equipped_at(RIGHT_HAND)->type;
          i += 2)
@@ -3295,12 +3279,10 @@ void adjust_minor_stats(void)
       g_player->stats[PHYSICAL_POWER]++;
       g_player->energy_loss_per_action++;
     }
-
-    if (get_heavy_item_equipped_at(RIGHT_HAND)->type == BOW)
-    {
-      g_player->stats[PHYSICAL_POWER]   = g_player->stats[PHYSICAL_DEFENSE];
-      g_player->energy_loss_per_action += 2;
-    }
+  }
+  else
+  {
+    g_player->energy_loss_per_action += g_player->stats[INTELLECT] / 3;
   }
 
   // Armor:
@@ -3315,7 +3297,7 @@ void adjust_minor_stats(void)
     {
       g_player->stats[PHYSICAL_DEFENSE] += 2;
       g_player->stats[MAGICAL_POWER]    -= 2;
-      g_player->energy_loss_per_action  += 1;
+      g_player->energy_loss_per_action++;
     }
   }
 
@@ -3352,10 +3334,6 @@ void init_player(void)
   for (i = 0; i < NUM_CONSTANT_STATUS_EFFECTS; ++i)
   {
     g_player->constant_status_effects[i] = 0;
-  }
-  for (i = 0; i < NUM_TEMP_STATUS_EFFECTS; ++i)
-  {
-    g_player->temp_status_effects[i] = 0;
   }
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {

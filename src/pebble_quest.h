@@ -107,7 +107,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Narration-related Constants
 ******************************************************************************/
 
-#define NARRATION_STR_LEN          105
+#define NARRATION_STR_LEN          100
 #define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 
@@ -135,22 +135,21 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define PEBBLE_OF_DEATH      4
 #define PEBBLE_OF_LIGHT      5
 #define PEBBLE_OF_DARKNESS   6
-#define BOW                  7
-#define DAGGER               8
-#define STAFF                9
-#define SWORD                10
-#define MACE                 11
-#define AXE                  12
-#define FLAIL                13
-#define SHIELD               14
-#define ROBE                 15
-#define HEAVY_ARMOR          16
-#define LIGHT_ARMOR          17
-#define NUM_ITEM_TYPES       18
+#define DAGGER               7
+#define STAFF                8
+#define SWORD                9
+#define MACE                 10
+#define AXE                  11
+#define FLAIL                12
+#define SHIELD               13
+#define ROBE                 14
+#define HEAVY_ARMOR          15
+#define LIGHT_ARMOR          16
+#define NUM_ITEM_TYPES       17
 #define NUM_PEBBLE_TYPES     7
-#define NUM_HEAVY_ITEM_TYPES 11 // Excludes Pebbles.
-#define FIRST_HEAVY_ITEM     BOW
-#define MAX_HEAVY_ITEMS      4
+#define NUM_HEAVY_ITEM_TYPES 10 // Excludes Pebbles.
+#define FIRST_HEAVY_ITEM     DAGGER
+#define MAX_HEAVY_ITEMS      3
 #define RANDOM_ITEM          (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
 
 // Equip targets (i.e., places where an item may be equipped):
@@ -277,7 +276,6 @@ typedef struct PlayerCharacter {
           map[MAP_WIDTH][MAP_HEIGHT], // Location data is here for convenience.
           stats[NUM_CHARACTER_STATS],
           constant_status_effects[NUM_CONSTANT_STATUS_EFFECTS],
-          temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
           pebbles[NUM_PEBBLE_TYPES],
           equipped_pebble,
           energy_loss_per_action,
