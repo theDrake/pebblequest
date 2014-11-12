@@ -41,27 +41,27 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 // NPC types:
 #define OOZE          0
 #define WORM          1
-#define WOLF          3
-#define BEAR          4
-#define GOBLIN        5
-#define ORC           6
-#define OGRE          7
-#define TROLL         8
-#define LIZARD_MAN    9
-#define MINOTAUR      10
-#define SKELETON      11
-#define ZOMBIE        12
-#define MUMMY         13
-#define WRAITH        14
-#define VAMPIRE       15
-#define IMP           16
-#define DRAGON        17
-#define FLOATING_EYE  18
-#define ELEMENTAL     19
-#define THIEF         20
-#define WARRIOR       21
-#define MAGE          22
-#define NUM_NPC_TYPES 23
+#define WOLF          2
+#define BEAR          3
+#define GOBLIN        4
+#define ORC           5
+#define OGRE          6
+#define TROLL         7
+#define LIZARD_MAN    8
+#define MINOTAUR      9
+#define SKELETON      10
+#define ZOMBIE        11
+#define MUMMY         12
+#define WRAITH        13
+#define VAMPIRE       14
+#define IMP           15
+#define DRAGON        16
+#define FLOATING_EYE  17
+#define ELEMENTAL     18
+#define THIEF         19
+#define WARRIOR       20
+#define MAGE          21
+#define NUM_NPC_TYPES 22
 
 // Character stats:
 #define STRENGTH            0
@@ -107,7 +107,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Narration-related Constants
 ******************************************************************************/
 
-#define NARRATION_STR_LEN          100
+#define NARRATION_STR_LEN          105
 #define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 
@@ -261,7 +261,7 @@ typedef struct HeavyItem {
 typedef struct NonPlayerCharacter {
   GPoint position;
   int16_t type,
-          hp,
+          health,
           power,
           physical_defense,
           magical_defense,

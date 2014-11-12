@@ -115,9 +115,15 @@ void determine_npc_behavior(npc_t *npc)
 {
   if (time(NULL) % 2 && touching(npc->position, g_player->position))
   {
-    damage_player(npc->power - npc->type == MAGE                  ?
-                                 g_player->stats[MAGICAL_DEFENSE] :
-                                 g_player->stats[PHYSICAL_DEFENSE]);
+    if (npc->type == MAGE)
+    {
+      flash_screen();
+      damage_player(npc->power - g_player->stats[MAGICAL_DEFENSE]);
+    }
+    else
+    {
+      damage_player(npc->power - g_player->stats[PHYSICAL_DEFENSE]);
+    }
   }
   else
   {
@@ -213,8 +219,8 @@ void damage_npc(npc_t *npc, int16_t damage)
   {
     damage = MIN_DAMAGE;
   }
-  npc->hp -= damage;
-  if (npc->hp <= 0)
+  npc->health -= damage;
+  if (npc->health <= 0)
   {
     npc->type = NONE;
 
@@ -225,7 +231,7 @@ void damage_npc(npc_t *npc, int16_t damage)
     }
 
     // Apply experience points and check for a "level up":
-    g_player->exp_points += npc->hp + npc->power + npc->physical_defense +
+    g_player->exp_points += npc->health + npc->power + npc->physical_defense +
                               npc->magical_defense;
     if (g_player->exp_points / 10 >= g_player->level)
     {
@@ -894,10 +900,10 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "You've descended into a vast dungeon where the "
                             "Pebbles are guarded by evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 100
-      strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n"
-                            "By David C. Drake:\ndavidcdrake.com/\n"
-                            "         pebblequest");
+    case INTRO_NARRATION_3: // Total chars: 102
+      strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest, by "
+                            "David C. Drake!\ndavidcdrake.com/\n"
+                            "           pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
       strcpy(narration_str, "        CONTROLS\nForward: \"Up\"\nBack: \"Down\""
@@ -2728,9 +2734,10 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                                 GRAPHICS_FRAME_WIDTH / 3;
       g_attack_slash_x2     = rand() % (GRAPHICS_FRAME_WIDTH / 3) +
                                 GRAPHICS_FRAME_WIDTH / 3;
-      g_attack_slash_y1     = rand() % (GRAPHICS_FRAME_HEIGHT / 3);
-      g_attack_slash_y2     = GRAPHICS_FRAME_HEIGHT -
-                                 rand() % (GRAPHICS_FRAME_HEIGHT / 3);
+      g_attack_slash_y1     = rand() % (GRAPHICS_FRAME_HEIGHT / 3) +
+                                STATUS_BAR_HEIGHT;
+      g_attack_slash_y2     = GRAPHICS_FRAME_HEIGHT - STATUS_BAR_HEIGHT -
+                                rand() % (GRAPHICS_FRAME_HEIGHT / 3);
       g_attack_timer        = app_timer_register(DEFAULT_TIMER_DURATION,
                                                  attack_timer_callback,
                                                  NULL);
@@ -3420,12 +3427,12 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   }
 
   // Set major stats according to current dungeon depth:
-  npc->hp               = g_player->depth * 5;
+  npc->health           = g_player->depth * 5;
   npc->power            = g_player->depth * 2;
   npc->physical_defense = g_player->depth;
   npc->magical_defense  = g_player->depth;
 
-  // Check for increased HP:
+  // Check for increased health:
   /*if (type == ORC        ||
       type == WARRIOR    ||
       type == BEAR       ||
@@ -3436,7 +3443,7 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
       type == DRAGON     ||
       type == VAMPIRE)
   {
-    npc->hp *= 2;
+    npc->health *= 2;
   }
 
   // Check for increased power:
