@@ -3498,7 +3498,7 @@ void init_heavy_item(heavy_item_t *const item, const int16_t type)
   {
     item->equip_target = RIGHT_HAND;
   }
-  else if (item_type == SHIELD)
+  else if (type == SHIELD)
   {
     item->equip_target = LEFT_HAND;
   }
