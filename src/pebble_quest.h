@@ -254,8 +254,10 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 ******************************************************************************/
 
 typedef struct HeavyItem {
-  int16_t type, 
-          infused_pebble;
+  int16_t type,
+          infused_pebble,
+          equip_target;
+  bool equipped;
 } __attribute__((__packed__)) heavy_item_t;
 
 typedef struct NonPlayerCharacter {
@@ -272,7 +274,7 @@ typedef struct NonPlayerCharacter {
 typedef struct PlayerCharacter {
   GPoint position;
   int16_t direction,
-          map[MAP_WIDTH][MAP_HEIGHT],
+          map[MAP_WIDTH][MAP_HEIGHT], // Location data is here for convenience.
           stats[NUM_CHARACTER_STATS],
           constant_status_effects[NUM_CONSTANT_STATUS_EFFECTS],
           temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
@@ -282,9 +284,8 @@ typedef struct PlayerCharacter {
           exp_points,
           level,
           depth;
-  heavy_item_t *heavy_items[MAX_HEAVY_ITEMS], // Clothing, armor, and weapons.
-               *equipped_heavy_items[NUM_EQUIP_TARGETS];
-  npc_t *npcs[MAX_NPCS_AT_ONE_TIME];
+  heavy_item_t heavy_items[MAX_HEAVY_ITEMS]; // Clothing, armor, and weapons.
+  npc_t npcs[MAX_NPCS_AT_ONE_TIME];          // NPCs are here for convenience.
 } __attribute__((__packed__)) player_t;
 
 /******************************************************************************
@@ -345,7 +346,7 @@ int16_t get_nth_item_type(const int16_t n);
 int16_t get_num_pebble_types_owned(void);
 int16_t get_inventory_row_for_pebble(const int16_t pebble_type);
 int16_t get_num_heavy_items_owned(void);
-int16_t get_equip_target(const int16_t item_type);
+heavy_item_t *get_heavy_item_equipped_at(const int16_t equip_target);
 int16_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int16_t type);
 npc_t *get_npc_at(const GPoint cell);
@@ -468,7 +469,6 @@ void equip_heavy_item(heavy_item_t *const item);
 void unequip_item_at(int16_t equip_target);
 void adjust_minor_stats(void);
 void init_player(void);
-void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);
 void init_heavy_item(heavy_item_t *const item, const int16_t n);
 void init_wall_coords(void);
