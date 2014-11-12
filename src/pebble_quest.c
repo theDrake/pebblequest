@@ -1469,7 +1469,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       }
 
       // Show inventory menu to provide an opportunity to adjust equipment:
-      window_stack_pop();
+      window_stack_pop(NOT_ANIMATED);
       g_current_selection = cell_index->row + get_num_pebble_types_owned();
       show_window(INVENTORY_MENU, NOT_ANIMATED);
     }
