@@ -890,13 +890,14 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "The Elderstone was sundered long ago, splintering"
                             " into countless Pebbles of Power.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 85
-      strcpy(narration_str, "You have descended into a vast dungeon where the "
+    case INTRO_NARRATION_2: // Total chars: 83
+      strcpy(narration_str, "You've descended into a vast dungeon where the "
                             "Pebbles are guarded by evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 79
-      strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n\n"
-                            "By David C. Drake:\ndavidcdrake.com");
+    case INTRO_NARRATION_3: // Total chars: 100
+      strcpy(narration_str, "Welcome, hero, to the world of PebbleQuest!\n"
+                            "By David C. Drake:\ndavidcdrake.com/\n"
+                            "         pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
       strcpy(narration_str, "        CONTROLS\nForward: \"Up\"\nBack: \"Down\""
@@ -964,7 +965,7 @@ void show_window(const int16_t window, const bool animated)
                                   (MenuIndex) {0, 0},
                                   MenuRowAlignCenter,
                                   NOT_ANIMATED);
-    if (window == MAIN_MENU)
+    if (window == INVENTORY_MENU)
     {
       menu_layer_set_selected_index(g_menu_layers[window],
                                     (MenuIndex) {0, g_current_selection},
@@ -2695,17 +2696,20 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       cell = get_cell_farther_away(cell, g_player->direction, 1);
     }
 
-    if (npc != NULL)
+    // If a Pebble is equipped, cast a spell:
+    if (g_player->equipped_pebble > NONE)
     {
-      // If a Pebble is equipped, cast a spell:
-      if (g_player->equipped_pebble > NONE)
+      flash_screen();
+      if (npc != NULL)
       {
-        flash_screen();
         damage_npc(npc, g_player->stats[MAGICAL_POWER] - npc->magical_defense);
       }
+    }
 
-      // Otherwise, the player is attacking with a physical weapon:
-      else
+    // Otherwise, the player is attacking with a physical weapon:
+    else
+    {
+      if (npc != NULL)
       {
         damage_npc(npc,
                    g_player->stats[PHYSICAL_POWER] - npc->physical_defense);
@@ -2716,21 +2720,20 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                      g_player->stats[MAGICAL_POWER] / 2 -
                        npc->magical_defense);
         }
-
-        // Set up the "attack slash" graphic:
-        g_player_is_attacking = true;
-        g_attack_slash_x1     = rand() % (GRAPHICS_FRAME_WIDTH / 2) +
-                                  GRAPHICS_FRAME_WIDTH / 4;
-        g_attack_slash_x2     = rand() % (GRAPHICS_FRAME_WIDTH / 2) +
-                                  GRAPHICS_FRAME_WIDTH / 4;
-        g_attack_slash_y1     = rand() % (GRAPHICS_FRAME_HEIGHT / 2) +
-                                  GRAPHICS_FRAME_HEIGHT / 4;
-        g_attack_slash_y2     = rand() % (GRAPHICS_FRAME_HEIGHT / 2) +
-                                  GRAPHICS_FRAME_HEIGHT / 4;
-        g_attack_timer        = app_timer_register(DEFAULT_TIMER_DURATION,
-                                                   attack_timer_callback,
-                                                   NULL);
       }
+
+      // Set up the "attack slash" graphic:
+      g_player_is_attacking = true;
+      g_attack_slash_x1     = rand() % (GRAPHICS_FRAME_WIDTH / 3) +
+                                GRAPHICS_FRAME_WIDTH / 3;
+      g_attack_slash_x2     = rand() % (GRAPHICS_FRAME_WIDTH / 3) +
+                                GRAPHICS_FRAME_WIDTH / 3;
+      g_attack_slash_y1     = rand() % (GRAPHICS_FRAME_HEIGHT / 3);
+      g_attack_slash_y2     = GRAPHICS_FRAME_HEIGHT -
+                                 rand() % (GRAPHICS_FRAME_HEIGHT / 3);
+      g_attack_timer        = app_timer_register(DEFAULT_TIMER_DURATION,
+                                                 attack_timer_callback,
+                                                 NULL);
     }
 
     layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
