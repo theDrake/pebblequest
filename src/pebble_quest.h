@@ -33,7 +33,6 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 ******************************************************************************/
 
 #define DEFAULT_MAJOR_STAT_VALUE   3 // For STRENGTH, AGILITY, and INTELLECT.
-#define NUM_PLAYER_ANIMATIONS      2 // Steps in the player's attack animation.
 #define MIN_REGEN                  1 // Min. health/energy recovery per second.
 #define MIN_DAMAGE                 2 // Min. damage per attack/spell/effect.
 #define MIN_ENERGY_LOSS_PER_ACTION 2
@@ -192,33 +191,34 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Graphics-related Constants
 ******************************************************************************/
 
-#define SCREEN_WIDTH             144
-#define SCREEN_HEIGHT            168
-#define SCREEN_CENTER_POINT_X    (SCREEN_WIDTH / 2)
-#define SCREEN_CENTER_POINT_Y    (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
-#define SCREEN_CENTER_POINT      GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
-#define STATUS_BAR_HEIGHT        16 // Applies to top and bottom status bars.
-#define FULL_SCREEN_FRAME        GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
-#define STATUS_BAR_FRAME         GRect(0, GRAPHICS_FRAME_HEIGHT, GRAPHICS_FRAME_WIDTH, STATUS_BAR_HEIGHT)
-#define STATUS_BAR_FONT          fonts_get_system_font(FONT_KEY_GOTHIC_14)
-#define STATUS_METER_PADDING     4
-#define STATUS_METER_WIDTH       (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
-#define STATUS_METER_HEIGHT      (STATUS_BAR_HEIGHT - STATUS_METER_PADDING * 2)
-#define FIRST_WALL_OFFSET        STATUS_BAR_HEIGHT
-#define MIN_WALL_HEIGHT          STATUS_BAR_HEIGHT
-#define GRAPHICS_FRAME_WIDTH     SCREEN_WIDTH
-#define GRAPHICS_FRAME_HEIGHT    (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
-#define GRAPHICS_FRAME           GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
-#define MAX_VISIBILITY_DEPTH     6 // Helps determine no. of cells visible in a given line of sight.
-#define STRAIGHT_AHEAD           (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
-#define TOP_LEFT                 0                          // Index value for "g_back_wall_coords".
-#define BOTTOM_RIGHT             1                          // Index value for "g_back_wall_coords".
-#define COMPASS_RADIUS           5
-#define NO_CORNER_RADIUS         0
-#define SMALL_CORNER_RADIUS      3
-#define NINETY_DEGREES           (TRIG_MAX_ANGLE / 4)
-#define DEFAULT_ROTATION_RATE    (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event
-#define ELLIPSE_RADIUS_RATIO     0.4
+#define SCREEN_WIDTH          144
+#define SCREEN_HEIGHT         168
+#define SCREEN_CENTER_POINT_X (SCREEN_WIDTH / 2)
+#define SCREEN_CENTER_POINT_Y (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
+#define SCREEN_CENTER_POINT   GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
+#define STATUS_BAR_HEIGHT     16 // Applies to top and bottom status bars.
+#define FULL_SCREEN_FRAME     GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
+#define STATUS_BAR_FRAME      GRect(0, GRAPHICS_FRAME_HEIGHT, GRAPHICS_FRAME_WIDTH, STATUS_BAR_HEIGHT)
+#define STATUS_BAR_FONT       fonts_get_system_font(FONT_KEY_GOTHIC_14)
+#define STATUS_METER_PADDING  4
+#define STATUS_METER_WIDTH    (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
+#define STATUS_METER_HEIGHT   (STATUS_BAR_HEIGHT - STATUS_METER_PADDING * 2)
+#define FIRST_WALL_OFFSET     STATUS_BAR_HEIGHT
+#define MIN_WALL_HEIGHT       STATUS_BAR_HEIGHT
+#define GRAPHICS_FRAME_WIDTH  SCREEN_WIDTH
+#define GRAPHICS_FRAME_HEIGHT (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
+#define GRAPHICS_FRAME        GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
+#define MAX_VISIBILITY_DEPTH  6 // Helps determine no. of cells visible in a given line of sight.
+#define STRAIGHT_AHEAD        (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
+#define TOP_LEFT              0                          // Index value for "g_back_wall_coords".
+#define BOTTOM_RIGHT          1                          // Index value for "g_back_wall_coords".
+#define COMPASS_RADIUS        5
+#define NO_CORNER_RADIUS      0
+#define SMALL_CORNER_RADIUS   3
+#define NINETY_DEGREES        (TRIG_MAX_ANGLE / 4)
+#define DEFAULT_ROTATION_RATE (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event
+#define ELLIPSE_RADIUS_RATIO  0.4
+#define ATTACK_SLASH_WIDTH    5
 
 /******************************************************************************
   Menu-related Constants
@@ -239,21 +239,15 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define LAST_CLICK_ONLY            true
 
 /******************************************************************************
-  Timer-related Constants
-******************************************************************************/
-
-#define PLAYER_TIMER_DURATION 20 // milliseconds
-#define FLASH_TIMER_DURATION  20 // milliseconds
-
-/******************************************************************************
   General Constants
 ******************************************************************************/
 
-#define MAX_INT_VALUE  9999
-#define MAX_INT_DIGITS 4
-#define STORAGE_KEY    841
-#define ANIMATED       true
-#define NOT_ANIMATED   false
+#define DEFAULT_TIMER_DURATION 20 // milliseconds
+#define MAX_INT_VALUE          9999
+#define MAX_INT_DIGITS         4
+#define STORAGE_KEY            841
+#define ANIMATED               true
+#define NOT_ANIMATED           false
 
 /******************************************************************************
   Structures
@@ -267,7 +261,10 @@ typedef struct HeavyItem {
 typedef struct NonPlayerCharacter {
   GPoint position;
   int16_t type,
-          stats[NUM_CHARACTER_STATS],
+          hp,
+          power,
+          physical_defense,
+          magical_defense,
           temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
           item;
 } __attribute__((__packed__)) npc_t;
@@ -281,6 +278,7 @@ typedef struct PlayerCharacter {
           temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
           pebbles[NUM_PEBBLE_TYPES],
           equipped_pebble,
+          energy_loss_per_action,
           exp_points,
           level,
           depth;
@@ -297,15 +295,19 @@ Window *g_windows[NUM_WINDOWS];
 MenuLayer *g_menu_layers[NUM_MENUS];
 InverterLayer *g_inverter_layer;
 TextLayer *g_narration_text_layer;
-AppTimer *g_player_timer,
-         *g_flash_timer;
+AppTimer *g_flash_timer,
+         *g_attack_timer;
 GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
 int16_t g_current_window,
         g_current_narration,
         g_current_selection,
-        g_player_current_animation;
+        g_attack_slash_x1,
+        g_attack_slash_x2,
+        g_attack_slash_y1,
+        g_attack_slash_y2;
+bool g_player_is_attacking;
 GPath *g_compass_path;
 player_t *g_player;
 
@@ -410,7 +412,6 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
                                            uint16_t section_index,
                                            void *data);
 void draw_scene(Layer *layer, GContext *ctx);
-void draw_player_action(GContext *ctx);
 void draw_floor_and_ceiling(GContext *ctx);
 void draw_cell_walls(GContext *ctx,
                      const GPoint cell,
@@ -443,7 +444,7 @@ void fill_ellipse(GContext *ctx,
                   const GColor color);
 void flash_screen(void);
 static void flash_timer_callback(void *data);
-static void player_timer_callback(void *data);
+static void attack_timer_callback(void *data);
 static void graphics_window_appear(Window *window);
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
                                         void *context);
@@ -465,8 +466,7 @@ void strcat_int(char *dest_str, int16_t integer);
 void add_current_selection_to_inventory(void);
 void equip_heavy_item(heavy_item_t *const item);
 void unequip_item_at(int16_t equip_target);
-bool player_is_using_magic_type(int16_t magic_type);
-void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items);
+void adjust_minor_stats(void);
 void init_player(void);
 void deinit_player(void);
 void init_npc(npc_t *npc, const int16_t type, const GPoint position);

@@ -115,8 +115,9 @@ void determine_npc_behavior(npc_t *npc)
 {
   if (time(NULL) % 2 && touching(npc->position, g_player->position))
   {
-    damage_player(npc->stats[PHYSICAL_POWER] -
-                    g_player->stats[PHYSICAL_DEFENSE]);
+    damage_player(npc->power - npc->type == MAGE                  ?
+                                 g_player->stats[MAGICAL_DEFENSE] :
+                                 g_player->stats[PHYSICAL_DEFENSE]);
   }
   else
   {
@@ -212,8 +213,8 @@ void damage_npc(npc_t *npc, int16_t damage)
   {
     damage = MIN_DAMAGE;
   }
-  npc->stats[CURRENT_HEALTH] -= damage;
-  if (npc->stats[CURRENT_HEALTH] <= 0)
+  npc->hp -= damage;
+  if (npc->hp <= 0)
   {
     npc->type = NONE;
 
@@ -224,8 +225,8 @@ void damage_npc(npc_t *npc, int16_t damage)
     }
 
     // Apply experience points and check for a "level up":
-    g_player->exp_points += npc->stats[STRENGTH] + npc->stats[AGILITY] +
-                            npc->stats[INTELLECT];
+    g_player->exp_points += npc->hp + npc->power + npc->physical_defense +
+                              npc->magical_defense;
     if (g_player->exp_points / 10 >= g_player->level)
     {
       g_player->level++;
@@ -284,10 +285,9 @@ void adjust_player_current_energy(const int16_t amount)
 /******************************************************************************
    Function: add_new_npc
 
-Description: Creates an NPC of a given type at a given position and adds it to
-             the player's linked list of NPCs. (If this would exceed the max.
-             number of NPCs at one time, or if the given position isn't
-             occupiable, a new NPC is not created.)
+Description: Initializes an NPC according to a given type and position (unless
+             the position isn't occupiable or the the max. number of NPCs has
+             already been reached).
 
      Inputs: npc_type - Desired type for the new NPC.
              position - Desired spawn point for the new NPC.
@@ -1005,6 +1005,8 @@ static void main_menu_draw_header_callback(GContext *ctx,
                                            uint16_t section_index,
                                            void *data)
 {
+  //Window *window = (Window *) data;
+
   menu_cell_basic_header_draw(ctx, cell_layer, "PebbleQuest - Menu");
 }
 
@@ -1371,7 +1373,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   else if (menu_layer == g_menu_layers[LEVEL_UP_MENU])
   {
     g_player->stats[cell_index->row]++;
-    assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
+    adjust_minor_stats();
     g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
     g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
     window_stack_pop(NOT_ANIMATED);
@@ -1406,7 +1408,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       case 0: // Equip
         unequip_item_at(RIGHT_HAND);
         g_player->equipped_pebble = g_current_selection;
-        //assign_minor_stats()???
+        //adjust_minor_stats();???
         g_current_selection =
           get_inventory_row_for_pebble(g_current_selection);
         show_window(INVENTORY_MENU, NOT_ANIMATED);
@@ -1467,12 +1469,13 @@ void menu_select_callback(MenuLayer *menu_layer,
       }
 
       // Show inventory menu to provide an opportunity to adjust equipment:
+      window_stack_pop();
       g_current_selection = cell_index->row + get_num_pebble_types_owned();
       show_window(INVENTORY_MENU, NOT_ANIMATED);
     }
 
-    // In either mode, we want to reassign minor stats:
-    assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
+    // In either mode, we want to adjust minor stats:
+    adjust_minor_stats();
   }
 }
 
@@ -1595,48 +1598,26 @@ void draw_scene(Layer *layer, GContext *ctx)
     }
   }
 
-  // Draw applicable weapon fire:
-  if (g_player_current_animation > 0)
+  // Draw the "attack slash", if applicable:
+  if (g_player_is_attacking)
   {
-    draw_player_action(ctx);
+    graphics_context_set_stroke_color(ctx, GColorWhite);
+    graphics_draw_line(ctx,
+                       GPoint(g_attack_slash_x1, g_attack_slash_y1),
+                       GPoint(g_attack_slash_x2, g_attack_slash_y2));
+    for (i = 0; i < ATTACK_SLASH_WIDTH / 2; ++i)
+    {
+      graphics_draw_line(ctx,
+                         GPoint(g_attack_slash_x1 + i, g_attack_slash_y1),
+                         GPoint(g_attack_slash_x2 + i, g_attack_slash_y2));
+      graphics_draw_line(ctx,
+                         GPoint(g_attack_slash_x1 - i, g_attack_slash_y1),
+                         GPoint(g_attack_slash_x2 - i, g_attack_slash_y2));
+    }
   }
 
   // Finally, draw the lower status bar:
   draw_status_bar(ctx);
-}
-
-/******************************************************************************
-   Function: draw_player_action
-
-Description: Draws the player's attack/spell onto the screen.
-
-     Inputs: ctx - Pointer to the relevant graphics context.
-
-    Outputs: None.
-******************************************************************************/
-void draw_player_action(GContext *ctx)
-{
-  //int16_t i;
-
-  /*graphics_context_set_stroke_color(ctx, GColorWhite);
-  graphics_draw_line(ctx,
-                     GPoint(SCREEN_CENTER_POINT_X, GRAPHICS_FRAME_HEIGHT),
-                     SCREEN_CENTER_POINT);
-  for (i = 0; i <= g_lightning_base_width / 2; ++i)
-  {
-    if (i == g_lightning_base_width / 2)
-    {
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-    }
-    graphics_draw_line(ctx,
-                      GPoint(SCREEN_CENTER_POINT_X - i, GRAPHICS_FRAME_HEIGHT),
-                      GPoint(SCREEN_CENTER_POINT_X - i / 3,
-                             SCREEN_CENTER_POINT_Y));
-    graphics_draw_line(ctx,
-                      GPoint(SCREEN_CENTER_POINT_X + i, GRAPHICS_FRAME_HEIGHT),
-                      GPoint(SCREEN_CENTER_POINT_X + i / 3,
-                             SCREEN_CENTER_POINT_Y));
-  }*/
 }
 
 /******************************************************************************
@@ -1652,7 +1633,7 @@ void draw_floor_and_ceiling(GContext *ctx)
 {
   int16_t x, y, max_y, shading_offset;
 
-  x = 2;
+  x     = 2;
   max_y = g_back_wall_coords[MAX_VISIBILITY_DEPTH - x]
                             [STRAIGHT_AHEAD]
                             [TOP_LEFT].y;
@@ -2523,7 +2504,7 @@ Description: Briefly "flashes" the graphics frame by inverting all its pixels.
 void flash_screen(void)
 {
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), false);
-  g_flash_timer = app_timer_register(FLASH_TIMER_DURATION,
+  g_flash_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                      flash_timer_callback,
                                      NULL);
 }
@@ -2544,26 +2525,17 @@ static void flash_timer_callback(void *data)
 }
 
 /******************************************************************************
-   Function: player_timer_callback
+   Function: attack_timer_callback
 
-Description: Called when the player timer reaches zero.
+Description: Called when the attack timer reaches zero.
 
      Inputs: data - Pointer to additional data (not used).
 
     Outputs: None.
 ******************************************************************************/
-static void player_timer_callback(void *data)
+static void attack_timer_callback(void *data)
 {
-  if (g_current_window != GRAPHICS_WINDOW)
-  {
-    return;
-  }
-  else if (--g_player_current_animation > 0)
-  {
-    g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
-                                        player_timer_callback,
-                                        NULL);
-  }
+  g_player_is_attacking = false;
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
 
@@ -2579,8 +2551,8 @@ Description: Called when the graphics window appears.
 static void graphics_window_appear(Window *window)
 {
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
-  g_player_current_animation = 0;
-  g_current_window           = GRAPHICS_WINDOW;
+  g_player_is_attacking = false;
+  g_current_window      = GRAPHICS_WINDOW;
 }
 
 /******************************************************************************
@@ -2611,6 +2583,8 @@ Description: The graphics window's single repeating click handler for the "up"
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
                                         void *context)
 {
+  //Window *window = (Window *) context;
+
   if (g_current_window == GRAPHICS_WINDOW)
   {
     move_player(g_player->direction);
@@ -2630,6 +2604,8 @@ Description: The graphics window's multi-click handler for the "up" button.
 ******************************************************************************/
 void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context)
 {
+  //Window *window = (Window *) context;
+
   if (g_current_window == GRAPHICS_WINDOW)
   {
     set_player_direction(get_direction_to_the_left(g_player->direction));
@@ -2650,6 +2626,8 @@ Description: The graphics window's single repeating click handler for the
 void graphics_down_single_repeating_click(ClickRecognizerRef recognizer,
                                           void *context)
 {
+  //Window *window = (Window *) context;
+
   if (g_current_window == GRAPHICS_WINDOW)
   {
     move_player(get_opposite_direction(g_player->direction));
@@ -2669,6 +2647,8 @@ Description: The graphics window's multi-click handler for the "down" button.
 ******************************************************************************/
 void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context)
 {
+  //Window *window = (Window *) context;
+
   if (g_current_window == GRAPHICS_WINDOW)
   {
     set_player_direction(get_direction_to_the_right(g_player->direction));
@@ -2694,8 +2674,11 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
   npc_t *npc;
   //Window *window = (Window *) context;
 
-  if (g_current_window == GRAPHICS_WINDOW)
+  if (g_current_window == GRAPHICS_WINDOW &&
+      g_player->stats[CURRENT_ENERGY] >= g_player->energy_loss_per_action)
   {
+    adjust_player_current_energy(g_player->energy_loss_per_action * -1);
+
     // Check for a targeted NPC:
     cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
     while (get_cell_type(cell) >= EMPTY)
@@ -2712,35 +2695,41 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       cell = get_cell_farther_away(cell, g_player->direction, 1);
     }
 
-    // If a Pebble is equipped, cast a spell:
-    if (g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
+    if (npc != NULL)
     {
+      // If a Pebble is equipped, cast a spell:
       if (g_player->equipped_pebble > NONE)
       {
         flash_screen();
-        adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION * -1);
-        if (npc != NULL)
-        {
-          damage_npc(npc,
-                     g_player->stats[MAGICAL_POWER] -
-                       npc->stats[MAGICAL_DEFENSE]);
-        }
+        damage_npc(npc, g_player->stats[MAGICAL_POWER] - npc->magical_defense);
       }
 
       // Otherwise, the player is attacking with a physical weapon:
-      else if (g_player->stats[CURRENT_ENERGY] >= MIN_ENERGY_LOSS_PER_ACTION)
+      else
       {
-        flash_screen();
-        adjust_player_current_energy(MIN_ENERGY_LOSS_PER_ACTION * -1);
-        g_player_timer = app_timer_register(PLAYER_TIMER_DURATION,
-                                            player_timer_callback,
-                                            NULL);
-        if (npc != NULL)
+        damage_npc(npc,
+                   g_player->stats[PHYSICAL_POWER] - npc->physical_defense);
+        if (g_player->equipped_heavy_items[RIGHT_HAND] &&
+            g_player->equipped_heavy_items[RIGHT_HAND]->infused_pebble > NONE)
         {
           damage_npc(npc,
-                     g_player->stats[PHYSICAL_POWER] -
-                       npc->stats[PHYSICAL_DEFENSE]);
+                     g_player->stats[MAGICAL_POWER] / 2 -
+                       npc->magical_defense);
         }
+
+        // Set up the "attack slash" graphic:
+        g_player_is_attacking = true;
+        g_attack_slash_x1     = rand() % (GRAPHICS_FRAME_WIDTH / 2) +
+                                  GRAPHICS_FRAME_WIDTH / 4;
+        g_attack_slash_x2     = rand() % (GRAPHICS_FRAME_WIDTH / 2) +
+                                  GRAPHICS_FRAME_WIDTH / 4;
+        g_attack_slash_y1     = rand() % (GRAPHICS_FRAME_HEIGHT / 2) +
+                                  GRAPHICS_FRAME_HEIGHT / 4;
+        g_attack_slash_y2     = rand() % (GRAPHICS_FRAME_HEIGHT / 2) +
+                                  GRAPHICS_FRAME_HEIGHT / 4;
+        g_attack_timer        = app_timer_register(DEFAULT_TIMER_DURATION,
+                                                   attack_timer_callback,
+                                                   NULL);
       }
     }
 
@@ -2759,6 +2748,8 @@ Description: Button-click configuration provider for the graphics window.
 ******************************************************************************/
 void graphics_click_config_provider(void *context)
 {
+  //Window *window = (Window *) context;
+
   // "Up" button:
   window_single_repeating_click_subscribe(BUTTON_ID_UP,
                                           MIN_ACTION_REPEAT_INTERVAL,
@@ -2800,6 +2791,8 @@ Description: The narration window's single-click handler for all buttons. Shows
 ******************************************************************************/
 void narration_single_click(ClickRecognizerRef recognizer, void *context)
 {
+  //Window *window = (Window *) context;
+
   if (g_current_narration < INTRO_NARRATION_4 ||
       (g_current_narration > INTRO_NARRATION_4 &&
        g_current_narration < STATS_NARRATION_2))
@@ -3197,7 +3190,7 @@ void equip_heavy_item(heavy_item_t *const item)
   {
     g_player->constant_status_effects[item->infused_pebble]++;
   }
-  assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
+  adjust_minor_stats();
 }
 
 /******************************************************************************
@@ -3236,65 +3229,83 @@ Description: Determines whether the player's attack currently utilizes a given
 
     Outputs: "True" if the player is using the given magic type to attack.
 ******************************************************************************/
-bool player_is_using_magic_type(int16_t magic_type)
+/*bool player_is_using_magic_type(int16_t magic_type)
 {
   return g_player->equipped_pebble == magic_type ||
          (g_player->equipped_heavy_items[RIGHT_HAND] &&
           g_player->equipped_heavy_items[RIGHT_HAND]->infused_pebble ==
             magic_type);
-}
+}*/
 
 /******************************************************************************
-   Function: assign_minor_stats
+   Function: adjust_minor_stats
 
-Description: Assigns values to the minor stats of a given stats array according
-             to its major stat values (STRENGTH, AGILITY, and INTELLECT), which
-             must already be assigned.
+Description: Assigns values to the player's minor stats according to major stat
+             values (STRENGTH, AGILITY, and INTELLECT) then adjusts them
+             according to equipped items and status effects.
 
-     Inputs: stats          - Stats array of the character of interest.
-             equipped_items - Array of pointers to equipped heavy items (only
-                              used for the player character).
+     Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
-void assign_minor_stats(int16_t *stats, heavy_item_t **equipped_items)
+void adjust_minor_stats(void)
 {
   int16_t i;
 
   // Set minor stats according to major stats (STRENGTH, AGILITY, INTELLECT):
-  stats[MAX_HEALTH]       = stats[STRENGTH] * 10;
-  stats[MAX_ENERGY]       = stats[INTELLECT] * 5 + stats[AGILITY] * 5;
-  stats[PHYSICAL_POWER]   = stats[STRENGTH] + stats[AGILITY] / 2;
-  stats[PHYSICAL_DEFENSE] = stats[AGILITY] + stats[STRENGTH] / 2;
-  stats[MAGICAL_POWER]    = stats[INTELLECT] + stats[AGILITY] / 2;
-  stats[MAGICAL_DEFENSE]  = stats[AGILITY] + stats[INTELLECT] / 2;
+  g_player->stats[MAX_HEALTH]       = g_player->stats[STRENGTH]  * 10;
+  g_player->stats[MAX_ENERGY]       = g_player->stats[INTELLECT] * 5 +
+                                        g_player->stats[AGILITY] * 5;
+  g_player->stats[PHYSICAL_POWER]   = g_player->stats[STRENGTH] +
+                                        g_player->stats[AGILITY] / 2;
+  g_player->stats[PHYSICAL_DEFENSE] = g_player->stats[AGILITY] +
+                                        g_player->stats[STRENGTH] / 2;
+  g_player->stats[MAGICAL_POWER]    = g_player->stats[INTELLECT] +
+                                        g_player->stats[AGILITY] / 2;
+  g_player->stats[MAGICAL_DEFENSE]  = g_player->stats[AGILITY] +
+                                        g_player->stats[INTELLECT] / 2;
+  g_player->energy_loss_per_action  = MIN_ENERGY_LOSS_PER_ACTION;
 
   // Apply weapon/armor effects:
-  if (equipped_items)
+  if (g_player->equipped_heavy_items[RIGHT_HAND])
   {
-    if (equipped_items[RIGHT_HAND])
+    // Weapons (excluding the bow):
+    for (i = DAGGER;
+         i <= g_player->equipped_heavy_items[RIGHT_HAND]->type;
+         i += 2)
     {
-      // Weapons (excluding the bow):
-      for (i = DAGGER; i <= equipped_items[RIGHT_HAND]->type; i += 2)
-      {
-        stats[PHYSICAL_POWER]++;
-      }
+      g_player->stats[PHYSICAL_POWER]++;
+      g_player->energy_loss_per_action++;
     }
-    if (equipped_items[BODY])
+
+    if (g_player->equipped_heavy_items[RIGHT_HAND]->type == BOW)
     {
-      // Armor:
-      for (i = LIGHT_ARMOR; i <= equipped_items[BODY]->type; ++i)
-      {
-        stats[PHYSICAL_DEFENSE]++;
-        stats[MAGICAL_POWER]--;
-      }
+      g_player->stats[PHYSICAL_POWER]   = g_player->stats[PHYSICAL_DEFENSE];
+      g_player->energy_loss_per_action += 2;
     }
-    // Shield:
-    if (equipped_items[LEFT_HAND])
+  }
+
+  // Armor:
+  if (g_player->equipped_heavy_items[BODY])
+  {
+    if (g_player->equipped_heavy_items[BODY]->type == LIGHT_ARMOR)
     {
-      stats[PHYSICAL_DEFENSE]++;
-      stats[MAGICAL_POWER]--;
+      g_player->stats[PHYSICAL_DEFENSE]++;
+      g_player->stats[MAGICAL_POWER]--;
     }
+    else if (g_player->equipped_heavy_items[BODY]->type == HEAVY_ARMOR)
+    {
+      g_player->stats[PHYSICAL_DEFENSE] += 2;
+      g_player->stats[MAGICAL_POWER]    -= 2;
+      g_player->energy_loss_per_action  += 1;
+    }
+  }
+
+  // Shield:
+  if (g_player->equipped_heavy_items[LEFT_HAND])
+  {
+    g_player->stats[PHYSICAL_DEFENSE]++;
+    g_player->stats[MAGICAL_POWER]--;
   }
 }
 
@@ -3347,8 +3358,8 @@ void init_player(void)
   equip_heavy_item(g_player->heavy_items[0]);
   equip_heavy_item(g_player->heavy_items[1]);
 
-  // Assign minor stats according to major stats and equipment:
-  assign_minor_stats(g_player->stats, g_player->equipped_heavy_items);
+  // Assign minor stats, then ensure health and energy are at 100%:
+  adjust_minor_stats();
   g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
   g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
 
@@ -3406,16 +3417,30 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   }
 
   // Set major stats according to current dungeon depth:
-  for (i = 0; i < NUM_MAJOR_STATS; ++i)
-  {
-    npc->stats[i] = g_player->depth;
-  }
+  npc->hp               = g_player->depth * 5;
+  npc->power            = g_player->depth * 2;
+  npc->physical_defense = g_player->depth;
+  npc->magical_defense  = g_player->depth;
 
-  // Check for increased strength:
+  // Check for increased HP:
   /*if (type == ORC        ||
       type == WARRIOR    ||
       type == BEAR       ||
-      type == OGRE       ||
+      type == TROLL      ||
+      type == OOZE ||
+      type == MINOTAUR   ||
+      type == MUMMY      ||
+      type == DRAGON     ||
+      type == VAMPIRE)
+  {
+    npc->hp *= 2;
+  }
+
+  // Check for increased power:
+  if (type == MAGE       ||
+      type == ORC        ||
+      type == WARRIOR    ||
+      type == BEAR       ||
       type == TROLL      ||
       type == LIZARD_MAN ||
       type == MINOTAUR   ||
@@ -3423,34 +3448,33 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
       type == DRAGON     ||
       type == VAMPIRE)
   {
-    npc->stats[STRENGTH] *= 2;
+    npc->power *= 2;
   }
 
-  // Check for increased agility:
-  if (type == GOBLIN  ||
-      type == WOLF    ||
+  // Check for increased phys. defense (via armor or evasion):
+  if (type == WARRIOR  ||
       type == THIEF   ||
+      type == LIZARD_MAN ||
       type == IMP     ||
       type == DRAGON  ||
       type == VAMPIRE)
   {
-    npc->stats[AGILITY] *= 2;
+    npc->physical_defense *= 2;
   }
 
-  // Check for increased intellect:
+  // Check for increased mag. defense:
   if (type == MAGE    ||
       type == VAMPIRE ||
       type == DRAGON  ||
       type == IMP     ||
       type == ELEMENTAL)
   {
-    npc->stats[INTELLECT] *= 2;
+    npc->magical_defense *= 2;
   }*/
 
   // Some NPCs have a chance of carrying a random item:
   if (type == ORC        ||
       type == GOBLIN     ||
-      type == SKELETON   ||
       type == LIZARD_MAN ||
       type == VAMPIRE    ||
       type == WARRIOR    ||
@@ -3460,15 +3484,10 @@ void init_npc(npc_t *npc, const int16_t type, const GPoint position)
   }
 
   // Mages are the only NPCs to carry Pebbles:
-  if (type == MAGE)
+  else if (type == MAGE)
   {
     npc->item = rand() % NUM_PEBBLE_TYPES;
   }
-
-  // Finally, assign minor stats according to major stat values:
-  assign_minor_stats(npc->stats, NULL);
-  npc->stats[CURRENT_HEALTH] = npc->stats[MAX_HEALTH];
-  npc->stats[CURRENT_ENERGY] = npc->stats[MAX_ENERGY];
 }
 
 /******************************************************************************
@@ -3861,11 +3880,12 @@ void init(void)
 
   // Set up graphics window and graphics-related variables:
   init_window(GRAPHICS_WINDOW);
+  init_wall_coords();
   g_compass_path = gpath_create(&COMPASS_PATH_INFO);
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
-  init_wall_coords();
+  g_player_is_attacking = false;
 
   // Allocate memory for the player struct:
   g_player = malloc(sizeof(player_t));
