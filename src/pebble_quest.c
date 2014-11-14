@@ -21,7 +21,7 @@ Description: Sets the player's orientation to a given direction and updates the
 
     Outputs: None.
 ******************************************************************************/
-void set_player_direction(const int16_t new_direction)
+void set_player_direction(const int8_t new_direction)
 {
   g_player->direction = new_direction;
   switch(new_direction)
@@ -45,13 +45,16 @@ void set_player_direction(const int16_t new_direction)
 /******************************************************************************
    Function: move_player
 
-Description: Attempts to move the player one cell forward in a given direction.
+Description: Attempts to move the player one cell forward (or backward) in a
+             given direction. If loot is present in that cell, the player does
+             not move but is instead shown the loot menu. Moving onto an exit
+             will take the player to a new location.
 
      Inputs: direction - Desired direction of movement.
 
     Outputs: None.
 ******************************************************************************/
-void move_player(const int16_t direction)
+void move_player(const int8_t direction)
 {
   GPoint destination = get_cell_farther_away(g_player->position, direction, 1);
 
@@ -65,16 +68,16 @@ void move_player(const int16_t direction)
       set_cell_type(destination, EMPTY);
     }
 
-    // Check for an exit:
-    else if (get_cell_type(destination) == EXIT)
-    {
-      init_location();
-    }
-
     // Shift the player's position:
     else
     {
       g_player->position = destination;
+
+      // Check for an exit:
+      if (get_cell_type(destination) == EXIT)
+      {
+        init_location();
+      }
     }
 
     layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
@@ -92,7 +95,7 @@ Description: Attempts to move a given NPC one cell forward in a given
 
     Outputs: None.
 ******************************************************************************/
-void move_npc(npc_t *npc, const int16_t direction)
+void move_npc(npc_t *const npc, const int8_t direction)
 {
   GPoint destination = get_cell_farther_away(npc->position, direction, 1);
 
@@ -111,9 +114,9 @@ Description: Determines what a given NPC should do.
 
     Outputs: None.
 ******************************************************************************/
-void determine_npc_behavior(npc_t *npc)
+void determine_npc_behavior(npc_t *const npc)
 {
-  if (time(NULL) % 2 && touching(npc->position, g_player->position))
+  if (touching(npc->position, g_player->position))
   {
     if (npc->type == MAGE)
     {
@@ -134,20 +137,20 @@ void determine_npc_behavior(npc_t *npc)
 /******************************************************************************
    Function: player_is_visible_from
 
-Description: Determines whether the player is (more or less) visible from a
-             given set of cell coordinates.
+Description: Determines whether the player is "visible" from a given position,
+             where "visible" means aligned along the x- or y-axis with no wall
+             or NPC in the way.
 
-     Inputs: cell - Cell coordinates from which to look for the player.
+     Inputs: position - Cell coordinates from which to look for the player.
 
-    Outputs: "True" if the player is (more or less) visible from the given
-             coordinates.
+    Outputs: "True" if the player is "visible" from the given position.
 ******************************************************************************/
-/*bool player_is_visible_from(GPoint cell)
+/*bool player_is_visible_from(const GPoint position)
 {
-  int16_t diff_x = cell.x - g_player->position.x,
-          diff_y = cell.y - g_player->position.y;
-  const int16_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
-                vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
+  int8_t diff_x = cell.x - g_player->position.x,
+         diff_y = cell.y - g_player->position.y;
+  const int8_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
+               vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
 
   if (diff_x > MAX_VISIBILITY_DEPTH || diff_y > MAX_VISIBILITY_DEPTH)
   {
@@ -191,7 +194,7 @@ Description: Damages the player according to his/her defense vs. a given damage
 
     Outputs: None.
 ******************************************************************************/
-void damage_player(int16_t damage)
+void damage_player(int8_t damage)
 {
   if (damage < MIN_DAMAGE)
   {
@@ -213,32 +216,62 @@ Description: Damages a given NPC according to a given damage value. If this
 
     Outputs: None.
 ******************************************************************************/
-void damage_npc(npc_t *npc, int16_t damage)
+void damage_npc(npc_t *const npc, int8_t damage)
 {
-  if (damage < MIN_DAMAGE)
+  if (npc)
   {
-    damage = MIN_DAMAGE;
+    if (damage < MIN_DAMAGE)
+    {
+      damage = MIN_DAMAGE;
+    }
+    npc->health -= damage;
+    if (npc->health <= 0)
+    {
+      npc->type = NONE;
+
+      // If the NPC had an item, leave it behind as loot:
+      if (npc->item > NONE)
+      {
+        set_cell_type(npc->position, npc->item);
+      }
+
+      // Apply experience points and check for a "level up":
+      g_player->exp_points += npc->health + npc->power + npc->physical_defense +
+                                npc->magical_defense;
+      if (g_player->exp_points / 10 >= g_player->level)
+      {
+        g_player->level++;
+        show_window(LEVEL_UP_MENU, NOT_ANIMATED);
+        show_narration(LEVEL_UP_NARRATION);
+      }
+    }
   }
-  npc->health -= damage;
-  if (npc->health <= 0)
+}
+
+/******************************************************************************
+   Function: cast_spell_on_npc
+
+Description: Applies the effects of a given spell, with a given potency, to a
+             given NPC.
+
+     Inputs: npc        - Pointer to the targeted NPC.
+             spell_type - Integer representing the type of spell to be cast.
+             potency    - Amount of magical power being brought to bear.
+
+    Outputs: None.
+******************************************************************************/
+void cast_spell_on_npc(npc_t *const npc,
+                       const int8_t spell_type,
+                       int8_t potency)
+{
+  if (npc)
   {
-    npc->type = NONE;
-
-    // If the NPC had an item, leave it behind as loot:
-    if (npc->item > NONE)
+    potency -= npc->magical_defense;
+    if (potency < MIN_SPELL_POTENCY)
     {
-      set_cell_type(npc->position, npc->item);
+      potency = MIN_SPELL_POTENCY;
     }
-
-    // Apply experience points and check for a "level up":
-    g_player->exp_points += npc->health + npc->power + npc->physical_defense +
-                              npc->magical_defense;
-    if (g_player->exp_points / 10 >= g_player->level)
-    {
-      g_player->level++;
-      show_window(LEVEL_UP_MENU, NOT_ANIMATED);
-      show_narration(LEVEL_UP_NARRATION);
-    }
+    damage_npc(npc, potency);
   }
 }
 
@@ -254,7 +287,7 @@ Description: Adjusts the player's current health by a given amount, which may
 
     Outputs: None.
 ******************************************************************************/
-void adjust_player_current_health(const int16_t amount)
+void adjust_player_current_health(const int8_t amount)
 {
   g_player->stats[CURRENT_HEALTH] += amount;
   if (g_player->stats[CURRENT_HEALTH] > g_player->stats[MAX_HEALTH])
@@ -279,7 +312,7 @@ Description: Adjusts the player's current energy by a given amount, which may
 
     Outputs: None.
 ******************************************************************************/
-void adjust_player_current_energy(const int16_t amount)
+void adjust_player_current_energy(const int8_t amount)
 {
   g_player->stats[CURRENT_ENERGY] += amount;
   if (g_player->stats[CURRENT_ENERGY] > g_player->stats[MAX_ENERGY])
@@ -300,17 +333,17 @@ Description: Initializes an NPC according to a given type and position (unless
 
     Outputs: None.
 ******************************************************************************/
-void add_new_npc(const int16_t npc_type, const GPoint position)
+void add_new_npc(const int8_t npc_type, const GPoint position)
 {
-  int16_t i;
+  int8_t i;
 
   if (occupiable(position))
   {
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      if (g_player->npcs[i].type == NONE)
+      if (g_location->npcs[i].type == NONE)
       {
-        init_npc(&g_player->npcs[i], npc_type, position);
+        init_npc(&g_location->npcs[i], npc_type, position);
 
         return;
       }
@@ -332,7 +365,7 @@ Description: Returns a suitable NPC spawn point, outside the player's sphere of
 ******************************************************************************/
 GPoint get_npc_spawn_point(void)
 {
-  int16_t i;
+  int8_t i;
   GPoint spawn_point;
 
   for (i = 0; i < NUM_DIRECTIONS; ++i)
@@ -361,7 +394,7 @@ Description: Returns the central point, with respect to the graphics layer, of
     Outputs: GPoint coordinates of the floor's central point within the
              designated cell.
 ******************************************************************************/
-GPoint get_floor_center_point(const int16_t depth, const int16_t position)
+GPoint get_floor_center_point(const int8_t depth, const int8_t position)
 {
   int16_t x_midpoint1, x_midpoint2, x, y;
 
@@ -408,9 +441,9 @@ Description: Returns the midair central point, with respect to the graphics
     Outputs: GPoint coordinates of the midair central point within the
              designated cell.
 ******************************************************************************/
-/*GPoint get_midair_center_point(const int16_t depth, const int16_t position)
+/*GPoint get_midair_center_point(const int8_t depth, const int8_t position)
 {
-  int16_t x_midpoint1, x_midpoint2, x, y;
+  uint8_t x_midpoint1, x_midpoint2, x, y;
 
   x_midpoint1 = 0.5 * (g_back_wall_coords[depth][position][TOP_LEFT].x +
                        g_back_wall_coords[depth][position][BOTTOM_RIGHT].x);
@@ -457,8 +490,8 @@ Description: Given a set of cell coordinates, returns new cell coordinates a
              in. (These may lie out-of-bounds.)
 ******************************************************************************/
 GPoint get_cell_farther_away(const GPoint reference_point,
-                             const int16_t direction,
-                             const int16_t distance)
+                             const int8_t direction,
+                             const int8_t distance)
 {
   switch (direction)
   {
@@ -485,14 +518,14 @@ Description: Determines in which direction a character at a given position
 
     Outputs: Integer representing the direction in which the NPC ought to move.
 ******************************************************************************/
-int16_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee)
+int8_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee)
 {
-  int16_t diff_x                     = pursuer.x - pursuee.x,
-          diff_y                     = pursuer.y - pursuee.y;
-  const int16_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
-                vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
-  bool checked_horizontal_direction  = false,
-       checked_vertical_direction    = false;
+  int8_t diff_x                     = pursuer.x - pursuee.x,
+         diff_y                     = pursuer.y - pursuee.y;
+  const int8_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
+               vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
+  bool checked_horizontal_direction = false,
+       checked_vertical_direction   = false;
 
   // Check for alignment along the x-axis:
   if (diff_x == 0)
@@ -561,7 +594,7 @@ Description: Given a north/south/east/west reference direction, returns the
     Outputs: Integer representing the direction to the left of the reference
              direction.
 ******************************************************************************/
-int16_t get_direction_to_the_left(const int16_t reference_direction)
+int8_t get_direction_to_the_left(const int8_t reference_direction)
 {
   switch (reference_direction)
   {
@@ -587,7 +620,7 @@ Description: Given a north/south/east/west reference direction, returns the
     Outputs: Integer representing the direction to the right of the reference
              direction.
 ******************************************************************************/
-int16_t get_direction_to_the_right(const int16_t reference_direction)
+int8_t get_direction_to_the_right(const int8_t reference_direction)
 {
   switch (reference_direction)
   {
@@ -612,7 +645,7 @@ Description: Returns the opposite of a given direction value (i.e., given the
 
     Outputs: Integer representing the opposite of the given direction.
 ******************************************************************************/
-int16_t get_opposite_direction(const int16_t direction)
+int8_t get_opposite_direction(const int8_t direction)
 {
   switch (direction)
   {
@@ -636,9 +669,9 @@ Description: Returns the type of the nth item in the player's inventory.
 
     Outputs: The nth item's type.
 ******************************************************************************/
-int16_t get_nth_item_type(const int16_t n)
+int8_t get_nth_item_type(const int8_t n)
 {
-  int16_t i, item_count = 0;
+  int8_t i, item_count = 0;
 
   // Search Pebbles:
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
@@ -670,9 +703,9 @@ Description: Returns the number of types of Pebbles in the player's inventory.
 
     Outputs: Number of Pebble types owned by the player.
 ******************************************************************************/
-int16_t get_num_pebble_types_owned(void)
+int8_t get_num_pebble_types_owned(void)
 {
-  int16_t i, num_pebble_types = 0;
+  int8_t i, num_pebble_types = 0;
 
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {
@@ -697,9 +730,9 @@ Description: Returns the row where a given Pebble type will be displayed in the
     Outputs: Integer indicating the inventory row where the Pebble type will be
              found (starting from zero).
 ******************************************************************************/
-int16_t get_inventory_row_for_pebble(const int16_t pebble_type)
+int8_t get_inventory_row_for_pebble(const int8_t pebble_type)
 {
-  int16_t i;
+  int8_t i;
 
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {
@@ -721,9 +754,9 @@ Description: Returns the number of heavy items in the player's inventory.
 
     Outputs: Number of heavy items owned by the player.
 ******************************************************************************/
-int16_t get_num_heavy_items_owned(void)
+int8_t get_num_heavy_items_owned(void)
 {
-  int16_t i, num_heavy_items = 0;
+  int8_t i, num_heavy_items = 0;
 
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
@@ -747,9 +780,9 @@ Description: Given an equip target (RIGHT_HAND, LEFT_HAND, or BODY), returns
 
     Outputs: Pointer to the item equipped at the specified target.
 ******************************************************************************/
-heavy_item_t *get_heavy_item_equipped_at(const int16_t equip_target)
+heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target)
 {
-  int16_t i;
+  int8_t i;
 
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
@@ -772,14 +805,14 @@ Description: Returns the type of cell at a given set of coordinates.
 
     Outputs: The indicated cell's type.
 ******************************************************************************/
-int16_t get_cell_type(const GPoint cell)
+int8_t get_cell_type(const GPoint cell)
 {
   if (out_of_bounds(cell))
   {
     return SOLID;
   }
 
-  return g_player->map[cell.x][cell.y];
+  return g_location->map[cell.x][cell.y];
 }
 
 /******************************************************************************
@@ -793,9 +826,9 @@ Description: Sets the cell at a given set of coordinates to a given type.
 
     Outputs: None.
 ******************************************************************************/
-void set_cell_type(GPoint cell, const int16_t type)
+void set_cell_type(GPoint cell, const int8_t type)
 {
-  g_player->map[cell.x][cell.y] = type;
+  g_location->map[cell.x][cell.y] = type;
 }
 
 /******************************************************************************
@@ -810,14 +843,14 @@ Description: Returns a pointer to the NPC occupying a given cell.
 ******************************************************************************/
 npc_t *get_npc_at(const GPoint cell)
 {
-  int16_t i;
+  int8_t i;
 
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    if (g_player->npcs[i].type > NONE &&
-        gpoint_equal(&(g_player->npcs[i].position), &cell))
+    if (g_location->npcs[i].type > NONE &&
+        gpoint_equal(&(g_location->npcs[i].position), &cell))
     {
-      return &g_player->npcs[i];
+      return &g_location->npcs[i];
     }
   }
 
@@ -873,8 +906,8 @@ Description: Determines whether two cells are "touching," meaning they are next
 ******************************************************************************/
 bool touching(const GPoint cell, const GPoint cell_2)
 {
-  const int16_t diff_x = cell.x - cell_2.x,
-                diff_y = cell.y - cell_2.y;
+  const int8_t diff_x = cell.x - cell_2.x,
+               diff_y = cell.y - cell_2.y;
 
   return ((diff_x == 0 && abs(diff_y) == 1) ||
           (diff_y == 0 && abs(diff_x) == 1));
@@ -889,9 +922,9 @@ Description: Displays desired narration text via the narration window.
 
     Outputs: None.
 ******************************************************************************/
-void show_narration(const int16_t narration)
+void show_narration(const int8_t narration)
 {
-  int16_t i;
+  int8_t i;
   static char narration_str[NARRATION_STR_LEN + 1];
 
   g_current_narration = narration;
@@ -905,9 +938,10 @@ void show_narration(const int16_t narration)
       strcpy(narration_str, "You have descended into a vast dungeon where the "
                             "Pebbles are guarded by evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 90
-      strcpy(narration_str, "Welcome, hero, to PebbleQuest!\nBy David C. Drake"
-                            ":\ndavidcdrake.com/\n            pebblequest");
+    case INTRO_NARRATION_3: // Total chars: 92
+      strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
+                            "Drake:\n davidcdrake.com/\n"
+                            "            pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
       strcpy(narration_str, "        CONTROLS\nForward: \"Up\"\nBack: \"Down\""
@@ -965,7 +999,7 @@ Description: Prepares and displays a given window.
 
     Outputs: None.
 ******************************************************************************/
-void show_window(const int16_t window, const bool animated)
+void show_window(const int8_t window, const bool animated)
 {
   // If it's a menu, reload menu data and set to the appropriate index:
   if (window < NUM_MENUS)
@@ -1193,7 +1227,7 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
   heavy_item_t *item;
-  int16_t item_type = get_nth_item_type(cell_index->row);
+  int8_t item_type = get_nth_item_type(cell_index->row);
 
   strcat_item_name(title_str, item_type);
 
@@ -1355,7 +1389,7 @@ void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data)
 {
-  int16_t old_item_equip_target;
+  int8_t old_item_equip_target;
   bool old_item_was_equipped = false;
 
   if (menu_layer == g_menu_layers[MAIN_MENU])
@@ -1364,10 +1398,10 @@ void menu_select_callback(MenuLayer *menu_layer,
     {
       case 0: // Play
         show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
-        if (g_player->depth == 1 &&
-            get_cell_type(g_player->position) == ENTRANCE)
+        if (g_player->depth == 0)
         {
           show_narration(INTRO_NARRATION_1);
+          init_location();
         }
         break;
       case 1: // Inventory
@@ -1557,7 +1591,7 @@ Description: Draws a (simplistic) 3D scene based on the player's current
 ******************************************************************************/
 void draw_scene(Layer *layer, GContext *ctx)
 {
-  int16_t i, depth;
+  int8_t i, depth;
   GPoint cell, cell_2;
 
   // First, draw the background, floor, and ceiling:
@@ -1640,7 +1674,7 @@ Description: Draws the floor and ceiling.
 ******************************************************************************/
 void draw_floor_and_ceiling(GContext *ctx)
 {
-  int16_t x, y, max_y, shading_offset;
+  uint8_t x, y, max_y, shading_offset;
 
   x     = 2;
   max_y = g_back_wall_coords[MAX_VISIBILITY_DEPTH - x]
@@ -1693,8 +1727,8 @@ Description: Draws any walls that exist along the back and sides of a given
 ******************************************************************************/
 void draw_cell_walls(GContext *ctx,
                      const GPoint cell,
-                     const int16_t depth,
-                     const int16_t position)
+                     const int8_t depth,
+                     const int8_t position)
 {
   int16_t left, right, top, bottom, y_offset;
   bool back_wall_drawn, left_wall_drawn, right_wall_drawn;
@@ -1853,10 +1887,10 @@ Description: Draws an NPC or any other contents present in a given cell.
 ******************************************************************************/
 void draw_cell_contents(GContext *ctx,
                         const GPoint cell,
-                        const int16_t depth,
-                        const int16_t position)
+                        const int8_t depth,
+                        const int8_t position)
 {
-  int16_t drawing_unit; // Reference variable for drawing contents at depth.
+  uint8_t drawing_unit; // Reference variable for drawing contents at depth.
   GPoint floor_center_point;
   npc_t *npc = get_npc_at(cell);
 
@@ -2192,45 +2226,6 @@ void draw_shaded_quad(GContext *ctx,
 }
 
 /******************************************************************************
-   Function: fill_quad
-
-Description: Draws a filled quadrilateral according to specifications. Assumes
-             the left and right sides are parallel.
-
-     Inputs: ctx         - Pointer to the relevant graphics context.
-             upper_left  - Coordinates of the upper-left point.
-             lower_left  - Coordinates of the lower-left point.
-             upper_right - Coordinates of the upper-right point.
-             lower_right - Coordinates of the lower-right point.
-             color       - Desired color.
-
-    Outputs: None.
-******************************************************************************/
-void fill_quad(GContext *ctx,
-               const GPoint upper_left,
-               const GPoint lower_left,
-               const GPoint upper_right,
-               const GPoint lower_right,
-               const GColor color)
-{
-  int16_t i;
-  float dy_over_width = (float) (upper_right.y - upper_left.y) /
-                                (upper_right.x - upper_left.x);
-
-  graphics_context_set_stroke_color(ctx, color);
-  for (i = upper_left.x;
-       i <= upper_right.x && i < GRAPHICS_FRAME_WIDTH;
-       ++i)
-  {
-    graphics_draw_line(ctx,
-                       GPoint(i, upper_left.y + (i - upper_left.x) *
-                                 dy_over_width),
-                       GPoint(i, lower_left.y - (i - upper_left.x) *
-                                 dy_over_width));
-  }
-}
-
-/******************************************************************************
    Function: draw_status_bar
 
 Description: Draws the lower status bar.
@@ -2284,7 +2279,7 @@ void draw_status_meter(GContext *ctx,
                        const GPoint origin,
                        const float ratio)
 {
-  int16_t i, j;
+  uint8_t i, j;
 
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_fill_color(ctx, GColorWhite);
@@ -2331,12 +2326,12 @@ Description: Draws a shaded ellipse according to given specifications.
 ******************************************************************************/
 /*void draw_shaded_ellipse(GContext *ctx,
                          const GPoint center,
-                         const int16_t h_radius,
-                         const int16_t v_radius,
+                         const int8_t h_radius,
+                         const int8_t v_radius,
                          const GPoint shading_ref)
 {
   int32_t theta;
-  int16_t i, j, shading_offset;
+  int8_t i, j, shading_offset;
 
   // Determine the shading offset:
   shading_offset = 1 + shading_ref.y / MAX_VISIBILITY_DEPTH;
@@ -2385,11 +2380,11 @@ Description: Draws a shaded sphere according to given specifications.
 ******************************************************************************/
 /*bool draw_shaded_sphere(GContext *ctx,
                         const GPoint center,
-                        const int16_t radius,
-                        int16_t shading_offset)
+                        const int8_t radius,
+                        int8_t shading_offset)
 {
   int32_t theta;
-  int16_t i, x_offset, y_offset;
+  int8_t i, x_offset, y_offset;
 
   if (center.x + radius < 0 ||
       center.x - radius >= GRAPHICS_FRAME_WIDTH ||
@@ -2448,12 +2443,12 @@ Description: Draws a filled ellipse according to given specifications.
 ******************************************************************************/
 void fill_ellipse(GContext *ctx,
                   const GPoint center,
-                  const int16_t h_radius,
-                  const int16_t v_radius,
+                  const int8_t h_radius,
+                  const int8_t v_radius,
                   const GColor color)
 {
-  int32_t theta;
-  int16_t x_offset, y_offset;
+  int16_t theta;
+  uint8_t x_offset, y_offset;
 
   graphics_context_set_stroke_color(ctx, color);
   for (theta = 0; theta < NINETY_DEGREES; theta += DEFAULT_ROTATION_RATE)
@@ -2484,11 +2479,11 @@ Description: Draws the outline of an ellipse according to given specifications.
 ******************************************************************************/
 /*void draw_ellipse(GContext *ctx,
                   const GPoint center,
-                  const int16_t h_radius,
-                  const int16_t v_radius)
+                  const int8_t h_radius,
+                  const int8_t v_radius)
 {
   int32_t theta;
-  int16_t x_offset, y_offset;
+  int8_t x_offset, y_offset;
 
   for (theta = 0; theta < NINETY_DEGREES; theta += DEFAULT_ROTATION_RATE)
   {
@@ -2706,26 +2701,22 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     if (g_player->equipped_pebble > NONE)
     {
       flash_screen();
-      if (npc != NULL)
-      {
-        damage_npc(npc, g_player->stats[MAGICAL_POWER] - npc->magical_defense);
-      }
+      cast_spell_on_npc(npc,
+                        g_player->equipped_pebble,
+                        g_player->stats[MAGICAL_POWER]);
     }
 
     // Otherwise, the player is attacking with a physical weapon:
     else
     {
-      if (npc != NULL)
+      damage_npc(npc, g_player->stats[PHYSICAL_POWER] - npc->physical_defense);
+      if (get_heavy_item_equipped_at(RIGHT_HAND) &&
+          get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
       {
-        damage_npc(npc,
-                   g_player->stats[PHYSICAL_POWER] - npc->physical_defense);
-        if (get_heavy_item_equipped_at(RIGHT_HAND) &&
-            get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
-        {
-          damage_npc(npc,
-                     g_player->stats[MAGICAL_POWER] / 2 -
-                       npc->magical_defense);
-        }
+        flash_screen();
+        cast_spell_on_npc(npc,
+                        get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble,
+                        g_player->stats[MAGICAL_POWER] / 2);
       }
 
       // Set up the "attack slash" graphic:
@@ -2845,16 +2836,16 @@ Description: Handles changes to the game world every second while in active
 ******************************************************************************/
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 {
-  int16_t i;
+  int8_t i;
 
   if (g_current_window == GRAPHICS_WINDOW)
   {
     // Handle NPC behavior:
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      if (g_player->npcs[i].type > NONE)
+      if (g_location->npcs[i].type > NONE)
       {
-        determine_npc_behavior(&g_player->npcs[i]);
+        determine_npc_behavior(&g_location->npcs[i]);
         if (g_player->stats[CURRENT_HEALTH] <= 0)
         {
           return;
@@ -2907,7 +2898,7 @@ Description: Concatenates the name of a given item onto a given string.
 
     Outputs: None.
 ******************************************************************************/
-void strcat_item_name(char *dest_str, const int16_t item_type)
+void strcat_item_name(char *const dest_str, const int8_t item_type)
 {
   if (item_type < FIRST_HEAVY_ITEM)
   {
@@ -2962,7 +2953,7 @@ Description: Concatenates the name of a given magic type onto a given string.
 
     Outputs: None.
 ******************************************************************************/
-void strcat_magic_type(char *dest_str, const int16_t magic_type)
+void strcat_magic_type(char *const dest_str, const int8_t magic_type)
 {
   strcat(dest_str, " of ");
   switch(magic_type)
@@ -3001,7 +2992,7 @@ Description: Concatenates the name of a given stat onto a given string.
 
     Outputs: None.
 ******************************************************************************/
-void strcat_stat_name(char *dest_str, const int16_t stat)
+void strcat_stat_name(char *const dest_str, const int8_t stat)
 {
   switch(stat)
   {
@@ -3049,7 +3040,7 @@ Description: Concatenates the value of a given stat onto a given string. (This
 
     Outputs: None.
 ******************************************************************************/
-void strcat_stat_value(char *dest_str, const int16_t stat)
+void strcat_stat_value(char *const dest_str, const int8_t stat)
 {
   if (stat == MAX_HEALTH || stat == MAX_ENERGY)
   {
@@ -3074,9 +3065,9 @@ Description: Concatenates a "small" integer value onto the end of a string. The
 
     Outputs: None.
 ******************************************************************************/
-void strcat_int(char *dest_str, int16_t integer)
+void strcat_int(char *const dest_str, int16_t integer)
 {
-  int16_t i, j;
+  int8_t i, j;
   static char int_str[MAX_INT_DIGITS + 1];
   bool negative = false;
 
@@ -3136,7 +3127,7 @@ Description: Adds an item of type "g_current_selection" to the player's
 ******************************************************************************/
 void add_current_selection_to_inventory(void)
 {
-  int16_t i;
+  int8_t i;
 
   // Pebbles:
   if (g_current_selection < FIRST_HEAVY_ITEM)
@@ -3200,7 +3191,7 @@ Description: Unequips the equipped item (if any) at a given equip target, then
 
     Outputs: None.
 ******************************************************************************/
-void unequip_item_at(int16_t equip_target)
+void unequip_item_at(const int8_t equip_target)
 {
   heavy_item_t *heavy_item = get_heavy_item_equipped_at(equip_target);
 
@@ -3221,25 +3212,6 @@ void unequip_item_at(int16_t equip_target)
 }
 
 /******************************************************************************
-   Function: player_is_using_magic_type
-
-Description: Determines whether the player's attack currently utilizes a given
-             magic type (either because the associated Pebble is equipped or
-             because a weapon infused by the associated Pebble is equipped).
-
-     Inputs: magic_type - Integer representing the "magic type" of interest.
-
-    Outputs: "True" if the player is using the given magic type to attack.
-******************************************************************************/
-/*bool player_is_using_magic_type(int16_t magic_type)
-{
-  return g_player->equipped_pebble == magic_type ||
-         (get_heavy_item_equipped_at(equip_target) &&
-          get_heavy_item_equipped_at(equip_target)->infused_pebble ==
-            magic_type);
-}*/
-
-/******************************************************************************
    Function: adjust_minor_stats
 
 Description: Assigns values to the player's minor stats according to major stat
@@ -3252,12 +3224,13 @@ Description: Assigns values to the player's minor stats according to major stat
 ******************************************************************************/
 void adjust_minor_stats(void)
 {
-  int16_t i;
+  int8_t i;
 
-  // Set minor stats according to major stats (STRENGTH, AGILITY, INTELLECT):
+  // Set minor stats according to major stats:
   g_player->stats[MAX_HEALTH]       = g_player->stats[STRENGTH]  * 10;
-  g_player->stats[MAX_ENERGY]       = g_player->stats[INTELLECT] * 5 +
-                                        g_player->stats[AGILITY] * 5;
+  g_player->stats[MAX_ENERGY]       = g_player->stats[AGILITY] * 4 +
+                                        g_player->stats[STRENGTH] * 3 +
+                                        g_player->stats[INTELLECT] * 3;
   g_player->stats[PHYSICAL_POWER]   = g_player->stats[STRENGTH] +
                                         g_player->stats[AGILITY] / 2;
   g_player->stats[PHYSICAL_DEFENSE] = g_player->stats[AGILITY] +
@@ -3268,7 +3241,7 @@ void adjust_minor_stats(void)
                                         g_player->stats[INTELLECT] / 2;
   g_player->energy_loss_per_action  = MIN_ENERGY_LOSS_PER_ACTION;
 
-  // Apply weapon/armor effects:
+  // Weapon (or equipped Pebble):
   if (get_heavy_item_equipped_at(RIGHT_HAND))
   {
     // Weapons:
@@ -3280,7 +3253,7 @@ void adjust_minor_stats(void)
       g_player->energy_loss_per_action++;
     }
   }
-  else
+  else if (g_player->equipped_pebble > NONE)
   {
     g_player->energy_loss_per_action += g_player->stats[INTELLECT] / 3;
   }
@@ -3321,7 +3294,7 @@ Description: Initializes the global player character struct according to
 ******************************************************************************/
 void init_player(void)
 {
-  int16_t i;
+  int8_t i;
 
   g_player->level           = 1;
   g_player->exp_points      = 0;
@@ -3354,9 +3327,6 @@ void init_player(void)
   adjust_minor_stats();
   g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
   g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
-
-  // Finally, set up a new location:
-  init_location();
 }
 
 /******************************************************************************
@@ -3371,9 +3341,9 @@ Description: Initializes a non-player character (NPC) struct according to a
 
     Outputs: None.
 ******************************************************************************/
-void init_npc(npc_t *npc, const int16_t type, const GPoint position)
+void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
 {
-  int16_t i;
+  int8_t i;
 
   npc->type     = type;
   npc->position = position;
@@ -3467,7 +3437,7 @@ Description: Initializes a new heavy item struct according to a given type.
 
     Outputs: None.
 ******************************************************************************/
-void init_heavy_item(heavy_item_t *const item, const int16_t type)
+void init_heavy_item(heavy_item_t *const item, const int8_t type)
 {
   item->type           = type;
   item->infused_pebble = NONE;
@@ -3501,7 +3471,7 @@ Description: Initializes the global "back_wall_coords" array so that it
 ******************************************************************************/
 void init_wall_coords(void)
 {
-  int16_t i, j, wall_width;
+  uint8_t i, j, wall_width;
   const float perspective_modifier = 2.0; // Helps determine FOV, etc.
 
   for (i = 0; i < MAX_VISIBILITY_DEPTH - 1; ++i)
@@ -3556,7 +3526,8 @@ void init_wall_coords(void)
 /******************************************************************************
    Function: init_location
 
-Description: Initializes the "map" array.
+Description: Initializes the global location struct, setting up a new location
+             with an entrance, an exit, and a single NPC of type "MAGE".
 
      Inputs: None.
 
@@ -3564,13 +3535,13 @@ Description: Initializes the "map" array.
 ******************************************************************************/
 void init_location(void)
 {
-  int16_t i, j, builder_direction;
+  int8_t i, j, builder_direction;
   GPoint builder_position;
 
   // Remove any preexisting NPCs:
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    g_player->npcs[i].type = NONE;
+    g_location->npcs[i].type = NONE;
   }
 
   // Now set each cell to solid:
@@ -3578,7 +3549,7 @@ void init_location(void)
   {
     for (j = 0; j < MAP_HEIGHT; ++j)
     {
-      g_player->map[i][j] = SOLID;
+      g_location->map[i][j] = SOLID;
     }
   }
 
@@ -3671,7 +3642,7 @@ Description: Initializes the window at a given index of the "g_windows" array.
 
     Outputs: None.
 ******************************************************************************/
-void init_window(const int16_t window_index)
+void init_window(const int8_t window_index)
 {
   g_windows[window_index] = window_create();
 
@@ -3825,7 +3796,7 @@ Description: Deinitializes the window at a given index of the "g_windows"
 
     Outputs: None.
 ******************************************************************************/
-void deinit_window(const int16_t window_index)
+void deinit_window(const int8_t window_index)
 {
   if (window_index < NUM_MENUS)
   {
@@ -3853,7 +3824,7 @@ Description: Initializes the PebbleQuest app.
 ******************************************************************************/
 void init(void)
 {
-  int16_t i;
+  int8_t i;
 
   srand(time(NULL));
   g_current_window = MAIN_MENU;
@@ -3868,10 +3839,12 @@ void init(void)
   g_player_is_attacking = false;
 
   // Load saved data or initialize a brand new player struct:
-  g_player = malloc(sizeof(player_t));
+  g_player   = malloc(sizeof(player_t));
+  g_location = malloc(sizeof(location_t));
   if (persist_exists(STORAGE_KEY))
   {
     persist_read_data(STORAGE_KEY, g_player, sizeof(player_t));
+    persist_read_data(STORAGE_KEY + 1, g_location, sizeof(location_t));
   }
   else
   {
@@ -3901,12 +3874,14 @@ Description: Deinitializes the PebbleQuest app.
 ******************************************************************************/
 void deinit(void)
 {
-  int16_t i;
+  int8_t i;
 
   tick_timer_service_unsubscribe();
   app_focus_service_unsubscribe();
   persist_write_data(STORAGE_KEY, g_player, sizeof(player_t));
+  persist_write_data(STORAGE_KEY + 1, g_location, sizeof(location_t));
   free(g_player);
+  free(g_location);
   for (i = 0; i < NUM_WINDOWS; ++i)
   {
     deinit_window(i);

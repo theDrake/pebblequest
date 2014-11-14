@@ -35,6 +35,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define DEFAULT_MAJOR_STAT_VALUE   3 // For STRENGTH, AGILITY, and INTELLECT.
 #define MIN_REGEN                  1 // Min. health/energy recovery per second.
 #define MIN_DAMAGE                 2 // Min. damage per attack/spell/effect.
+#define MIN_SPELL_POTENCY          MIN_DAMAGE
 #define MIN_ENERGY_LOSS_PER_ACTION 2
 #define MAX_NPCS_AT_ONE_TIME       2
 
@@ -96,7 +97,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_DIRECTIONS 4
 
 // Other:
-#define MAP_WIDTH          10
+#define MAP_WIDTH          20
 #define MAP_HEIGHT         MAP_WIDTH
 #define RANDOM_POINT_NORTH GPoint(rand() % MAP_WIDTH, 0)
 #define RANDOM_POINT_SOUTH GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
@@ -253,38 +254,41 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 ******************************************************************************/
 
 typedef struct HeavyItem {
-  int16_t type,
-          infused_pebble,
-          equip_target;
+  int8_t type,
+         infused_pebble,
+         equip_target;
   bool equipped;
 } __attribute__((__packed__)) heavy_item_t;
 
-typedef struct NonPlayerCharacter {
-  GPoint position;
-  int16_t type,
-          health,
-          power,
-          physical_defense,
-          magical_defense,
-          temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
-          item;
-} __attribute__((__packed__)) npc_t;
-
 typedef struct PlayerCharacter {
   GPoint position;
-  int16_t direction,
-          map[MAP_WIDTH][MAP_HEIGHT], // Location data is here for convenience.
-          stats[NUM_CHARACTER_STATS],
-          constant_status_effects[NUM_CONSTANT_STATUS_EFFECTS],
-          pebbles[NUM_PEBBLE_TYPES],
-          equipped_pebble,
-          energy_loss_per_action,
-          exp_points,
-          level,
-          depth;
+  int8_t direction,
+         constant_status_effects[NUM_CONSTANT_STATUS_EFFECTS],
+         pebbles[NUM_PEBBLE_TYPES],
+         equipped_pebble,
+         energy_loss_per_action,
+         level,
+         depth;
+  int16_t stats[NUM_CHARACTER_STATS],
+          exp_points;
   heavy_item_t heavy_items[MAX_HEAVY_ITEMS]; // Clothing, armor, and weapons.
-  npc_t npcs[MAX_NPCS_AT_ONE_TIME];          // NPCs are here for convenience.
 } __attribute__((__packed__)) player_t;
+
+typedef struct NonPlayerCharacter {
+  GPoint position;
+  int8_t type,
+         health,
+         power,
+         physical_defense,
+         magical_defense,
+         temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
+         item;
+} __attribute__((__packed__)) npc_t;
+
+typedef struct Location {
+  int8_t map[MAP_WIDTH][MAP_HEIGHT];
+  npc_t npcs[MAX_NPCS_AT_ONE_TIME];
+} __attribute__((__packed__)) location_t;
 
 /******************************************************************************
   Global Variables
@@ -299,7 +303,7 @@ AppTimer *g_flash_timer,
 GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
-int16_t g_current_window,
+uint8_t g_current_window,
         g_current_narration,
         g_current_selection,
         g_attack_slash_x1,
@@ -309,6 +313,7 @@ int16_t g_current_window,
 bool g_player_is_attacking;
 GPath *g_compass_path;
 player_t *g_player;
+location_t *g_location;
 
 static const GPathInfo COMPASS_PATH_INFO = {
   .num_points = 4,
@@ -322,37 +327,40 @@ static const GPathInfo COMPASS_PATH_INFO = {
   Function Declarations
 ******************************************************************************/
 
-void set_player_direction(const int16_t new_direction);
-void move_player(const int16_t direction);
-void move_npc(npc_t *npc, const int16_t direction);
-void determine_npc_behavior(npc_t *npc);
-void damage_player(int16_t damage);
-void damage_npc(npc_t *npc, int16_t damage);
-void adjust_player_current_health(const int16_t amount);
-void adjust_player_current_mp(const int16_t amount);
-void add_new_npc(const int16_t npc_type, const GPoint position);
+void set_player_direction(const int8_t new_direction);
+void move_player(const int8_t direction);
+void move_npc(npc_t *const npc, const int8_t direction);
+void determine_npc_behavior(npc_t *const npc);
+void damage_player(int8_t damage);
+void damage_npc(npc_t *const npc, int8_t damage);
+void cast_spell_on_npc(npc_t *const npc,
+                       const int8_t spell_type,
+                       int8_t potency);
+void adjust_player_current_health(const int8_t amount);
+void adjust_player_current_mp(const int8_t amount);
+void add_new_npc(const int8_t npc_type, const GPoint position);
 GPoint get_npc_spawn_point(void);
-GPoint get_floor_center_point(const int16_t depth, const int16_t position);
+GPoint get_floor_center_point(const int8_t depth, const int8_t position);
 GPoint get_cell_farther_away(const GPoint reference_point,
-                             const int16_t direction,
-                             const int16_t distance);
-int16_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee);
-int16_t get_direction_to_the_left(const int16_t reference_direction);
-int16_t get_direction_to_the_right(const int16_t reference_direction);
-int16_t get_opposite_direction(const int16_t direction);
-int16_t get_nth_item_type(const int16_t n);
-int16_t get_num_pebble_types_owned(void);
-int16_t get_inventory_row_for_pebble(const int16_t pebble_type);
-int16_t get_num_heavy_items_owned(void);
-heavy_item_t *get_heavy_item_equipped_at(const int16_t equip_target);
-int16_t get_cell_type(const GPoint cell);
-void set_cell_type(GPoint cell, const int16_t type);
+                             const int8_t direction,
+                             const int8_t distance);
+int8_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee);
+int8_t get_direction_to_the_left(const int8_t reference_direction);
+int8_t get_direction_to_the_right(const int8_t reference_direction);
+int8_t get_opposite_direction(const int8_t direction);
+int8_t get_nth_item_type(const int8_t n);
+int8_t get_num_pebble_types_owned(void);
+int8_t get_inventory_row_for_pebble(const int8_t pebble_type);
+int8_t get_num_heavy_items_owned(void);
+heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target);
+int8_t get_cell_type(const GPoint cell);
+void set_cell_type(GPoint cell, const int8_t type);
 npc_t *get_npc_at(const GPoint cell);
 bool out_of_bounds(const GPoint cell);
 bool occupiable(const GPoint cell);
 bool touching(const GPoint cell, const GPoint cell_2);
-void show_narration(const int16_t narration);
-void show_window(const int16_t window, const bool animated);
+void show_narration(const int8_t narration);
+void show_window(const int8_t window, const bool animated);
 static void main_menu_draw_header_callback(GContext *ctx,
                                            const Layer *cell_layer,
                                            uint16_t section_index,
@@ -414,32 +422,26 @@ void draw_scene(Layer *layer, GContext *ctx);
 void draw_floor_and_ceiling(GContext *ctx);
 void draw_cell_walls(GContext *ctx,
                      const GPoint cell,
-                     const int16_t depth,
-                     const int16_t position);
+                     const int8_t depth,
+                     const int8_t position);
 void draw_cell_contents(GContext *ctx,
                         const GPoint cell,
-                        const int16_t depth,
-                        const int16_t position);
+                        const int8_t depth,
+                        const int8_t position);
 void draw_shaded_quad(GContext *ctx,
                       const GPoint upper_left,
                       const GPoint lower_left,
                       const GPoint upper_right,
                       const GPoint lower_right,
                       const GPoint shading_ref);
-void fill_quad(GContext *ctx,
-               const GPoint upper_left,
-               const GPoint lower_left,
-               const GPoint upper_right,
-               const GPoint lower_right,
-               const GColor color);
 void draw_status_bar(GContext *ctx);
 void draw_status_meter(GContext *ctx,
                        const GPoint origin,
                        const float ratio);
 void fill_ellipse(GContext *ctx,
                   const GPoint center,
-                  const int16_t h_radius,
-                  const int16_t v_radius,
+                  const int8_t h_radius,
+                  const int8_t v_radius,
                   const GColor color);
 void flash_screen(void);
 static void flash_timer_callback(void *data);
@@ -457,22 +459,22 @@ void graphics_click_config_provider(void *context);
 void narration_single_click(ClickRecognizerRef recognizer, void *context);
 void narration_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
-void strcat_item_name(char *dest_str, const int16_t item_type);
-void strcat_magic_type(char *dest_str, const int16_t magic_type);
-void strcat_stat_name(char *dest_str, const int16_t stat);
-void strcat_stat_value(char *dest_str, const int16_t stat);
-void strcat_int(char *dest_str, int16_t integer);
+void strcat_item_name(char *const dest_str, const int8_t item_type);
+void strcat_magic_type(char *const dest_str, const int8_t magic_type);
+void strcat_stat_name(char *const dest_str, const int8_t stat);
+void strcat_stat_value(char *const dest_str, const int8_t stat);
+void strcat_int(char *const dest_str, int16_t integer);
 void add_current_selection_to_inventory(void);
 void equip_heavy_item(heavy_item_t *const item);
-void unequip_item_at(int16_t equip_target);
+void unequip_item_at(const int8_t equip_target);
 void adjust_minor_stats(void);
 void init_player(void);
-void init_npc(npc_t *npc, const int16_t type, const GPoint position);
-void init_heavy_item(heavy_item_t *const item, const int16_t n);
+void init_npc(npc_t *const npc, const int8_t type, const GPoint position);
+void init_heavy_item(heavy_item_t *const item, const int8_t n);
 void init_wall_coords(void);
 void init_location(void);
-void init_window(const int16_t window_index);
-void deinit_window(const int16_t window_index);
+void init_window(const int8_t window_index);
+void deinit_window(const int8_t window_index);
 void init(void);
 void deinit(void);
 int main(void);
