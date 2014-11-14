@@ -228,8 +228,8 @@ void damage_npc(npc_t *const npc, int8_t damage)
   if (npc->health <= 0)
   {
     npc->type             = NONE;
-    g_player->exp_points += npc->health + npc->power + npc->physical_defense +
-                              npc->magical_defense;
+    g_player->exp_points += (npc->health + npc->power + npc->physical_defense +
+                             npc->magical_defense) / 4;
 
     // If the NPC had an item, leave it behind as loot:
     if (npc->item > NONE)
@@ -929,9 +929,9 @@ void show_narration(const int8_t narration)
       strcpy(narration_str, "You have descended into a vast dungeon where the "
                             "Pebbles are guarded by evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 92
-      strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
-                            "Drake:\n davidcdrake.com/\n"
+    case INTRO_NARRATION_3: // Total chars: 98
+      strcpy(narration_str, "Welcome, brave hero, to PebbleQuest!\n\nBy David "
+                            "C. Drake:\n davidcdrake.com/\n"
                             "            pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
@@ -945,7 +945,7 @@ void show_narration(const int8_t narration)
       break;
     case STATS_NARRATION_1: // Total chars: ??
       strcpy(narration_str, "Depth: ");
-      strcat_int(narration_str, g_player->depth);
+      strcat_int(narration_str, sizeof(location_t)); //g_player->depth);
       strcat(narration_str, "\nExp.: ");
       strcat_int(narration_str, g_player->exp_points);
       strcat(narration_str, "\nLevel: ");
@@ -2836,7 +2836,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
   if (g_current_window == GRAPHICS_WINDOW)
   {
     // Check for a "level up":
-    if (g_player->exp_points / 10 >= g_player->level)
+    if (g_player->exp_points / POINTS_PER_LEVEL >= g_player->level)
     {
       g_player->level++;
       show_window(LEVEL_UP_MENU, NOT_ANIMATED);
@@ -3358,9 +3358,9 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
 
   // Set major stats according to current dungeon depth:
   npc->health           = g_player->depth * 5;
-  npc->power            = g_player->depth * 2;
-  npc->physical_defense = g_player->depth;
-  npc->magical_defense  = g_player->depth;
+  npc->power            = g_player->depth * 5;
+  npc->physical_defense = g_player->depth * 5;
+  npc->magical_defense  = g_player->depth * 5;
 
   // Check for increased health:
   /*if (type == ORC        ||
@@ -3583,7 +3583,7 @@ void init_location(void)
   while (get_cell_type(builder_position) != EXIT)
   {
     // Add random loot or simply make the cell EMPTY:
-    if (rand() % 20 == 0)
+    if (rand() % 50 == 0)
     {
       set_cell_type(builder_position, RANDOM_ITEM); // Excludes Pebbles.
     }

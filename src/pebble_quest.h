@@ -32,6 +32,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Player- and NPC-related Constants
 ******************************************************************************/
 
+#define POINTS_PER_LEVEL           50
 #define DEFAULT_MAJOR_STAT_VALUE   3 // For STRENGTH, AGILITY, and INTELLECT.
 #define MIN_REGEN                  1 // Min. health/energy recovery per second.
 #define MIN_DAMAGE                 2 // Min. damage per attack/spell/effect.
@@ -97,7 +98,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_DIRECTIONS 4
 
 // Other:
-#define MAP_WIDTH          15
+#define MAP_WIDTH          12
 #define MAP_HEIGHT         MAP_WIDTH
 #define RANDOM_POINT_NORTH GPoint(rand() % MAP_WIDTH, 0)
 #define RANDOM_POINT_SOUTH GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
@@ -216,7 +217,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NO_CORNER_RADIUS      0
 #define SMALL_CORNER_RADIUS   3
 #define NINETY_DEGREES        (TRIG_MAX_ANGLE / 4)
-#define DEFAULT_ROTATION_RATE (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event
+#define DEFAULT_ROTATION_RATE (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event.
 #define ELLIPSE_RADIUS_RATIO  0.4
 #define ATTACK_SLASH_WIDTH    5
 
