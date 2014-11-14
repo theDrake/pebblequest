@@ -223,24 +223,18 @@ void damage_npc(npc_t *const npc, int8_t damage)
     damage = MIN_DAMAGE;
   }
   npc->health -= damage;
+
+  // Check for NPC death:
   if (npc->health <= 0)
   {
-    npc->type = NONE;
+    npc->type             = NONE;
+    g_player->exp_points += npc->health + npc->power + npc->physical_defense +
+                              npc->magical_defense;
 
     // If the NPC had an item, leave it behind as loot:
     if (npc->item > NONE)
     {
       set_cell_type(npc->position, npc->item);
-    }
-
-    // Apply experience points and check for a "level up":
-    g_player->exp_points += npc->health + npc->power + npc->physical_defense +
-                              npc->magical_defense;
-    if (g_player->exp_points / 10 >= g_player->level)
-    {
-      g_player->level++;
-      show_window(LEVEL_UP_MENU, NOT_ANIMATED);
-      show_narration(LEVEL_UP_NARRATION);
     }
   }
 }
@@ -2841,6 +2835,14 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 
   if (g_current_window == GRAPHICS_WINDOW)
   {
+    // Check for a "level up":
+    if (g_player->exp_points / 10 >= g_player->level)
+    {
+      g_player->level++;
+      show_window(LEVEL_UP_MENU, NOT_ANIMATED);
+      show_narration(LEVEL_UP_NARRATION);
+    }
+
     // Handle NPC behavior:
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {

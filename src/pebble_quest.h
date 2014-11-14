@@ -97,7 +97,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_DIRECTIONS 4
 
 // Other:
-#define MAP_WIDTH          20
+#define MAP_WIDTH          15
 #define MAP_HEIGHT         MAP_WIDTH
 #define RANDOM_POINT_NORTH GPoint(rand() % MAP_WIDTH, 0)
 #define RANDOM_POINT_SOUTH GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
@@ -235,7 +235,7 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MULTI_CLICK_MIN            2
 #define MULTI_CLICK_MAX            2   // We only care about double-clicks.
 #define MULTI_CLICK_TIMEOUT        0   // milliseconds
-#define MIN_ACTION_REPEAT_INTERVAL 200 // milliseconds per action
+#define MIN_ACTION_REPEAT_INTERVAL 250 // milliseconds per action
 #define LAST_CLICK_ONLY            true
 
 /******************************************************************************
