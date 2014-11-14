@@ -233,11 +233,11 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
   Button-related Constants
 ******************************************************************************/
 
-#define MULTI_CLICK_MIN            2
-#define MULTI_CLICK_MAX            2   // We only care about double-clicks.
-#define MULTI_CLICK_TIMEOUT        0   // milliseconds
-#define MIN_ACTION_REPEAT_INTERVAL 250 // milliseconds per action
-#define LAST_CLICK_ONLY            true
+#define MULTI_CLICK_MIN               2
+#define MULTI_CLICK_MAX               2   // We only care about double-clicks.
+#define MULTI_CLICK_TIMEOUT           0   // milliseconds
+#define PLAYER_ACTION_REPEAT_INTERVAL 300 // milliseconds
+#define LAST_CLICK_ONLY               true
 
 /******************************************************************************
   General Constants

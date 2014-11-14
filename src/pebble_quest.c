@@ -68,16 +68,16 @@ void move_player(const int8_t direction)
       set_cell_type(destination, EMPTY);
     }
 
+    // Check for an exit:
+    else if (get_cell_type(destination) == EXIT)
+    {
+      init_location();
+    }
+
     // Shift the player's position:
     else
     {
       g_player->position = destination;
-
-      // Check for an exit:
-      if (get_cell_type(destination) == EXIT)
-      {
-        init_location();
-      }
     }
 
     layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
@@ -929,9 +929,9 @@ void show_narration(const int8_t narration)
       strcpy(narration_str, "You have descended into a vast dungeon where the "
                             "Pebbles are guarded by evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 98
-      strcpy(narration_str, "Welcome, brave hero, to PebbleQuest!\n\nBy David "
-                            "C. Drake:\n davidcdrake.com/\n"
+    case INTRO_NARRATION_3: // Total chars: 92
+      strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
+                            "Drake:\n davidcdrake.com/\n"
                             "            pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
@@ -945,7 +945,7 @@ void show_narration(const int8_t narration)
       break;
     case STATS_NARRATION_1: // Total chars: ??
       strcpy(narration_str, "Depth: ");
-      strcat_int(narration_str, sizeof(location_t)); //g_player->depth);
+      strcat_int(narration_str, g_player->depth);
       strcat(narration_str, "\nExp.: ");
       strcat_int(narration_str, g_player->exp_points);
       strcat(narration_str, "\nLevel: ");
@@ -2667,6 +2667,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 {
   GPoint cell;
   npc_t *npc;
+  heavy_item_t *weapon = get_heavy_item_equipped_at(RIGHT_HAND);
   //Window *window = (Window *) context;
 
   if (g_current_window == GRAPHICS_WINDOW &&
@@ -2705,13 +2706,12 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
         damage_npc(npc,
                    g_player->stats[PHYSICAL_POWER] - npc->physical_defense);
       }
-      if (get_heavy_item_equipped_at(RIGHT_HAND) &&
-          get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
+      if (weapon && weapon->infused_pebble > NONE)
       {
         flash_screen();
         cast_spell_on_npc(npc,
-                        get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble,
-                        g_player->stats[MAGICAL_POWER] / 2);
+                          weapon->infused_pebble,
+                          g_player->stats[MAGICAL_POWER] / 2);
       }
 
       // Set up the "attack slash" graphic:
@@ -2748,7 +2748,7 @@ void graphics_click_config_provider(void *context)
 
   // "Up" button:
   window_single_repeating_click_subscribe(BUTTON_ID_UP,
-                                          MIN_ACTION_REPEAT_INTERVAL,
+                                          PLAYER_ACTION_REPEAT_INTERVAL,
                                           graphics_up_single_repeating_click);
   window_multi_click_subscribe(BUTTON_ID_UP,
                                MULTI_CLICK_MIN,
@@ -2759,7 +2759,7 @@ void graphics_click_config_provider(void *context)
 
   // "Down" button:
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN,
-                                         MIN_ACTION_REPEAT_INTERVAL,
+                                         PLAYER_ACTION_REPEAT_INTERVAL,
                                          graphics_down_single_repeating_click);
   window_multi_click_subscribe(BUTTON_ID_DOWN,
                                MULTI_CLICK_MIN,
@@ -2770,7 +2770,7 @@ void graphics_click_config_provider(void *context)
 
   // "Select" button:
   window_single_repeating_click_subscribe(BUTTON_ID_SELECT,
-                                       MIN_ACTION_REPEAT_INTERVAL,
+                                       PLAYER_ACTION_REPEAT_INTERVAL,
                                        graphics_select_single_repeating_click);
 }
 
@@ -3315,16 +3315,13 @@ void init_player(void)
   {
     g_player->pebbles[i] = 0;
   }
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
-    init_heavy_item(&g_player->heavy_items[i], NONE);
-  }
 
   // Add starting inventory items:
   init_heavy_item(&g_player->heavy_items[0], DAGGER);
-  init_heavy_item(&g_player->heavy_items[1], ROBE);
+  init_heavy_item(&g_player->heavy_items[1], STAFF);
+  init_heavy_item(&g_player->heavy_items[2], ROBE);
   equip_heavy_item(&g_player->heavy_items[0]);
-  equip_heavy_item(&g_player->heavy_items[1]);
+  equip_heavy_item(&g_player->heavy_items[2]);
 
   // Assign minor stats, then ensure health and energy are at 100%:
   adjust_minor_stats();
@@ -3357,10 +3354,8 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   }
 
   // Set major stats according to current dungeon depth:
-  npc->health           = g_player->depth * 5;
-  npc->power            = g_player->depth * 5;
-  npc->physical_defense = g_player->depth * 5;
-  npc->magical_defense  = g_player->depth * 5;
+  npc->health = npc->power = npc->physical_defense = npc->magical_defense =
+    g_player->depth * 3;
 
   // Check for increased health:
   /*if (type == ORC        ||
@@ -3412,7 +3407,7 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
     npc->magical_defense *= 2;
   }*/
 
-  // Some NPCs have a chance of carrying a random item:
+  // Some NPCs may carry a random item:
   if (type == ORC        ||
       type == GOBLIN     ||
       type == LIZARD_MAN ||
@@ -3423,7 +3418,7 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
     npc->item = rand() % 2 ? NONE : RANDOM_ITEM; // Excludes Pebbles.
   }
 
-  // Mages are the only NPCs to carry Pebbles:
+  // Mages are the only source of Pebbles:
   else if (type == MAGE)
   {
     npc->item = rand() % NUM_PEBBLE_TYPES;
