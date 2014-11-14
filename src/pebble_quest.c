@@ -218,32 +218,29 @@ Description: Damages a given NPC according to a given damage value. If this
 ******************************************************************************/
 void damage_npc(npc_t *const npc, int8_t damage)
 {
-  if (npc)
+  if (damage < MIN_DAMAGE)
   {
-    if (damage < MIN_DAMAGE)
+    damage = MIN_DAMAGE;
+  }
+  npc->health -= damage;
+  if (npc->health <= 0)
+  {
+    npc->type = NONE;
+
+    // If the NPC had an item, leave it behind as loot:
+    if (npc->item > NONE)
     {
-      damage = MIN_DAMAGE;
+      set_cell_type(npc->position, npc->item);
     }
-    npc->health -= damage;
-    if (npc->health <= 0)
+
+    // Apply experience points and check for a "level up":
+    g_player->exp_points += npc->health + npc->power + npc->physical_defense +
+                              npc->magical_defense;
+    if (g_player->exp_points / 10 >= g_player->level)
     {
-      npc->type = NONE;
-
-      // If the NPC had an item, leave it behind as loot:
-      if (npc->item > NONE)
-      {
-        set_cell_type(npc->position, npc->item);
-      }
-
-      // Apply experience points and check for a "level up":
-      g_player->exp_points += npc->health + npc->power + npc->physical_defense +
-                                npc->magical_defense;
-      if (g_player->exp_points / 10 >= g_player->level)
-      {
-        g_player->level++;
-        show_window(LEVEL_UP_MENU, NOT_ANIMATED);
-        show_narration(LEVEL_UP_NARRATION);
-      }
+      g_player->level++;
+      show_window(LEVEL_UP_MENU, NOT_ANIMATED);
+      show_narration(LEVEL_UP_NARRATION);
     }
   }
 }
@@ -2690,7 +2687,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       npc = get_npc_at(cell);
 
       // If we've found an NPC or the attack isn't ranged, we're done:
-      if (npc != NULL || g_player->equipped_pebble == NONE)
+      if (npc || g_player->equipped_pebble == NONE)
       {
         break;
       }
@@ -2709,7 +2706,11 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     // Otherwise, the player is attacking with a physical weapon:
     else
     {
-      damage_npc(npc, g_player->stats[PHYSICAL_POWER] - npc->physical_defense);
+      if (npc)
+      {
+        damage_npc(npc,
+                   g_player->stats[PHYSICAL_POWER] - npc->physical_defense);
+      }
       if (get_heavy_item_equipped_at(RIGHT_HAND) &&
           get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
       {
