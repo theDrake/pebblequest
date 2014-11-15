@@ -290,7 +290,7 @@ void cast_spell_on_npc(npc_t *const npc,
   if (npc)
   {
     // First, attempt to apply a status effect:
-    if (rand() % potency > rand % npc->magical_defense)
+    if (rand() % potency > rand() % npc->magical_defense)
     {
       npc->status_effects[pebble_type] += potency;
     }

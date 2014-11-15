@@ -34,7 +34,6 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 
 #define POINTS_PER_LEVEL           50
 #define DEFAULT_MAJOR_STAT_VALUE   3 // For STRENGTH, AGILITY, and INTELLECT.
-#define MIN_REGEN                  1 // Min. health/energy recovery per second.
 #define MIN_DAMAGE                 2 // Min. damage per attack/spell/effect.
 #define MIN_SPELL_POTENCY          MIN_DAMAGE
 #define MIN_ENERGY_LOSS_PER_ACTION 2
