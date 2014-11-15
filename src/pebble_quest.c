@@ -2762,7 +2762,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
         if (rand() % g_player->stats[PHYSICAL_POWER] >
               rand() % npc->physical_defense)
         {
-          npc->status_effects[weapon % 2 ? WOUNDED : STUNNED] +=
+          npc->status_effects[weapon->type % 2 ? WOUNDED : STUNNED] +=
             g_player->stats[PHYSICAL_POWER] / 2;
         }
 
