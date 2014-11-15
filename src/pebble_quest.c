@@ -2906,8 +2906,11 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         }
 
         // Apply wounding damage:
-        damage_npc(&g_location->npcs[i],
-                   g_location->npcs[i].status_effects[WOUNDED]);
+        if (g_location->npcs[i].status_effects[WOUNDED])
+        {
+          damage_npc(&g_location->npcs[i],
+                     g_location->npcs[i].status_effects[WOUNDED]);
+        }
 
         // Reduce all status effects:
         for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
