@@ -2755,12 +2755,25 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                    g_player->stats[PHYSICAL_POWER] -
                      (npc->physical_defense - npc->status_effects[BURNED]));
       }
-      if (weapon && weapon->infused_pebble > NONE)
+
+      if (weapon)
       {
-        flash_screen();
-        cast_spell_on_npc(npc,
-                          weapon->infused_pebble,
-                          g_player->stats[MAGICAL_POWER] / 2);
+        // Check for WOUNDED/STUNNED effect from sharp/blunt weapons:
+        if (rand() % g_player->stats[PHYSICAL_POWER] >
+              rand() % npc->physical_defense)
+        {
+          npc->status_effects[weapon % 2 ? WOUNDED : STUNNED] +=
+            g_player->stats[PHYSICAL_POWER] / 2;
+        }
+
+        // Check for an infused Pebble:
+        if (weapon->infused_pebble > NONE)
+        {
+          flash_screen();
+          cast_spell_on_npc(npc,
+                            weapon->infused_pebble,
+                            g_player->stats[MAGICAL_POWER] / 2);
+        }
       }
 
       // Set up the "attack slash" graphic:
