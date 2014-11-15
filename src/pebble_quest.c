@@ -1420,7 +1420,7 @@ void menu_select_callback(MenuLayer *menu_layer,
                           void *data)
 {
   int8_t old_item_equip_target;
-  bool old_item_was_equipped = false;
+  bool item_was_equipped = false;
 
   if (menu_layer == g_menu_layers[MAIN_MENU])
   {
@@ -1500,8 +1500,17 @@ void menu_select_callback(MenuLayer *menu_layer,
       if (g_player->heavy_items[cell_index->row].infused_pebble == NONE)
       {
         // Infuse the item:
+        if (g_player->heavy_items[cell_index->row].equipped)
+        {
+          unequip_item_at(g_player->heavy_items[cell_index->row].equip_target);
+          item_was_equipped = true;
+        }
         g_player->heavy_items[cell_index->row].infused_pebble =
           g_current_selection;
+        if (item_was_equipped)
+        {
+          equip_heavy_item(&g_player->heavy_items[cell_index->row]);
+        }
 
         // Remove the Pebble from the pool of equippable/infusable Pebbles:
         g_player->pebbles[g_current_selection]--;
@@ -1526,7 +1535,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       if (g_player->heavy_items[cell_index->row].equipped)
       {
         unequip_item_at(old_item_equip_target);
-        old_item_was_equipped = true;
+        item_was_equipped = true;
       }
 
       // Reinitialize the heavy item struct:
@@ -1534,7 +1543,7 @@ void menu_select_callback(MenuLayer *menu_layer,
                       g_current_selection);
 
       // If old item was equipped, equip new one if it has the same equip target:
-      if (old_item_was_equipped &&
+      if (item_was_equipped &&
           g_player->heavy_items[cell_index->row].equip_target ==
             old_item_equip_target)
       {
