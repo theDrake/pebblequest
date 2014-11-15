@@ -325,7 +325,7 @@ void cast_spell_on_npc(npc_t *const npc,
                        const int8_t pebble_type,
                        int8_t potency);
 void adjust_player_current_health(const int8_t amount);
-void adjust_player_current_mp(const int8_t amount);
+void adjust_player_current_energy(const int8_t amount);
 void add_new_npc(const int8_t npc_type, const GPoint position);
 GPoint get_npc_spawn_point(void);
 GPoint get_floor_center_point(const int8_t depth, const int8_t position);

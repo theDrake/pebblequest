@@ -148,7 +148,7 @@ void determine_npc_behavior(npc_t *const npc)
         damage_player(damage - g_player->stats[PHYSICAL_DEFENSE]);
         if (g_player->stats[BACKLASH_DAMAGE])
         {
-          damage_npc(npc, damage / 2 + g_player->stats[BACKLASH_DAMAGE])
+          damage_npc(npc, damage / 2 + g_player->stats[BACKLASH_DAMAGE]);
         }
       }
     }
@@ -250,7 +250,7 @@ void damage_npc(npc_t *const npc, int8_t damage)
   npc->health -= damage;
 
   // Check for health absorption:
-  if (npc->status_effects[LIFE_DRAIN])
+  if (npc->status_effects[DRAINED])
   {
     adjust_player_current_health(damage);
   }
@@ -290,13 +290,13 @@ void cast_spell_on_npc(npc_t *const npc,
   if (npc)
   {
     // First, attempt to apply a status effect:
-    if (rand() % potency > rand % (npc->magical_defense * 2))
+    if (rand() % potency > rand % npc->magical_defense)
     {
       npc->status_effects[pebble_type] += potency;
     }
 
     // Next, apply damage:
-    potency -= (npc->magical_defense - npc->status_effects[SHOCK];
+    potency -= (npc->magical_defense - npc->status_effects[SHOCKED]);
     if (potency < MIN_SPELL_POTENCY)
     {
       potency = MIN_SPELL_POTENCY;
@@ -2898,7 +2898,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 
         // Apply wounding damage:
         damage_npc(&g_location->npcs[i],
-                   &g_location->npcs[i].status_effects[WOUNDED]);
+                   g_location->npcs[i].status_effects[WOUNDED]);
 
         // Reduce all status effects:
         for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
@@ -3353,18 +3353,16 @@ void init_player(void)
   g_player->exp_points      = 0;
   g_player->depth           = 0;
   g_player->equipped_pebble = NONE;
-  for (i = 0; i < NUM_MAJOR_STATS; ++i)
-  {
-    g_player->stats[i] = DEFAULT_MAJOR_STAT_VALUE;
-  }
-  for (i = 0; i < NUM_CONSTANT_STATUS_EFFECTS; ++i)
-  {
-    g_player->constant_status_effects[i] = 0;
-  }
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
   {
     g_player->pebbles[i] = 0;
   }
+  for (i = 0; i < NUM_MAJOR_STATS; ++i)
+  {
+    g_player->stats[i] = DEFAULT_MAJOR_STAT_VALUE;
+  }
+  g_player->stats[HEALTH_REGEN]    = g_player->stats[ENERGY_REGEN]     = 1;
+  g_player->stats[BACKLASH_DAMAGE] = g_player->stats[SPELL_ABSORPTION] = 0;
 
   // Add starting inventory items:
   init_heavy_item(&g_player->heavy_items[0], DAGGER);
