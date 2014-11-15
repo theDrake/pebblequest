@@ -116,21 +116,46 @@ Description: Determines what a given NPC should do.
 ******************************************************************************/
 void determine_npc_behavior(npc_t *const npc)
 {
-  if (touching(npc->position, g_player->position))
+  int8_t damage;
+
+  if (npc->status_effects[STUNNED] == 0)
   {
-    if (npc->type == MAGE)
+    if (npc->status_effects[INTIMIDATED])
     {
-      flash_screen();
-      damage_player(npc->power - g_player->stats[MAGICAL_DEFENSE]);
+      move_npc(npc,
+            get_opposite_direction(get_pursuit_direction(npc->position,
+                                                         g_player->position)));
+    }
+    if (touching(npc->position, g_player->position))
+    {
+      damage = npc->power - npc->status_effects[FROZEN];
+      if (npc->type == MAGE)
+      {
+        flash_screen();
+        if (g_player->stats[SPELL_ABSORPTION] &&
+            rand() % g_player->stats[MAGICAL_POWER] +
+              g_player->stats[SPELL_ABSORPTION] > rand() % damage)
+        {
+          adjust_player_current_energy(damage);
+        }
+        else
+        {
+          damage_player(damage - g_player->stats[MAGICAL_DEFENSE]);
+        }
+      }
+      else
+      {
+        damage_player(damage - g_player->stats[PHYSICAL_DEFENSE]);
+        if (g_player->stats[BACKLASH_DAMAGE])
+        {
+          damage_npc(npc, damage / 2 + g_player->stats[BACKLASH_DAMAGE])
+        }
+      }
     }
     else
     {
-      damage_player(npc->power - g_player->stats[PHYSICAL_DEFENSE]);
+      move_npc(npc, get_pursuit_direction(npc->position, g_player->position));
     }
-  }
-  else
-  {
-    move_npc(npc, get_pursuit_direction(npc->position, g_player->position));
   }
 }
 
@@ -224,6 +249,12 @@ void damage_npc(npc_t *const npc, int8_t damage)
   }
   npc->health -= damage;
 
+  // Check for health absorption:
+  if (npc->status_effects[LIFE_DRAIN])
+  {
+    adjust_player_current_health(damage);
+  }
+
   // Check for NPC death:
   if (npc->health <= 0)
   {
@@ -245,19 +276,27 @@ void damage_npc(npc_t *const npc, int8_t damage)
 Description: Applies the effects of a given spell, with a given potency, to a
              given NPC.
 
-     Inputs: npc        - Pointer to the targeted NPC.
-             spell_type - Integer representing the type of spell to be cast.
-             potency    - Amount of magical power being brought to bear.
+     Inputs: npc         - Pointer to the targeted NPC.
+             pebble_type - Integer representing the Pebble used to cast the
+                           spell.
+             potency     - Amount of magical power being brought to bear.
 
     Outputs: None.
 ******************************************************************************/
 void cast_spell_on_npc(npc_t *const npc,
-                       const int8_t spell_type,
+                       const int8_t pebble_type,
                        int8_t potency)
 {
   if (npc)
   {
-    potency -= npc->magical_defense;
+    // First, attempt to apply a status effect:
+    if (rand() % potency > rand % (npc->magical_defense * 2))
+    {
+      npc->status_effects[pebble_type] += potency;
+    }
+
+    // Next, apply damage:
+    potency -= (npc->magical_defense - npc->status_effects[SHOCK];
     if (potency < MIN_SPELL_POTENCY)
     {
       potency = MIN_SPELL_POTENCY;
@@ -959,7 +998,7 @@ void show_narration(const int8_t narration)
       break;
     case STATS_NARRATION_2: // Total chars: ??
       strcpy(narration_str, "");
-      for (i = NUM_MAJOR_STATS; i < NUM_CHARACTER_STATS; ++i)
+      for (i = PHYSICAL_POWER; i < CURRENT_HEALTH; ++i)
       {
         strcat_stat_name(narration_str, i);
         strcat_stat_value(narration_str, i);
@@ -2704,7 +2743,8 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       if (npc)
       {
         damage_npc(npc,
-                   g_player->stats[PHYSICAL_POWER] - npc->physical_defense);
+                   g_player->stats[PHYSICAL_POWER] -
+                     (npc->physical_defense - npc->status_effects[BURNED]));
       }
       if (weapon && weapon->infused_pebble > NONE)
       {
@@ -2831,7 +2871,7 @@ Description: Handles changes to the game world every second while in active
 ******************************************************************************/
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 {
-  int8_t i;
+  int8_t i, j;
 
   if (g_current_window == GRAPHICS_WINDOW)
   {
@@ -2846,12 +2886,24 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     // Handle NPC behavior:
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      if (g_location->npcs[i].type > NONE)
+      if (time(NULL) % 2 && g_location->npcs[i].type > NONE)
       {
         determine_npc_behavior(&g_location->npcs[i]);
+
+        // Check for player death:
         if (g_player->stats[CURRENT_HEALTH] <= 0)
         {
           return;
+        }
+
+        // Apply wounding damage:
+        damage_npc(&g_location->npcs[i],
+                   &g_location->npcs[i].status_effects[WOUNDED]);
+
+        // Reduce all status effects:
+        for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
+        {
+          g_location->npcs[i].status_effects[j] /= 2;
         }
       }
     }
@@ -2864,10 +2916,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Handle player stat recovery:
-    adjust_player_current_health(MIN_REGEN +
-                    g_player->constant_status_effects[INCREASED_HEALTH_REGEN]);
-    adjust_player_current_energy(MIN_REGEN +
-                    g_player->constant_status_effects[INCREASED_ENERGY_REGEN]);
+    adjust_player_current_health(g_player->stats[HEALTH_REGEN]);
+    adjust_player_current_energy(g_player->stats[ENERGY_REGEN]);
 
     layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
   }
@@ -3178,7 +3228,7 @@ void equip_heavy_item(heavy_item_t *const heavy_item)
   if (heavy_item->equip_target < RIGHT_HAND &&
       heavy_item->infused_pebble > NONE)
   {
-    g_player->constant_status_effects[heavy_item->infused_pebble]++;
+    g_player->stats[heavy_item->infused_pebble]++;
   }
   adjust_minor_stats();
 }
@@ -3208,7 +3258,7 @@ void unequip_item_at(const int8_t equip_target)
     if (heavy_item->equip_target < RIGHT_HAND &&
         heavy_item->infused_pebble > NONE)
     {
-      g_player->constant_status_effects[heavy_item->infused_pebble]--;
+      g_player->stats[heavy_item->infused_pebble]--;
     }
   }
   adjust_minor_stats();
@@ -3348,14 +3398,14 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   npc->type     = type;
   npc->position = position;
   npc->item     = NONE;
-  for (i = 0; i < NUM_TEMP_STATUS_EFFECTS; ++i)
+  for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
   {
-    npc->temp_status_effects[i] = 0;
+    npc->status_effects[i] = 0;
   }
 
   // Set major stats according to current dungeon depth:
   npc->health = npc->power = npc->physical_defense = npc->magical_defense =
-    g_player->depth * 3;
+    g_player->depth * 2;
 
   // Check for increased health:
   /*if (type == ORC        ||

@@ -65,20 +65,24 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define MAGE          21
 #define NUM_NPC_TYPES 22
 
-// Character stats:
-#define STRENGTH            0
-#define AGILITY             1
-#define INTELLECT           2
-#define PHYSICAL_POWER      3
-#define PHYSICAL_DEFENSE    4
-#define MAGICAL_POWER       5
-#define MAGICAL_DEFENSE     6
-#define MAX_HEALTH          7
-#define MAX_ENERGY          8
-#define CURRENT_HEALTH      9
-#define CURRENT_ENERGY      10
-#define NUM_CHARACTER_STATS 11
-#define NUM_MAJOR_STATS     3 // STRENGTH, AGILITY, and INTELLECT.
+// Character stats (the first seven correspond to Pebble effects):
+#define INTELLECT           0
+#define STRENGTH            1
+#define AGILITY             2
+#define HEALTH_REGEN        3
+#define BACKLASH_DAMAGE     4
+#define ENERGY_REGEN        5
+#define SPELL_ABSORPTION    6
+#define PHYSICAL_POWER      7
+#define PHYSICAL_DEFENSE    8
+#define MAGICAL_POWER       9
+#define MAGICAL_DEFENSE     10
+#define MAX_HEALTH          11
+#define MAX_ENERGY          12
+#define CURRENT_HEALTH      13
+#define CURRENT_ENERGY      14
+#define NUM_CHARACTER_STATS 15
+#define NUM_MAJOR_STATS     3 // INTELLECT, STRENGTH, and AGILITY.
 
 /******************************************************************************
   Location-related Constants
@@ -130,8 +134,8 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 ******************************************************************************/
 
 #define NONE                 -1
-#define PEBBLE_OF_FIRE       0
-#define PEBBLE_OF_ICE        1
+#define PEBBLE_OF_ICE        0
+#define PEBBLE_OF_FIRE       1
 #define PEBBLE_OF_LIGHTNING  2
 #define PEBBLE_OF_LIFE       3
 #define PEBBLE_OF_DEATH      4
@@ -160,33 +164,15 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define RIGHT_HAND        2
 #define NUM_EQUIP_TARGETS 3
 
-// Constant status effects (via infused robes/armor/shields):
-#define INCREASED_STRENGTH          0
-#define INCREASED_INTELLECT         1
-#define INCREASED_AGILITY           2
-#define INCREASED_HEALTH_REGEN      3
-#define BACKLASH_DAMAGE             4
-#define INCREASED_ENERGY_REGEN      5
-#define SPELL_ABSORPTION            6
-#define NUM_CONSTANT_STATUS_EFFECTS 7
-
-// Weapon infusion effects:
-#define DECREASE_INTELLECT 0
-#define DECREASE_AGILITY   1
-#define DECREASE_STRENGTH  2
-#define ABSORB_HEALTH      3
-#define WOUND              4
-#define STUN               5
-#define INTIMIDATE         6
-
 // Temporary status effects (via spells and infused weapons):
-#define DECREASED_INTELLECT     0
-#define DECREASED_STRENGTH      1
-#define DECREASED_AGILITY       2
-#define STUNNED                 3
-#define DAMAGE_OVER_TIME        4
-#define INTIMIDATED             5
-#define NUM_TEMP_STATUS_EFFECTS 6
+#define FROZEN             0
+#define BURNED             1
+#define SHOCKED            2
+#define DRAINED            3
+#define WOUNDED            4
+#define INTIMIDATED        5
+#define STUNNED            6
+#define NUM_STATUS_EFFECTS 7
 
 /******************************************************************************
   Graphics-related Constants
@@ -264,10 +250,11 @@ typedef struct HeavyItem {
 typedef struct PlayerCharacter {
   GPoint position;
   int8_t direction,
-         constant_status_effects[NUM_CONSTANT_STATUS_EFFECTS],
          pebbles[NUM_PEBBLE_TYPES],
          equipped_pebble,
          energy_loss_per_action,
+         health_regen_per_second,
+         energy_regen_per_second,
          level,
          depth;
   int16_t stats[NUM_CHARACTER_STATS],
@@ -279,11 +266,11 @@ typedef struct NonPlayerCharacter {
   GPoint position;
   int8_t type,
          health,
-         power,
-         physical_defense,
-         magical_defense,
-         temp_status_effects[NUM_TEMP_STATUS_EFFECTS],
          item;
+  uint8_t power,
+          physical_defense,
+          magical_defense,
+          status_effects[NUM_STATUS_EFFECTS];
 } __attribute__((__packed__)) npc_t;
 
 typedef struct Location {
@@ -335,7 +322,7 @@ void determine_npc_behavior(npc_t *const npc);
 void damage_player(int8_t damage);
 void damage_npc(npc_t *const npc, int8_t damage);
 void cast_spell_on_npc(npc_t *const npc,
-                       const int8_t spell_type,
+                       const int8_t pebble_type,
                        int8_t potency);
 void adjust_player_current_health(const int8_t amount);
 void adjust_player_current_mp(const int8_t amount);
