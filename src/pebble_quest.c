@@ -126,7 +126,7 @@ void determine_npc_behavior(npc_t *const npc)
             get_opposite_direction(get_pursuit_direction(npc->position,
                                                          g_player->position)));
     }
-    if (touching(npc->position, g_player->position))
+    else if (touching(npc->position, g_player->position))
     {
       damage = npc->power - npc->status_effects[FROZEN];
       if (npc->type == MAGE)
@@ -258,9 +258,17 @@ void damage_npc(npc_t *const npc, int8_t damage)
   // Check for NPC death:
   if (npc->health <= 0)
   {
-    npc->type             = NONE;
+    npc->type = NONE;
+
+    // Add experience points and check for a "level up":
     g_player->exp_points += (npc->health + npc->power + npc->physical_defense +
                              npc->magical_defense) / 4;
+    if (g_player->exp_points / POINTS_PER_LEVEL >= g_player->level)
+    {
+      g_player->level++;
+      show_window(LEVEL_UP_MENU, NOT_ANIMATED);
+      show_narration(LEVEL_UP_NARRATION);
+    }
 
     // If the NPC had an item, leave it behind as loot:
     if (npc->item > NONE)
@@ -296,12 +304,9 @@ void cast_spell_on_npc(npc_t *const npc,
     }
 
     // Next, apply damage:
-    potency -= (npc->magical_defense - npc->status_effects[SHOCKED]);
-    if (potency < MIN_SPELL_POTENCY)
-    {
-      potency = MIN_SPELL_POTENCY;
-    }
-    damage_npc(npc, potency);
+    damage_npc(npc,
+               potency - (npc->magical_defense -
+                          npc->status_effects[SHOCKED]));
   }
 }
 
@@ -1102,7 +1107,7 @@ static void level_up_menu_draw_header_callback(GContext *ctx,
                                                uint16_t section_index,
                                                void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Increase an Attribute!");
+  menu_cell_basic_header_draw(ctx, cell_layer, "Increase an Attribute");
 }
 
 /******************************************************************************
@@ -1995,7 +2000,71 @@ void draw_cell_contents(GContext *ctx,
 
   // Draw the NPC:
   graphics_context_set_fill_color(ctx, GColorBlack);
-  /*if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
+  if (npc->type == MAGE)
+  {
+    // Body:
+    draw_shaded_quad(ctx,
+                     GPoint(floor_center_point.x - drawing_unit * 4,
+                            floor_center_point.y - drawing_unit * 8),
+                     GPoint(floor_center_point.x - drawing_unit * 4,
+                            floor_center_point.y),
+                     GPoint(floor_center_point.x + drawing_unit * 4,
+                            floor_center_point.y - drawing_unit * 8),
+                     GPoint(floor_center_point.x + drawing_unit * 4,
+                            floor_center_point.y),
+                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
+                              8,
+                            g_back_wall_coords[depth][position][TOP_LEFT].y -
+                              8));
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit * 3.5,
+                             floor_center_point.y - drawing_unit * 7.5,
+                             drawing_unit,
+                             drawing_unit * 7.5),
+                       drawing_unit / 2,
+                       GCornersTop);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x + drawing_unit * 2.5,
+                             floor_center_point.y - drawing_unit * 7.5,
+                             drawing_unit,
+                             drawing_unit * 7.5),
+                       drawing_unit / 2,
+                       GCornersTop);
+
+    // Head:
+    draw_shaded_quad(ctx,
+                     GPoint(floor_center_point.x - drawing_unit * 1.4,
+                            floor_center_point.y - drawing_unit * 10.4),
+                     GPoint(floor_center_point.x - drawing_unit * 1.4,
+                            floor_center_point.y - drawing_unit * 8),
+                     GPoint(floor_center_point.x + drawing_unit * 1.4,
+                            floor_center_point.y - drawing_unit * 10.4),
+                     GPoint(floor_center_point.x + drawing_unit * 1.4,
+                            floor_center_point.y - drawing_unit * 8),
+                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
+                              8,
+                            g_back_wall_coords[depth][position][TOP_LEFT].y -
+                              8));
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit,
+                             floor_center_point.y - drawing_unit * 10,
+                             drawing_unit * 2,
+                             drawing_unit * 2),
+                       drawing_unit,
+                       GCornersAll);
+
+    // Eyes:
+    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x - drawing_unit / 2,
+                                floor_center_point.y - (drawing_unit * 9)),
+                         drawing_unit / 4);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x + drawing_unit / 2,
+                                floor_center_point.y - (drawing_unit * 9)),
+                         drawing_unit / 4);
+  }
+  /*else if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2090,11 +2159,11 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 5),
                          drawing_unit + time(NULL) % 2);
-  }
+  }*/
   else // if (npc->type == [humanoid])
   {
     // Legs:
-    */draw_shaded_quad(ctx,
+    draw_shaded_quad(ctx,
                      GPoint(floor_center_point.x - drawing_unit * 2,
                             floor_center_point.y - drawing_unit * 3),
                      GPoint(floor_center_point.x - drawing_unit * 2,
@@ -2194,7 +2263,7 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 4);
-  //}
+  }
 }
 
 /******************************************************************************
@@ -2897,18 +2966,10 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 
   if (g_current_window == GRAPHICS_WINDOW)
   {
-    // Check for a "level up":
-    if (g_player->exp_points / POINTS_PER_LEVEL >= g_player->level)
-    {
-      g_player->level++;
-      show_window(LEVEL_UP_MENU, NOT_ANIMATED);
-      show_narration(LEVEL_UP_NARRATION);
-    }
-
     // Handle NPC behavior:
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      if (time(NULL) % 2 && g_location->npcs[i].type > NONE)
+      if (g_location->npcs[i].type > NONE)
       {
         determine_npc_behavior(&g_location->npcs[i]);
 
@@ -2980,7 +3041,7 @@ void strcat_item_name(char *const dest_str, const int8_t item_type)
 {
   if (item_type < FIRST_HEAVY_ITEM)
   {
-    strcat(dest_str, "P.");
+    strcat(dest_str, "Pebble");
     strcat_magic_type(dest_str, item_type);
   }
   else
@@ -3012,10 +3073,10 @@ void strcat_item_name(char *const dest_str, const int8_t item_type)
         strcat(dest_str, "Robe");
         break;
       case LIGHT_ARMOR:
-        strcat(dest_str, "L. Armor");
+        strcat(dest_str, "L Armor");
         break;
       case HEAVY_ARMOR:
-        strcat(dest_str, "H. Armor");
+        strcat(dest_str, "H Armor");
         break;
     }
   }
@@ -3036,14 +3097,14 @@ void strcat_magic_type(char *const dest_str, const int8_t magic_type)
   strcat(dest_str, " of ");
   switch(magic_type)
   {
+    case PEBBLE_OF_THUNDER:
+      strcat(dest_str, "Thunder");
+      break;
     case PEBBLE_OF_FIRE:
       strcat(dest_str, "Fire");
       break;
     case PEBBLE_OF_ICE:
       strcat(dest_str, "Ice");
-      break;
-    case PEBBLE_OF_LIGHTNING:
-      strcat(dest_str, "Lightning");
       break;
     case PEBBLE_OF_LIFE:
       strcat(dest_str, "Life");
@@ -3054,8 +3115,8 @@ void strcat_magic_type(char *const dest_str, const int8_t magic_type)
     case PEBBLE_OF_LIGHT:
       strcat(dest_str, "Light");
       break;
-    case PEBBLE_OF_DARKNESS:
-      strcat(dest_str, "Darkness");
+    default: // case PEBBLE_OF_SHADOW:
+      strcat(dest_str, "Shadow");
       break;
   }
 }
@@ -3098,7 +3159,7 @@ void strcat_stat_name(char *const dest_str, const int8_t stat)
     case MAGICAL_POWER:
       strcat(dest_str, "M. Power");
       break;
-    case MAGICAL_DEFENSE:
+    default: // case MAGICAL_DEFENSE:
       strcat(dest_str, "M. Defense");
       break;
   }
@@ -3427,8 +3488,8 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   }
 
   // Set major stats according to current dungeon depth:
-  npc->health = npc->power = npc->physical_defense = npc->magical_defense =
-    g_player->depth * 2;
+  npc->health = g_player->depth * 3;
+  npc->power  = npc->physical_defense = npc->magical_defense = g_player->depth;
 
   // Check for increased health:
   /*if (type == ORC        ||

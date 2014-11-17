@@ -65,9 +65,9 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_NPC_TYPES 22
 
 // Character stats (the first seven correspond to Pebble effects):
-#define INTELLECT           0
+#define AGILITY             0
 #define STRENGTH            1
-#define AGILITY             2
+#define INTELLECT           2
 #define HEALTH_REGEN        3
 #define BACKLASH_DAMAGE     4
 #define ENERGY_REGEN        5
@@ -133,13 +133,13 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 ******************************************************************************/
 
 #define NONE                 -1
-#define PEBBLE_OF_ICE        0
+#define PEBBLE_OF_THUNDER    2
 #define PEBBLE_OF_FIRE       1
-#define PEBBLE_OF_LIGHTNING  2
+#define PEBBLE_OF_ICE        0
 #define PEBBLE_OF_LIFE       3
 #define PEBBLE_OF_DEATH      4
 #define PEBBLE_OF_LIGHT      5
-#define PEBBLE_OF_DARKNESS   6
+#define PEBBLE_OF_SHADOW     6
 #define DAGGER               7
 #define STAFF                8
 #define SWORD                9
@@ -164,9 +164,9 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_EQUIP_TARGETS 3
 
 // Temporary status effects (via spells and infused weapons):
-#define FROZEN             0
+#define SHOCKED            0
 #define BURNED             1
-#define SHOCKED            2
+#define FROZEN             2
 #define DRAINED            3
 #define WOUNDED            4
 #define INTIMIDATED        5
