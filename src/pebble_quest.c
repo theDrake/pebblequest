@@ -917,7 +917,7 @@ bool player_is_visible_from(GPoint cell)
   {
     do
     {
-      cell = get_cell_farther_away(npc->position,
+      cell = get_cell_farther_away(cell,
                                    diff_x == 0 ? vertical_direction :
                                                  horizontal_direction,
                                    1);
