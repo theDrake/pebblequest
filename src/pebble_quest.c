@@ -228,8 +228,7 @@ Description: Applies the effects of a given spell, with a given potency, to a
              given NPC.
 
      Inputs: npc        - Pointer to the targeted NPC.
-             magic_type - Integer representing the type of magic (i.e., type of
-                          Pebble) used to create the spell.
+             magic_type - Integer representing the spell's magic type.
              potency    - Amount of magical power being brought to bear.
 
     Outputs: None.
@@ -242,15 +241,16 @@ void cast_spell_on_npc(npc_t *const npc,
 
   if (npc)
   {
-    // First, attempt to apply a status effect:
-    if (rand() % potency > rand() % npc->magical_defense)
+    // First, apply a status effect (if applicable):
+    if (magic_type < PEBBLE_OF_DEATH ||
+        (rand() % potency > rand() % npc->magical_defense))
     {
       npc->status_effects[magic_type] += potency;
     }
 
     // Next, apply damage and check for health absorption:
     damage = damage_npc(npc, potency - npc->magical_defense);
-    if (magic_type == LIFE_DRAIN)
+    if (magic_type == PEBBLE_OF_LIFE)
     {
       adjust_player_current_health(damage);
     }
@@ -1469,8 +1469,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       case 0: // Equip
         unequip_item_at(RIGHT_HAND);
         g_player->equipped_pebble = g_current_selection;
-        //adjust_minor_stats();???
-        g_current_selection =
+        g_current_selection       =
           get_inventory_row_for_pebble(g_current_selection);
         show_window(INVENTORY_MENU, NOT_ANIMATED);
         break;
@@ -1490,7 +1489,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         // Infuse the item:
         if (g_player->heavy_items[cell_index->row].equipped)
         {
-          unequip_item_at(g_player->heavy_items[cell_index->row].equip_target);
+          unequip_heavy_item(&g_player->heavy_items[cell_index->row]);
           item_was_equipped = true;
         }
         g_player->heavy_items[cell_index->row].infused_pebble =
@@ -1522,7 +1521,7 @@ void menu_select_callback(MenuLayer *menu_layer,
         g_player->heavy_items[cell_index->row].equip_target;
       if (g_player->heavy_items[cell_index->row].equipped)
       {
-        unequip_item_at(old_item_equip_target);
+        unequip_heavy_item(&g_player->heavy_items[cell_index->row]);
         item_was_equipped = true;
       }
 
@@ -1982,7 +1981,7 @@ void draw_cell_contents(GContext *ctx,
   }*/
 
   // Draw the NPC:
-  graphics_context_set_fill_color(ctx, GColorBlack);
+  /*graphics_context_set_fill_color(ctx, GColorBlack);
   if (npc->type == MAGE)
   {
     // Body:
@@ -2034,7 +2033,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 2,
                              drawing_unit * 2),
                        drawing_unit,
-                       GCornersAll);
+                       GCornersAll);*/
 
     // Eyes:
     graphics_context_set_fill_color(ctx, GColorWhite);
@@ -2046,8 +2045,8 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 4);
-  }
-  /*else if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
+  /*}
+  else if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2142,7 +2141,7 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 5),
                          drawing_unit + time(NULL) % 2);
-  }*/
+  }
   else // if (npc->type == [humanoid])
   {
     // Legs:
@@ -2201,7 +2200,7 @@ void draw_cell_contents(GContext *ctx,
                      GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
                               10,
                             g_back_wall_coords[depth][position][TOP_LEFT].y -
-                              10));
+                              10));*/
     /*graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2,
                              floor_center_point.y - drawing_unit * 8,
@@ -2211,7 +2210,7 @@ void draw_cell_contents(GContext *ctx,
                        GCornerNone);*/
 
     // Arms:
-    graphics_context_set_fill_color(ctx, GColorWhite);
+    /*graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
                              floor_center_point.y - drawing_unit * 8,
@@ -2246,7 +2245,7 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 4);
-  }
+  }*/
 }
 
 /******************************************************************************
@@ -3057,10 +3056,10 @@ void strcat_item_name(char *const dest_str, const int8_t item_type)
         strcat(dest_str, "Robe");
         break;
       case LIGHT_ARMOR:
-        strcat(dest_str, "L Armor");
+        strcat(dest_str, "L. Armor");
         break;
       case HEAVY_ARMOR:
-        strcat(dest_str, "H Armor");
+        strcat(dest_str, "H. Armor");
         break;
     }
   }
@@ -3304,6 +3303,27 @@ void equip_heavy_item(heavy_item_t *const heavy_item)
 }
 
 /******************************************************************************
+   Function: unequip_heavy_item
+
+Description: Unequips a given heavy item, then adjusts constant status effects
+             and minor stats accordingly.
+
+     Inputs: heavy_item - Pointer to the heavy item to be unequipped.
+
+    Outputs: None.
+******************************************************************************/
+void unequip_heavy_item(heavy_item_t *const heavy_item)
+{
+  heavy_item->equipped = false;
+  if (heavy_item->equip_target < RIGHT_HAND &&
+      heavy_item->infused_pebble > NONE)
+  {
+    g_player->stats[heavy_item->infused_pebble]--;
+  }
+  adjust_minor_stats();
+}
+
+/******************************************************************************
    Function: unequip_item_at
 
 Description: Unequips the equipped item (if any) at a given equip target, then
@@ -3324,14 +3344,8 @@ void unequip_item_at(const int8_t equip_target)
   }
   if (heavy_item)
   {
-    heavy_item->equipped = false;
-    if (heavy_item->equip_target < RIGHT_HAND &&
-        heavy_item->infused_pebble > NONE)
-    {
-      g_player->stats[heavy_item->infused_pebble]--;
-    }
+    unequip_heavy_item(heavy_item);
   }
-  adjust_minor_stats();
 }
 
 /******************************************************************************
@@ -3432,10 +3446,10 @@ void init_player(void)
 
   // Add starting inventory items:
   init_heavy_item(&g_player->heavy_items[0], DAGGER);
-  init_heavy_item(&g_player->heavy_items[1], STAFF);
-  init_heavy_item(&g_player->heavy_items[2], ROBE);
+  init_heavy_item(&g_player->heavy_items[1], ROBE);
+  init_heavy_item(&g_player->heavy_items[2], NONE);
   equip_heavy_item(&g_player->heavy_items[0]);
-  equip_heavy_item(&g_player->heavy_items[2]);
+  equip_heavy_item(&g_player->heavy_items[1]);
 
   // Assign minor stats, then ensure health and energy are at 100%:
   adjust_minor_stats();

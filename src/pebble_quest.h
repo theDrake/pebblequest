@@ -168,7 +168,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define WEAKNESS           0
 #define DAMAGE_OVER_TIME   1
 #define SLOW               2
-#define LIFE_DRAIN         3 // Not actually used as a "status effect".
+//                         3 Pebble of Life doesn't cause a "status effect".
 #define DISINTEGRATION     4
 #define INTIMIDATION       5
 #define STUN               6
@@ -455,6 +455,7 @@ void strcat_stat_value(char *const dest_str, const int8_t stat);
 void strcat_int(char *const dest_str, int16_t integer);
 void add_current_selection_to_inventory(void);
 void equip_heavy_item(heavy_item_t *const item);
+void unequip_heavy_item(heavy_item_t *const heavy_item);
 void unequip_item_at(const int8_t equip_target);
 void adjust_minor_stats(void);
 void init_player(void);
