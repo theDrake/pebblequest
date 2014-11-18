@@ -3,10 +3,9 @@
 
      Author: David C. Drake (http://davidcdrake.com)
 
-Description: Function definitions for the 3D, first-person, fantasy RPG
-             PebbleQuest, developed for the Pebble smartwatch (SDK 2).
-             Copyright 2014, David C. Drake. More information available online:
-             http://davidcdrake.com/pebblequest
+Description: Function definitions for PebbleQuest, a first-person 3D fantasy
+             RPG developed for the Pebble smartwatch (SDK 2). More information
+             available online: http://davidcdrake.com/pebblequest
 ******************************************************************************/
 
 #include "pebble_quest.h"
@@ -99,7 +98,7 @@ void move_npc(npc_t *const npc, const int8_t direction)
 {
   GPoint destination = get_cell_farther_away(npc->position, direction, 1);
 
-  if (occupiable(destination))
+  if (occupiable(destination) && get_cell_type(destination) != EXIT)
   {
     npc->position = destination;
   }
@@ -116,40 +115,37 @@ Description: Determines what a given NPC should do.
 ******************************************************************************/
 void determine_npc_behavior(npc_t *const npc)
 {
-  int8_t damage;
+  int8_t damage = npc->power - npc->status_effects[WEAKNESS];
 
-  if (npc->status_effects[STUNNED] == 0)
+  if (npc->status_effects[STUN] == 0 && npc->status_effects[SLOW] % 2 == 0)
   {
-    if (npc->status_effects[INTIMIDATED])
+    if (npc->status_effects[INTIMIDATION])
     {
       move_npc(npc,
             get_opposite_direction(get_pursuit_direction(npc->position,
                                                          g_player->position)));
     }
-    else if (touching(npc->position, g_player->position))
+    else if (npc->type == MAGE && player_is_visible_from(npc->position))
     {
-      damage = npc->power - npc->status_effects[FROZEN];
-      if (npc->type == MAGE)
+      flash_screen();
+      if (g_player->stats[SPELL_ABSORPTION] &&
+          damage > 0                        &&
+          rand() % g_player->stats[MAGICAL_POWER] +
+            g_player->stats[SPELL_ABSORPTION] > rand() % damage)
       {
-        flash_screen();
-        if (g_player->stats[SPELL_ABSORPTION] &&
-            rand() % g_player->stats[MAGICAL_POWER] +
-              g_player->stats[SPELL_ABSORPTION] > rand() % damage)
-        {
-          adjust_player_current_energy(damage);
-        }
-        else
-        {
-          damage_player(damage - g_player->stats[MAGICAL_DEFENSE]);
-        }
+        adjust_player_current_energy(damage);
       }
       else
       {
-        damage_player(damage - g_player->stats[PHYSICAL_DEFENSE]);
-        if (g_player->stats[BACKLASH_DAMAGE])
-        {
-          damage_npc(npc, damage / 2 + g_player->stats[BACKLASH_DAMAGE]);
-        }
+        damage_player(damage - g_player->stats[MAGICAL_DEFENSE]);
+      }
+    }
+    else if (touching(npc->position, g_player->position))
+    {
+      damage_player(damage - g_player->stats[PHYSICAL_DEFENSE]);
+      if (g_player->stats[BACKLASH_DAMAGE])
+      {
+        damage_npc(npc, damage / 2 + g_player->stats[BACKLASH_DAMAGE]);
       }
     }
     else
@@ -158,56 +154,6 @@ void determine_npc_behavior(npc_t *const npc)
     }
   }
 }
-
-/******************************************************************************
-   Function: player_is_visible_from
-
-Description: Determines whether the player is "visible" from a given position,
-             where "visible" means aligned along the x- or y-axis with no wall
-             or NPC in the way.
-
-     Inputs: position - Cell coordinates from which to look for the player.
-
-    Outputs: "True" if the player is "visible" from the given position.
-******************************************************************************/
-/*bool player_is_visible_from(const GPoint position)
-{
-  int8_t diff_x = cell.x - g_player->position.x,
-         diff_y = cell.y - g_player->position.y;
-  const int8_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
-               vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
-
-  if (diff_x > MAX_VISIBILITY_DEPTH || diff_y > MAX_VISIBILITY_DEPTH)
-  {
-    return false;
-  }
-  while (!gpoint_equal(&g_player->position, &cell))
-  {
-    if ((diff_x == diff_y &&
-         get_cell_type(get_cell_farther_away(cell,
-                                             horizontal_direction,
-                                             1)) >= SOLID &&
-         get_cell_type(get_cell_farther_away(cell,
-                                             vertical_direction,
-                                             1)) >= SOLID) ||
-        (diff_x > diff_y &&
-         get_cell_type(get_cell_farther_away(cell,
-                                             horizontal_direction,
-                                             1)) >= SOLID) ||
-        (diff_x < diff_y &&
-         get_cell_type(get_cell_farther_away(cell,
-                                             vertical_direction,
-                                             1)) >= SOLID))
-    {
-      return false;
-    }
-    shift_position(&cell, get_pursuit_direction(cell, g_player->position));
-    diff_x = cell.x - g_player->position.x,
-    diff_y = cell.y - g_player->position.y;
-  }
-
-  return true;
-}*/
 
 /******************************************************************************
    Function: damage_player
@@ -249,14 +195,8 @@ void damage_npc(npc_t *const npc, int8_t damage)
   }
   npc->health -= damage;
 
-  // Check for health absorption:
-  if (npc->status_effects[DRAINED])
-  {
-    adjust_player_current_health(damage);
-  }
-
   // Check for NPC death:
-  if (npc->health <= 0)
+  if (npc->health <= 0 || npc->status_effects[DISINTEGRATION])
   {
     npc->type = NONE;
 
@@ -284,15 +224,15 @@ void damage_npc(npc_t *const npc, int8_t damage)
 Description: Applies the effects of a given spell, with a given potency, to a
              given NPC.
 
-     Inputs: npc         - Pointer to the targeted NPC.
-             pebble_type - Integer representing the Pebble used to cast the
-                           spell.
-             potency     - Amount of magical power being brought to bear.
+     Inputs: npc        - Pointer to the targeted NPC.
+             magic_type - Integer representing the type of magic (i.e., type of
+                          Pebble) used to create the spell.
+             potency    - Amount of magical power being brought to bear.
 
     Outputs: None.
 ******************************************************************************/
 void cast_spell_on_npc(npc_t *const npc,
-                       const int8_t pebble_type,
+                       const int8_t magic_type,
                        int8_t potency)
 {
   if (npc)
@@ -300,13 +240,15 @@ void cast_spell_on_npc(npc_t *const npc,
     // First, attempt to apply a status effect:
     if (rand() % potency > rand() % npc->magical_defense)
     {
-      npc->status_effects[pebble_type] += potency;
+      npc->status_effects[magic_type] += potency;
     }
 
-    // Next, apply damage:
-    damage_npc(npc,
-               potency - (npc->magical_defense -
-                          npc->status_effects[SHOCKED]));
+    // Next, apply damage and check for health absorption:
+    damage_npc(npc, potency - npc->magical_defense);
+    if (magic_type == LIFE_DRAIN)
+    {
+      adjust_player_current_health(damage);
+    }
   }
 }
 
@@ -949,6 +891,40 @@ bool touching(const GPoint cell, const GPoint cell_2)
 }
 
 /******************************************************************************
+   Function: player_is_visible_from
+
+Description: Determines whether the player is "visible" from a given position,
+             where "visible" means aligned along the x- or y-axis with no wall
+             or NPC in the way.
+
+     Inputs: cell - Cell coordinates from which to look for the player.
+
+    Outputs: "True" if the player is "visible" from the given position.
+******************************************************************************/
+bool player_is_visible_from(GPoint cell)
+{
+  int8_t diff_x = cell.x - g_player->position.x,
+         diff_y = cell.y - g_player->position.y;
+  const int8_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
+               vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
+
+  if (diff_x == 0 || diff_y == 0)
+  {
+    do
+    {
+      shift_position(&cell,
+                     diff_x == 0 ? vertical_direction : horizontal_direction);
+      if (gpoint_equal(&g_player->position, &cell))
+      {
+        return true;
+      }
+    }while (occupiable(cell));
+  }
+
+  return false;
+}
+
+/******************************************************************************
    Function: show_narration
 
 Description: Displays desired narration text via the narration window.
@@ -973,13 +949,13 @@ void show_narration(const int8_t narration)
       strcpy(narration_str, "You have descended into a vast dungeon where the "
                             "Pebbles are guarded by evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 92
+    case INTRO_NARRATION_3: // Total chars: 91
       strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
-                            "Drake:\n davidcdrake.com/\n"
+                            "Drake:\ndavidcdrake.com/\n"
                             "            pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
-      strcpy(narration_str, "        CONTROLS\nForward: \"Up\"\nBack: \"Down\""
+      strcpy(narration_str, "       CONTROLS\nForward: \"Up\"\nBack: \"Down\""
                             "\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
                             "\"Select\"");
       break;
@@ -2820,18 +2796,16 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     {
       if (npc)
       {
-        damage_npc(npc,
-                   g_player->stats[PHYSICAL_POWER] -
-                     (npc->physical_defense - npc->status_effects[BURNED]));
+        damage_npc(npc, g_player->stats[PHYSICAL_POWER]);
       }
 
       if (weapon)
       {
-        // Check for WOUNDED/STUNNED effect from sharp/blunt weapons:
+        // Check for wound/stun effect from sharp/blunt weapons:
         if (npc && rand() % g_player->stats[PHYSICAL_POWER] >
                      rand() % npc->physical_defense)
         {
-          npc->status_effects[weapon->type % 2 ? WOUNDED : STUNNED] +=
+          npc->status_effects[weapon->type % 2 ? DAMAGE_OVER_TIME : STUN] +=
             g_player->stats[PHYSICAL_POWER] / 2;
         }
 
@@ -2979,17 +2953,20 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
           return;
         }
 
-        // Apply wounding damage:
-        if (g_location->npcs[i].status_effects[WOUNDED])
+        // Apply wounding/burning damage:
+        if (g_location->npcs[i].status_effects[DAMAGE_OVER_TIME])
         {
           damage_npc(&g_location->npcs[i],
-                     g_location->npcs[i].status_effects[WOUNDED]);
+                     g_location->npcs[i].status_effects[DAMAGE_OVER_TIME]);
         }
 
         // Reduce all status effects:
         for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
         {
-          g_location->npcs[i].status_effects[j] /= 2;
+          if (g_location->npcs[i].status_effects[j] > 0)
+          {
+            g_location->npcs[i].status_effects[j]--;
+          }
         }
       }
     }
@@ -3367,9 +3344,8 @@ void adjust_minor_stats(void)
 
   // Set minor stats according to major stats:
   g_player->stats[MAX_HEALTH]       = g_player->stats[STRENGTH]  * 10;
-  g_player->stats[MAX_ENERGY]       = g_player->stats[AGILITY] * 4 +
-                                        g_player->stats[STRENGTH] * 3 +
-                                        g_player->stats[INTELLECT] * 3;
+  g_player->stats[MAX_ENERGY]       = g_player->stats[STRENGTH] * 5 +
+                                        g_player->stats[INTELLECT] * 5;
   g_player->stats[PHYSICAL_POWER]   = g_player->stats[STRENGTH] +
                                         g_player->stats[AGILITY] / 2;
   g_player->stats[PHYSICAL_DEFENSE] = g_player->stats[AGILITY] +
@@ -3378,37 +3354,27 @@ void adjust_minor_stats(void)
                                         g_player->stats[AGILITY] / 2;
   g_player->stats[MAGICAL_DEFENSE]  = g_player->stats[AGILITY] +
                                         g_player->stats[INTELLECT] / 2;
-  g_player->energy_loss_per_action  = MIN_ENERGY_LOSS_PER_ACTION;
+  g_player->energy_loss_per_action  = DEFAULT_ENERGY_LOSS_PER_ACTION -
+                                        g_player->stats[AGILITY];
 
   // Weapon (or equipped Pebble):
   if (get_heavy_item_equipped_at(RIGHT_HAND))
   {
     // Weapons:
-    for (i = DAGGER;
-         i <= get_heavy_item_equipped_at(RIGHT_HAND)->type;
-         i += 2)
+    for (i = DAGGER; i <= get_heavy_item_equipped_at(RIGHT_HAND)->type; i += 2)
     {
       g_player->stats[PHYSICAL_POWER]++;
       g_player->energy_loss_per_action++;
     }
   }
-  else if (g_player->equipped_pebble > NONE)
-  {
-    g_player->energy_loss_per_action += g_player->stats[INTELLECT] / 3;
-  }
 
   // Armor:
   if (get_heavy_item_equipped_at(BODY))
   {
-    if (get_heavy_item_equipped_at(BODY)->type == LIGHT_ARMOR)
+    for (i = LIGHT_ARMOR; i <= get_heavy_item_equipped_at(BODY)->type; ++i)
     {
       g_player->stats[PHYSICAL_DEFENSE]++;
       g_player->stats[MAGICAL_POWER]--;
-    }
-    else if (get_heavy_item_equipped_at(BODY)->type == HEAVY_ARMOR)
-    {
-      g_player->stats[PHYSICAL_DEFENSE] += 2;
-      g_player->stats[MAGICAL_POWER]    -= 2;
       g_player->energy_loss_per_action++;
     }
   }
@@ -3418,6 +3384,13 @@ void adjust_minor_stats(void)
   {
     g_player->stats[PHYSICAL_DEFENSE]++;
     g_player->stats[MAGICAL_POWER]--;
+    g_player->energy_loss_per_action++;
+  }
+
+  // Adjust energy loss per action, if necessary:
+  if (g_player->energy_loss_per_action < MIN_ENERGY_LOSS_PER_ACTION)
+  {
+    g_player->energy_loss_per_action = MIN_ENERGY_LOSS_PER_ACTION;
   }
 }
 

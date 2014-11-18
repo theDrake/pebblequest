@@ -3,9 +3,9 @@
 
      Author: David C. Drake (http://davidcdrake.com)
 
-Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
-             developed for the Pebble smartwatch (SDK 2). Copyright 2014, David
-             C. Drake. More info online: http://davidcdrake.com/pebblequest
+Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
+             developed for the Pebble smartwatch (SDK 2). More info online:
+             http://davidcdrake.com/pebblequest
 ******************************************************************************/
 
 #ifndef PEBBLE_QUEST_H_
@@ -34,9 +34,10 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 
 #define POINTS_PER_LEVEL           50
 #define DEFAULT_MAJOR_STAT_VALUE   3 // For STRENGTH, AGILITY, and INTELLECT.
-#define MIN_DAMAGE                 2 // Min. damage per attack/spell/effect.
+#define MIN_DAMAGE                 3 // Min. damage per attack/spell/effect.
 #define MIN_SPELL_POTENCY          MIN_DAMAGE
-#define MIN_ENERGY_LOSS_PER_ACTION 2
+#define MIN_ENERGY_LOSS_PER_ACTION 3
+#define MAX_ENERGY_LOSS_PER_ACTION 10
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
@@ -164,13 +165,13 @@ Description: Header file for the 3D, first-person, fantasy RPG PebbleQuest,
 #define NUM_EQUIP_TARGETS 3
 
 // Temporary status effects (via spells and infused weapons):
-#define SHOCKED            0
-#define BURNED             1
-#define FROZEN             2
-#define DRAINED            3
-#define WOUNDED            4
-#define INTIMIDATED        5
-#define STUNNED            6
+#define WEAKNESS           0
+#define DAMAGE_OVER_TIME   1
+#define SLOW               2
+#define LIFE_DRAIN         3
+#define DISINTEGRATION     4
+#define INTIMIDATION       5
+#define STUN               6
 #define NUM_STATUS_EFFECTS 7
 
 /******************************************************************************
@@ -321,7 +322,7 @@ void determine_npc_behavior(npc_t *const npc);
 void damage_player(int8_t damage);
 void damage_npc(npc_t *const npc, int8_t damage);
 void cast_spell_on_npc(npc_t *const npc,
-                       const int8_t pebble_type,
+                       const int8_t magic_type,
                        int8_t potency);
 void adjust_player_current_health(const int8_t amount);
 void adjust_player_current_energy(const int8_t amount);
@@ -346,6 +347,7 @@ npc_t *get_npc_at(const GPoint cell);
 bool out_of_bounds(const GPoint cell);
 bool occupiable(const GPoint cell);
 bool touching(const GPoint cell, const GPoint cell_2);
+bool player_is_visible_from(GPoint cell);
 void show_narration(const int8_t narration);
 void show_window(const int8_t window, const bool animated);
 static void main_menu_draw_header_callback(GContext *ctx,
