@@ -115,7 +115,7 @@ Description: Determines what a given NPC should do.
 ******************************************************************************/
 void determine_npc_behavior(npc_t *const npc)
 {
-  int8_t damage = npc->power - npc->status_effects[WEAKNESS];
+  int8_t damage = npc->power - npc->status_effects[WEAKNESS] / 2;
 
   if (npc->status_effects[STUN] == 0 && npc->status_effects[SLOW] % 2 == 0)
   {
@@ -158,8 +158,8 @@ void determine_npc_behavior(npc_t *const npc)
 /******************************************************************************
    Function: damage_player
 
-Description: Damages the player according to his/her defense vs. a given damage
-             value.
+Description: Damages the player according to a given damage value (or
+             MIN_DAMAGE if the value's too low) and vibrates the Pebble watch.
 
      Inputs: damage - Potential amount of damage.
 
@@ -178,16 +178,17 @@ void damage_player(int8_t damage)
 /******************************************************************************
    Function: damage_npc
 
-Description: Damages a given NPC according to a given damage value. If this
-             reduces the NPC's health to zero or below, the NPC's death is
-             handled.
+Description: Damages a given NPC according to a given damage value (or
+             MIN_DAMAGE if the value's too low). If this reduces the NPC's
+             health to zero or below, the NPC's death is handled.
 
      Inputs: npc    - Pointer to the NPC to be damaged.
              damage - Amount of damage.
 
-    Outputs: None.
+    Outputs: The amount of damage actually dealt (as a positive value), which
+             will be at least MIN_DAMAGE.
 ******************************************************************************/
-void damage_npc(npc_t *const npc, int8_t damage)
+uint8_t damage_npc(npc_t *const npc, int8_t damage)
 {
   if (damage < MIN_DAMAGE)
   {
@@ -216,6 +217,8 @@ void damage_npc(npc_t *const npc, int8_t damage)
       set_cell_type(npc->position, npc->item);
     }
   }
+
+  return damage;
 }
 
 /******************************************************************************
@@ -235,6 +238,8 @@ void cast_spell_on_npc(npc_t *const npc,
                        const int8_t magic_type,
                        int8_t potency)
 {
+  uint8_t damage;
+
   if (npc)
   {
     // First, attempt to apply a status effect:
@@ -244,7 +249,7 @@ void cast_spell_on_npc(npc_t *const npc,
     }
 
     // Next, apply damage and check for health absorption:
-    damage_npc(npc, potency - npc->magical_defense);
+    damage = damage_npc(npc, potency - npc->magical_defense);
     if (magic_type == LIFE_DRAIN)
     {
       adjust_player_current_health(damage);
@@ -912,8 +917,10 @@ bool player_is_visible_from(GPoint cell)
   {
     do
     {
-      shift_position(&cell,
-                     diff_x == 0 ? vertical_direction : horizontal_direction);
+      cell = get_cell_farther_away(npc->position,
+                                   diff_x == 0 ? vertical_direction :
+                                                 horizontal_direction,
+                                   1);
       if (gpoint_equal(&g_player->position, &cell))
       {
         return true;
@@ -2957,7 +2964,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         if (g_location->npcs[i].status_effects[DAMAGE_OVER_TIME])
         {
           damage_npc(&g_location->npcs[i],
-                     g_location->npcs[i].status_effects[DAMAGE_OVER_TIME]);
+                     g_location->npcs[i].status_effects[DAMAGE_OVER_TIME] / 2);
         }
 
         // Reduce all status effects:
@@ -3112,11 +3119,11 @@ void strcat_stat_name(char *const dest_str, const int8_t stat)
 {
   switch(stat)
   {
-    case STRENGTH:
-      strcat(dest_str, "Strength");
-      break;
     case AGILITY:
       strcat(dest_str, "Agility");
+      break;
+    case STRENGTH:
+      strcat(dest_str, "Strength");
       break;
     case INTELLECT:
       strcat(dest_str, "Intellect");
@@ -3331,7 +3338,7 @@ void unequip_item_at(const int8_t equip_target)
    Function: adjust_minor_stats
 
 Description: Assigns values to the player's minor stats according to major stat
-             values (STRENGTH, AGILITY, and INTELLECT) then adjusts them
+             values (AGILITY, STRENGTH, and INTELLECT) then adjusts them
              according to equipped items and status effects.
 
      Inputs: None.

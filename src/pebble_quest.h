@@ -32,13 +32,13 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
   Player- and NPC-related Constants
 ******************************************************************************/
 
-#define POINTS_PER_LEVEL           50
-#define DEFAULT_MAJOR_STAT_VALUE   3 // For STRENGTH, AGILITY, and INTELLECT.
-#define MIN_DAMAGE                 3 // Min. damage per attack/spell/effect.
-#define MIN_SPELL_POTENCY          MIN_DAMAGE
-#define MIN_ENERGY_LOSS_PER_ACTION 3
-#define MAX_ENERGY_LOSS_PER_ACTION 10
-#define MAX_NPCS_AT_ONE_TIME       2
+#define POINTS_PER_LEVEL               50
+#define DEFAULT_MAJOR_STAT_VALUE       3 // AGILITY, STRENGTH, and INTELLECT.
+#define MIN_DAMAGE                     3 // Min. damage per attack/spell.
+#define MIN_SPELL_POTENCY              MIN_DAMAGE
+#define MIN_ENERGY_LOSS_PER_ACTION     3
+#define DEFAULT_ENERGY_LOSS_PER_ACTION 10
+#define MAX_NPCS_AT_ONE_TIME           2
 
 // NPC types:
 #define OOZE          0
@@ -82,7 +82,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define CURRENT_HEALTH      13
 #define CURRENT_ENERGY      14
 #define NUM_CHARACTER_STATS 15
-#define NUM_MAJOR_STATS     3 // INTELLECT, STRENGTH, and AGILITY.
+#define NUM_MAJOR_STATS     3 // AGILITY, STRENGTH, and INTELLECT.
 
 /******************************************************************************
   Location-related Constants
@@ -134,9 +134,9 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 #define NONE                 -1
-#define PEBBLE_OF_THUNDER    2
+#define PEBBLE_OF_THUNDER    0
 #define PEBBLE_OF_FIRE       1
-#define PEBBLE_OF_ICE        0
+#define PEBBLE_OF_ICE        2
 #define PEBBLE_OF_LIFE       3
 #define PEBBLE_OF_DEATH      4
 #define PEBBLE_OF_LIGHT      5
@@ -168,7 +168,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define WEAKNESS           0
 #define DAMAGE_OVER_TIME   1
 #define SLOW               2
-#define LIFE_DRAIN         3
+#define LIFE_DRAIN         3 // Not actually used as a "status effect".
 #define DISINTEGRATION     4
 #define INTIMIDATION       5
 #define STUN               6
@@ -320,7 +320,7 @@ void move_player(const int8_t direction);
 void move_npc(npc_t *const npc, const int8_t direction);
 void determine_npc_behavior(npc_t *const npc);
 void damage_player(int8_t damage);
-void damage_npc(npc_t *const npc, int8_t damage);
+uint8_t damage_npc(npc_t *const npc, int8_t damage);
 void cast_spell_on_npc(npc_t *const npc,
                        const int8_t magic_type,
                        int8_t potency);
