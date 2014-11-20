@@ -89,8 +89,8 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 // Cell types (for loot, an item type value is used):
-#define ENTRANCE -1
-#define EXIT     -2
+#define EXIT     -1
+#define ENTRANCE -2
 #define EMPTY    -3
 #define SOLID    -4
 

@@ -1936,23 +1936,42 @@ void draw_cell_contents(GContext *ctx,
   }
   floor_center_point = get_floor_center_point(depth, position);
 
-  // Draw a shadow/exit on the ground or an entrance on the ceiling:
-  fill_ellipse(ctx,
-               GPoint(floor_center_point.x,
-                      get_cell_type(cell) == ENTRANCE                ?
-                        GRAPHICS_FRAME_HEIGHT - floor_center_point.y :
-                        floor_center_point.y),
-               ELLIPSE_RADIUS_RATIO *
-                 (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
-                  g_back_wall_coords[depth][position][TOP_LEFT].x),
-               depth == 0                                               ?
+  // Check for an entrance (hole in the ceiling):
+  if (get_cell_type(cell) == ENTRANCE)
+  {
+    fill_ellipse(ctx,
+                 GPoint(floor_center_point.x,
+                        GRAPHICS_FRAME_HEIGHT - floor_center_point.y),
                  ELLIPSE_RADIUS_RATIO *
-                  (GRAPHICS_FRAME_HEIGHT -
-                   g_back_wall_coords[depth][position][BOTTOM_RIGHT].y) :
+                   (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
+                    g_back_wall_coords[depth][position][TOP_LEFT].x),
+                 depth == 0                                               ?
+                   ELLIPSE_RADIUS_RATIO *
+                    (GRAPHICS_FRAME_HEIGHT -
+                     g_back_wall_coords[depth][position][BOTTOM_RIGHT].y) :
+                   ELLIPSE_RADIUS_RATIO *
+                      (g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y -
+                       g_back_wall_coords[depth][position][BOTTOM_RIGHT].y),
+                 GColorBlack);
+  }
+
+  // Check for an exit (hole in the ground) or a shadow cast by loot/NPC:
+  if (npc || get_cell_type(cell) >= EXIT)
+  {
+    fill_ellipse(ctx,
+                 GPoint(floor_center_point.x, floor_center_point.y),
                  ELLIPSE_RADIUS_RATIO *
-                    (g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y -
-                     g_back_wall_coords[depth][position][BOTTOM_RIGHT].y),
-               GColorBlack);
+                   (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
+                    g_back_wall_coords[depth][position][TOP_LEFT].x),
+                 depth == 0                                               ?
+                   ELLIPSE_RADIUS_RATIO *
+                    (GRAPHICS_FRAME_HEIGHT -
+                     g_back_wall_coords[depth][position][BOTTOM_RIGHT].y) :
+                   ELLIPSE_RADIUS_RATIO *
+                      (g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y -
+                       g_back_wall_coords[depth][position][BOTTOM_RIGHT].y),
+                 GColorBlack);
+  }
 
   // If there's no NPC, check for loot, then we're done:
   if (npc == NULL)
@@ -1968,6 +1987,7 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 2,
                          GCornersTop);
     }
+
     return;
   }
 
