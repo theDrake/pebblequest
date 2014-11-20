@@ -1219,7 +1219,7 @@ static void main_menu_draw_row_callback(GContext *ctx,
       break;
     default:
       strcat(title_str, "Character Stats");
-      strcat(subtitle_str, "Strength, Agility...");
+      strcat(subtitle_str, "Agility, Strength...");
       break;
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
