@@ -2001,72 +2001,39 @@ void draw_cell_contents(GContext *ctx,
   }*/
 
   // Draw the NPC:
-  /*graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_context_set_fill_color(ctx, GColorBlack);
   if (npc->type == MAGE)
   {
     // Body:
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit * 4,
-                            floor_center_point.y - drawing_unit * 8),
-                     GPoint(floor_center_point.x - drawing_unit * 4,
-                            floor_center_point.y),
-                     GPoint(floor_center_point.x + drawing_unit * 4,
-                            floor_center_point.y - drawing_unit * 8),
-                     GPoint(floor_center_point.x + drawing_unit * 4,
-                            floor_center_point.y),
-                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
-                              8,
-                            g_back_wall_coords[depth][position][TOP_LEFT].y -
-                              8));
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 3.5,
-                             floor_center_point.y - drawing_unit * 7.5,
-                             drawing_unit,
-                             drawing_unit * 7.5),
-                       drawing_unit / 2,
-                       GCornersTop);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit * 2.5,
-                             floor_center_point.y - drawing_unit * 7.5,
-                             drawing_unit,
-                             drawing_unit * 7.5),
-                       drawing_unit / 2,
+                       GRect(floor_center_point.x - drawing_unit * 2,
+                             floor_center_point.y - drawing_unit * 8,
+                             drawing_unit * 4,
+                             drawing_unit * 8),
+                       drawing_unit,
                        GCornersTop);
 
     // Head:
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit * 1.4,
-                            floor_center_point.y - drawing_unit * 10.4),
-                     GPoint(floor_center_point.x - drawing_unit * 1.4,
-                            floor_center_point.y - drawing_unit * 8),
-                     GPoint(floor_center_point.x + drawing_unit * 1.4,
-                            floor_center_point.y - drawing_unit * 10.4),
-                     GPoint(floor_center_point.x + drawing_unit * 1.4,
-                            floor_center_point.y - drawing_unit * 8),
-                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
-                              8,
-                            g_back_wall_coords[depth][position][TOP_LEFT].y -
-                              8));
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit,
                              floor_center_point.y - drawing_unit * 10,
-                             drawing_unit * 2,
+                             drawing_unit * 2 + 1,
                              drawing_unit * 2),
                        drawing_unit,
-                       GCornersAll);*/
+                       GCornersTop);
 
     // Eyes:
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x - drawing_unit / 2,
+                         GPoint(floor_center_point.x - drawing_unit / 2 + 1,
                                 floor_center_point.y - (drawing_unit * 9)),
-                         drawing_unit / 4);
+                         drawing_unit / 5);
     graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x + drawing_unit / 2,
+                         GPoint(floor_center_point.x + drawing_unit / 2 - 1,
                                 floor_center_point.y - (drawing_unit * 9)),
-                         drawing_unit / 4);
-  /*}
-  else if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
+                         drawing_unit / 5);
+  }
+  /*else if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
   {
     // Legs:
     graphics_fill_rect(ctx,
