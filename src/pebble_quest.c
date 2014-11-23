@@ -354,7 +354,7 @@ GPoint get_npc_spawn_point(void)
   {
     spawn_point = get_cell_farther_away(g_player->position,
                                         i,
-                                        MAX_VISIBILITY_DEPTH);
+                                        MAX_VISIBILITY_DEPTH - 1);
     if (occupiable(spawn_point))
     {
       return spawn_point;
@@ -2017,7 +2017,7 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit,
                              floor_center_point.y - drawing_unit * 10,
-                             drawing_unit * 2 + 1,
+                             drawing_unit * 2,
                              drawing_unit * 2),
                        drawing_unit,
                        GCornersTop);
@@ -2025,13 +2025,127 @@ void draw_cell_contents(GContext *ctx,
     // Eyes:
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x - drawing_unit / 2 + 1,
+                         GPoint(floor_center_point.x - drawing_unit / 3,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 5);
     graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x + drawing_unit / 2 - 1,
+                         GPoint(floor_center_point.x + drawing_unit / 3,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 5);
+  }
+  else
+  {
+    // Legs:
+    draw_shaded_quad(ctx,
+                     GPoint(floor_center_point.x - drawing_unit * 2,
+                            floor_center_point.y - drawing_unit * 3),
+                     GPoint(floor_center_point.x - drawing_unit * 2,
+                            floor_center_point.y),
+                     GPoint(floor_center_point.x - drawing_unit,
+                            floor_center_point.y - drawing_unit * 3),
+                     GPoint(floor_center_point.x - drawing_unit,
+                            floor_center_point.y),
+                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
+                              10,
+                            g_back_wall_coords[depth][position][TOP_LEFT].y -
+                              10));
+    draw_shaded_quad(ctx,
+                     GPoint(floor_center_point.x + drawing_unit,
+                            floor_center_point.y - drawing_unit * 3),
+                     GPoint(floor_center_point.x + drawing_unit,
+                            floor_center_point.y),
+                     GPoint(floor_center_point.x + drawing_unit * 2,
+                            floor_center_point.y - drawing_unit * 3),
+                     GPoint(floor_center_point.x + drawing_unit * 2,
+                            floor_center_point.y),
+                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
+                              10,
+                            g_back_wall_coords[depth][position][TOP_LEFT].y -
+                              10));
+
+    // Torso and head:
+    draw_shaded_quad(ctx,
+                     GPoint(floor_center_point.x - drawing_unit,
+                            floor_center_point.y - drawing_unit * 8),
+                     GPoint(floor_center_point.x - drawing_unit,
+                            floor_center_point.y - drawing_unit * 2),
+                     GPoint(floor_center_point.x + drawing_unit,
+                            floor_center_point.y - drawing_unit * 8),
+                     GPoint(floor_center_point.x + drawing_unit,
+                            floor_center_point.y - drawing_unit * 2),
+                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
+                              10,
+                            g_back_wall_coords[depth][position][TOP_LEFT].y -
+                              10));
+
+    // Arms:
+    draw_shaded_quad(ctx,
+                     GPoint(floor_center_point.x - drawing_unit * 3,
+                            floor_center_point.y - drawing_unit * 6),
+                     GPoint(floor_center_point.x - drawing_unit * 3,
+                            floor_center_point.y - drawing_unit * 5),
+                     GPoint(floor_center_point.x + drawing_unit * 3,
+                            floor_center_point.y - drawing_unit * 6),
+                     GPoint(floor_center_point.x + drawing_unit * 3,
+                            floor_center_point.y - drawing_unit * 5),
+                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
+                              10,
+                            g_back_wall_coords[depth][position][TOP_LEFT].y -
+                              10));
+    draw_shaded_quad(ctx,
+                     GPoint(floor_center_point.x - drawing_unit * 3,
+                            floor_center_point.y - drawing_unit * 7),
+                     GPoint(floor_center_point.x - drawing_unit * 3,
+                            floor_center_point.y - drawing_unit * 6),
+                     GPoint(floor_center_point.x - drawing_unit * 2,
+                            floor_center_point.y - drawing_unit * 7),
+                     GPoint(floor_center_point.x - drawing_unit * 2,
+                            floor_center_point.y - drawing_unit * 6),
+                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
+                              10,
+                            g_back_wall_coords[depth][position][TOP_LEFT].y -
+                              10));
+    draw_shaded_quad(ctx,
+                     GPoint(floor_center_point.x + drawing_unit * 2,
+                            floor_center_point.y - drawing_unit * 5),
+                     GPoint(floor_center_point.x + drawing_unit * 2,
+                            floor_center_point.y - drawing_unit * 4),
+                     GPoint(floor_center_point.x + drawing_unit * 3,
+                            floor_center_point.y - drawing_unit * 5),
+                     GPoint(floor_center_point.x + drawing_unit * 3,
+                            floor_center_point.y - drawing_unit * 4),
+                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
+                              10,
+                            g_back_wall_coords[depth][position][TOP_LEFT].y -
+                              10));
+
+    // Eyes:
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x - drawing_unit / 2,
+                                floor_center_point.y - drawing_unit * 7),
+                         drawing_unit / 5 + 1);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x + drawing_unit / 2,
+                                floor_center_point.y - drawing_unit * 7),
+                         drawing_unit / 5 + 1);
+
+    // Teeth:
+    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 6,
+                             drawing_unit / 3 + 1,
+                             drawing_unit),
+                       drawing_unit / 4,
+                       GCornerBottomLeft);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x + drawing_unit / 2 - 1,
+                             floor_center_point.y - drawing_unit * 6,
+                             drawing_unit / 3 + 1,
+                             drawing_unit),
+                       drawing_unit / 4,
+                       GCornerBottomRight);
   }
   /*else if (npc->type == WOLF || npc->type == BEAR || npc->type == DRAGON)
   {
