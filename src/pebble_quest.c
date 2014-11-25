@@ -1992,14 +1992,17 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // For some NPCs, we want to increase the drawing unit:
-  if (npc->type == ORC ||
-      npc->type == BEAR)
+  if (npc->type == PALE_ORC   ||
+      npc->type == DARK_ORC   ||
+      npc->type == WHITE_BEAR ||
+      npc->type == BLACK_BEAR)
   {
     drawing_unit++;
   }
-  else if (npc->type == OGRE  ||
-           npc->type == TROLL ||
-           npc->type == MINOTAUR)
+  else if (npc->type == PALE_TROLL ||
+           npc->type == DARK_TROLL ||
+           npc->type == MINOTAUR   ||
+           npc->type == DEMON)
   {
     drawing_unit += 2;
   }
@@ -2101,7 +2104,7 @@ void draw_cell_contents(GContext *ctx,
                                 floor_center_point.y - drawing_unit * 6 - 1),
                          drawing_unit / 5);
   }
-  else if (npc->type >= PALE_WOLF && npc->type <= DARK_BEAR)
+  else if (npc->type >= WHITE_WOLF && npc->type <= BLACK_BEAR)
   {
     // Legs:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :

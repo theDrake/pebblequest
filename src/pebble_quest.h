@@ -49,10 +49,10 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define DARK_TROLL    5
 #define MINOTAUR      6
 #define DEMON         7
-#define PALE_WOLF     8
-#define DARK_WOLF     9
-#define PALE_BEAR     10
-#define DARK_BEAR     11
+#define WHITE_WOLF    8
+#define BLACK_WOLF    9
+#define WHITE_BEAR    10
+#define BLACK_BEAR    11
 #define OOZE          12
 #define WORM          13
 #define LIZARD_MAN    14
