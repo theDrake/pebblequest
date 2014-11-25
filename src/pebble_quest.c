@@ -3453,18 +3453,13 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   }*/
 
   // Some NPCs may carry a random item:
-  if (type == ORC        ||
-      type == GOBLIN     ||
-      type == LIZARD_MAN ||
-      type == VAMPIRE    ||
-      type == WARRIOR    ||
-      type == THIEF)
+  if (type < MAGE)
   {
     npc->item = rand() % 2 ? NONE : RANDOM_ITEM; // Excludes Pebbles.
   }
 
   // Mages are the only source of Pebbles:
-  else if (type == MAGE)
+  else // if (type == MAGE)
   {
     npc->item = rand() % NUM_PEBBLE_TYPES;
   }
