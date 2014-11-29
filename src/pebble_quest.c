@@ -1991,21 +1991,18 @@ void draw_cell_contents(GContext *ctx,
     return;
   }
 
-  // For some NPCs, we want to increase the drawing unit:
-  /*if (npc->type == PALE_ORC   ||
-      npc->type == DARK_ORC   ||
-      npc->type == WHITE_BEAR ||
-      npc->type == BLACK_BEAR)
+  // For larger NPCs, increase the drawing unit:
+  if (npc->type == ORC_WARRIOR ||
+      npc->type == WHITE_BEAR  ||
+      npc->type == BLACK_BEAR  ||
+      npc->type <= DARK_TROLL)
   {
     drawing_unit++;
   }
-  else if (npc->type == PALE_TROLL ||
-           npc->type == DARK_TROLL ||
-           npc->type == MINOTAUR   ||
-           npc->type == DEMON)
+  if (npc->type <= DARK_OGRE)
   {
-    drawing_unit += 2;
-  }*/
+    drawing_unit ++;
+  }
 
   // Draw the NPC:
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -2313,11 +2310,11 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 -
                                drawing_unit / 4,
-                             floor_center_point.y - drawing_unit * 6,
+                             floor_center_point.y - drawing_unit * 7,
                              drawing_unit / 2,
-                             drawing_unit * 3),
+                             drawing_unit * 4),
                        drawing_unit,
-                       GCornersBottom);
+                       GCornersTop);
 
     // Head:
     draw_shaded_quad(ctx,
@@ -3425,59 +3422,37 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
     npc->status_effects[i] = 0;
   }
 
-  // Set major stats according to current dungeon depth:
-  npc->health = g_player->depth * 3;
-  npc->power  = npc->physical_defense = npc->magical_defense = g_player->depth;
+  // Set stats according to current dungeon depth:
+  npc->health = npc->power = npc->physical_defense = npc->magical_defense =
+    g_player->depth * 2;
 
-  // Check for increased health:
-  /*if (type == ORC        ||
-      type == WARRIOR    ||
-      type == BEAR       ||
-      type == TROLL      ||
-      type == OOZE ||
-      type == MINOTAUR   ||
-      type == MUMMY      ||
-      type == DRAGON     ||
-      type == VAMPIRE)
+  // Check for increased stats:
+  if (type <= DARK_TROLL ||
+      type == WHITE_BEAR ||
+      type == BLACK_BEAR)
   {
     npc->health *= 2;
   }
-
-  // Check for increased power:
-  if (type == MAGE       ||
-      type == ORC        ||
-      type == WARRIOR    ||
-      type == BEAR       ||
-      type == TROLL      ||
-      type == LIZARD_MAN ||
-      type == MINOTAUR   ||
-      type == MUMMY      ||
-      type == DRAGON     ||
-      type == VAMPIRE)
+  if (type <= DARK_OGRE   ||
+      type == MAGE        ||
+      type == ORC_WARRIOR ||
+      type == WHITE_BEAR  ||
+      type == BLACK_BEAR)
   {
     npc->power *= 2;
   }
-
-  // Check for increased phys. defense (via armor or evasion):
-  if (type == WARRIOR  ||
-      type == THIEF   ||
-      type == LIZARD_MAN ||
-      type == IMP     ||
-      type == DRAGON  ||
-      type == VAMPIRE)
+  if (type == HUMAN_WARRIOR ||
+      type == ORC_WARRIOR   ||
+      type == WRAITH        ||
+      type == DEMON)
   {
     npc->physical_defense *= 2;
   }
-
-  // Check for increased mag. defense:
-  if (type == MAGE    ||
-      type == VAMPIRE ||
-      type == DRAGON  ||
-      type == IMP     ||
-      type == ELEMENTAL)
+  if (type == DEMON ||
+      type % 2 == 0)
   {
     npc->magical_defense *= 2;
-  }*/
+  }
 
   // Some NPCs may carry a random item:
   if (type < MAGE)
