@@ -2037,7 +2037,7 @@ void draw_cell_contents(GContext *ctx,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 5);
   }
-  else if (npc->type >= PALE_GOBLIN && npc->type <= DEMON):
+  else if (npc->type >= PALE_GOBLIN && npc->type <= DEMON)
   {
     // Legs:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
@@ -2152,21 +2152,21 @@ void draw_cell_contents(GContext *ctx,
                                (drawing_unit + drawing_unit / 2),
                              floor_center_point.y - drawing_unit * 5,
                              drawing_unit,
-                             drawing_unit * 2)),
+                             drawing_unit * 2),
                        drawing_unit / 2,
                        GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 5,
                              drawing_unit,
-                             drawing_unit * 2)),
+                             drawing_unit * 2),
                        drawing_unit / 2,
                        GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 5,
                              drawing_unit,
-                             drawing_unit * 2)),
+                             drawing_unit * 2),
                        drawing_unit / 2,
                        GCornersAll);
   }
