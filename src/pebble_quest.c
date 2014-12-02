@@ -202,9 +202,8 @@ uint8_t damage_npc(npc_t *const npc, int8_t damage)
     npc->type = NONE;
 
     // Add experience points and check for a "level up":
-    g_player->exp_points += (npc->health + npc->power + npc->physical_defense +
-                             npc->magical_defense) / 4;
-    if (g_player->exp_points / POINTS_PER_LEVEL >= g_player->level)
+    g_player->exp_points += npc->power;
+    if (g_player->exp_points / (5 * g_player->level) >= g_player->level)
     {
       g_player->level++;
       show_window(LEVEL_UP_MENU, NOT_ANIMATED);
@@ -667,7 +666,7 @@ int8_t get_nth_item_type(const int8_t n)
   // Search heavy items:
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    if (g_player->heavy_items[i].type > NONE && item_count++ == n)
+    if (item_count + i == n)
     {
       return g_player->heavy_items[i].type;
     }
@@ -725,30 +724,6 @@ int8_t get_inventory_row_for_pebble(const int8_t pebble_type)
   }
 
   return 0;
-}
-
-/******************************************************************************
-   Function: get_num_heavy_items_owned
-
-Description: Returns the number of heavy items in the player's inventory.
-
-     Inputs: None.
-
-    Outputs: Number of heavy items owned by the player.
-******************************************************************************/
-int8_t get_num_heavy_items_owned(void)
-{
-  int8_t i, num_heavy_items = 0;
-
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
-    if (g_player->heavy_items[i].type > NONE)
-    {
-      num_heavy_items++;
-    }
-  }
-
-  return num_heavy_items;
 }
 
 /******************************************************************************
@@ -974,9 +949,9 @@ void show_narration(const int8_t narration)
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
                "Depth: %d\nExp.: %d\nLevel: %d",
-               sizeof(int),//g_player->depth,
-               sizeof(int8_t),//g_player->exp_points,
-               sizeof(int16_t),//g_player->level);
+               g_player->depth,
+               g_player->exp_points,
+               g_player->level);
       for (i = 0; i < NUM_MAJOR_STATS; ++i)
       {
         strcat(narration_str, "\n");
@@ -1461,7 +1436,20 @@ void menu_select_callback(MenuLayer *menu_layer,
   else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
     show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
-    add_current_selection_to_inventory();
+
+    // Pebbles:
+    if (g_current_selection < FIRST_HEAVY_ITEM)
+    {
+      g_player->pebbles[g_current_selection]++;
+      g_current_selection = get_inventory_row_for_pebble(g_current_selection);
+      show_window(INVENTORY_MENU, NOT_ANIMATED);
+    }
+
+    // Heavy items:
+    else
+    {
+      show_window(HEAVY_ITEMS_MENU, ANIMATED);
+    }
   }
   else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU])
   {
@@ -1530,7 +1518,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       init_heavy_item(&g_player->heavy_items[cell_index->row],
                       g_current_selection);
 
-      // If old item was equipped, equip new one if it has the same equip target:
+      // If old item was equipped, equip new one if equip target is the same:
       if (item_was_equipped &&
           g_player->heavy_items[cell_index->row].equip_target ==
             old_item_equip_target)
@@ -1585,11 +1573,11 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
 {
   if (menu_layer == g_menu_layers[INVENTORY_MENU])
   {
-    return get_num_pebble_types_owned() + get_num_heavy_items_owned();
+    return get_num_pebble_types_owned() + MAX_HEAVY_ITEMS;
   }
   else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
-    return get_num_heavy_items_owned();
+    return MAX_HEAVY_ITEMS;
   }
   else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
@@ -1993,18 +1981,19 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Prepare to draw the NPC:
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  if (npc->type == ORC_WARRIOR ||
-      npc->type == WHITE_BEAR  ||
-      npc->type == BLACK_BEAR  ||
-      npc->type <= DARK_TROLL)
+  if (npc->type <= DARK_TROLL  ||
+      npc->type == ORC_WARRIOR ||
+      (npc->type >= WHITE_BEAR && npc->type <= BLACK_PANTHER))
   {
     drawing_unit++;
   }
-  if (npc->type <= DARK_OGRE)
+  if (npc->type <= DARK_OGRE  ||
+      npc->type == WHITE_BEAR ||
+      npc->type == BLACK_BEAR)
   {
     drawing_unit ++;
   }
+  graphics_context_set_fill_color(ctx, GColorBlack);
 
   // Mages:
   if (npc->type == MAGE)
@@ -2039,21 +2028,9 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 5);
   }
 
-  // Goblins, trolls, ogres, minotaurs, and demons:
+  // Goblins, trolls, and ogres:
   else if (npc->type <= DARK_GOBLIN)
   {
-    // Horns (MINOTAUR and DEMON only):
-    if (npc->type <= DEMON)
-    {
-      graphics_fill_rect(ctx,
-                         GRect(floor_center_point.x - drawing_unit * 2,
-                               floor_center_point.y - drawing_unit * 7,
-                               drawing_unit * 4,
-                               drawing_unit / 2),
-                         drawing_unit,
-                         GCornersBottom);
-    }
-
     // Legs:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
                                                          GColorWhite);
@@ -2117,8 +2094,8 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 5);
   }
 
-  // Wolves and bears:
-  else if (npc->type >= WHITE_WOLF && npc->type <= BLACK_BEAR)
+  // Wolves, panthers, and bears:
+  else if (npc->type >= WHITE_BEAR && npc->type <= BLACK_WOLF)
   {
     // Legs:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
@@ -2162,15 +2139,6 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit / 2),
                        drawing_unit / 2,
                        GCornersAll);
-  }
-
-  // Oozes:
-  else if (npc->type == OOZE)
-  {
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x,
-                                floor_center_point.y - drawing_unit * 2),
-                         drawing_unit * 2 + drawing_unit);
   }
 
   // Wraiths:
@@ -3082,56 +3050,12 @@ void strcat_stat_value(char *const dest_str, const int8_t stat)
 }
 
 /******************************************************************************
-   Function: add_current_selection_to_inventory
-
-Description: Adds an item of type "g_current_selection" to the player's
-             inventory then displays the inventory menu to provide an
-             opportunity to infuse items and adjust equipment. If it's a heavy
-             item and there's no more room for heavy items, the "replace item"
-             menu will be shown.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void add_current_selection_to_inventory(void)
-{
-  int8_t i;
-
-  // Pebbles:
-  if (g_current_selection < FIRST_HEAVY_ITEM)
-  {
-    g_player->pebbles[g_current_selection]++;
-    g_current_selection = get_inventory_row_for_pebble(g_current_selection);
-    show_window(INVENTORY_MENU, NOT_ANIMATED);
-  }
-
-  // Heavy items:
-  else
-  {
-    for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-    {
-      if (g_player->heavy_items[i].type == NONE)
-      {
-        init_heavy_item(&g_player->heavy_items[i], g_current_selection);
-        g_current_selection = i + get_num_pebble_types_owned();
-        show_window(INVENTORY_MENU, NOT_ANIMATED);
-
-        return;
-      }
-    }
-
-    // If we reach this point, the player's heavy item array is full:
-    show_window(HEAVY_ITEMS_MENU, ANIMATED);
-  }
-}
-
-/******************************************************************************
    Function: equip_heavy_item
 
 Description: Equips a given heavy item to its appropriate equip target,
              unequipping the previously equipped item (if any), then adjusts
-             constant status effects and minor stats accordingly.
+             constant status effects and minor stats accordingly. If the item
+             was already equipped, it is instead unequipped.
 
      Inputs: heavy_item - Pointer to the heavy item to be equipped.
 
@@ -3139,14 +3063,21 @@ Description: Equips a given heavy item to its appropriate equip target,
 ******************************************************************************/
 void equip_heavy_item(heavy_item_t *const heavy_item)
 {
-  unequip_item_at(heavy_item->equip_target);
-  heavy_item->equipped = true;
-  if (heavy_item->equip_target < RIGHT_HAND &&
-      heavy_item->infused_pebble > NONE)
+  if (heavy_item->equipped)
   {
-    g_player->stats[heavy_item->infused_pebble]++;
+    unequip_heavy_item(heavy_item);
   }
-  adjust_minor_stats();
+  else
+  {
+    unequip_item_at(heavy_item->equip_target);
+    heavy_item->equipped = true;
+    if (heavy_item->equip_target < RIGHT_HAND &&
+        heavy_item->infused_pebble > NONE)
+    {
+      g_player->stats[heavy_item->infused_pebble]++;
+    }
+    adjust_minor_stats();
+  }
 }
 
 /******************************************************************************
@@ -3293,10 +3224,10 @@ void init_player(void)
 
   // Add starting inventory items:
   init_heavy_item(&g_player->heavy_items[0], DAGGER);
-  init_heavy_item(&g_player->heavy_items[1], ROBE);
-  init_heavy_item(&g_player->heavy_items[2], NONE);
+  init_heavy_item(&g_player->heavy_items[1], STAFF);
+  init_heavy_item(&g_player->heavy_items[2], ROBE);
   equip_heavy_item(&g_player->heavy_items[0]);
-  equip_heavy_item(&g_player->heavy_items[1]);
+  equip_heavy_item(&g_player->heavy_items[2]);
 
   // Assign minor stats, then ensure health and energy are at 100%:
   adjust_minor_stats();
@@ -3333,31 +3264,25 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
     g_player->depth * 2;
 
   // Check for increased stats:
-  if (type <= DARK_TROLL ||
+  if (type <= DARK_TROLL  ||
+      type == ORC_WARRIOR ||
+      (type >= WHITE_BEAR && type <= BLACK_PANTHER))
+  {
+    npc->power += g_player->depth;
+  }
+  if (type <= DARK_OGRE  ||
       type == WHITE_BEAR ||
       type == BLACK_BEAR)
   {
-    npc->health *= 2;
+    npc->power += g_player->depth;
   }
-  if (type <= DARK_OGRE   ||
-      type == MAGE        ||
-      type == ORC_WARRIOR ||
-      type == WHITE_BEAR  ||
-      type == BLACK_BEAR)
+  if (type % 2)
   {
-    npc->power *= 2;
+    npc->physical_defense += g_player->depth;
   }
-  if (type == HUMAN_WARRIOR ||
-      type == ORC_WARRIOR   ||
-      type == WRAITH        ||
-      type == DEMON)
+  else // if (type % 2 == 0)
   {
-    npc->physical_defense *= 2;
-  }
-  if (type == DEMON ||
-      type % 2 == 0)
-  {
-    npc->magical_defense *= 2;
+    npc->magical_defense += g_player->depth;
   }
 
   // Some NPCs may carry a random item:

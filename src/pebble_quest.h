@@ -32,7 +32,6 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
   Player- and NPC-related Constants
 ******************************************************************************/
 
-#define POINTS_PER_LEVEL               50
 #define DEFAULT_MAJOR_STAT_VALUE       3 // AGILITY, STRENGTH, and INTELLECT.
 #define MIN_DAMAGE                     3 // Min. damage per attack/spell.
 #define MIN_SPELL_POTENCY              MIN_DAMAGE
@@ -41,24 +40,23 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define MAX_NPCS_AT_ONE_TIME           2
 
 // NPC types:
-#define MINOTAUR      0
-#define DEMON         1
-#define PALE_OGRE     2
-#define DARK_OGRE     3
-#define PALE_TROLL    4
-#define DARK_TROLL    5
-#define PALE_GOBLIN   6
-#define DARK_GOBLIN   7
-#define WHITE_WOLF    8
-#define BLACK_WOLF    9
-#define WHITE_BEAR    10
-#define BLACK_BEAR    11
+#define PALE_OGRE     0
+#define DARK_OGRE     1
+#define PALE_TROLL    2
+#define DARK_TROLL    3
+#define PALE_GOBLIN   4
+#define DARK_GOBLIN   5
+#define WHITE_BEAR    6
+#define BLACK_BEAR    7
+#define WHITE_PANTHER 8
+#define BLACK_PANTHER 9
+#define WHITE_WOLF    10
+#define BLACK_WOLF    11
 #define HUMAN_WARRIOR 12
 #define ORC_WARRIOR   13
-#define OOZE          14
-#define WRAITH        15
-#define MAGE          16
-#define NUM_NPC_TYPES 17
+#define WRAITH        14
+#define MAGE          15
+#define NUM_NPC_TYPES 16
 
 // Character stats (the first seven correspond to Pebble effects):
 #define AGILITY             0
@@ -334,7 +332,6 @@ int8_t get_opposite_direction(const int8_t direction);
 int8_t get_nth_item_type(const int8_t n);
 int8_t get_num_pebble_types_owned(void);
 int8_t get_inventory_row_for_pebble(const int8_t pebble_type);
-int8_t get_num_heavy_items_owned(void);
 heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target);
 int8_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int8_t type);
@@ -447,7 +444,6 @@ void strcat_item_name(char *const dest_str, const int8_t item_type);
 void strcat_magic_type(char *const dest_str, const int8_t magic_type);
 void strcat_stat_name(char *const dest_str, const int8_t stat);
 void strcat_stat_value(char *const dest_str, const int8_t stat);
-void add_current_selection_to_inventory(void);
 void equip_heavy_item(heavy_item_t *const item);
 void unequip_heavy_item(heavy_item_t *const heavy_item);
 void unequip_item_at(const int8_t equip_target);
