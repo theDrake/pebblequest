@@ -2146,37 +2146,13 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit / 2),
                        drawing_unit / 4,
                        GCornersAll);
-
-    // Mouth:
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x -
-                               (drawing_unit + drawing_unit / 2),
-                             floor_center_point.y - drawing_unit * 5,
-                             drawing_unit,
-                             drawing_unit * 2),
-                       drawing_unit / 2,
-                       GCornersAll);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit / 2,
-                             floor_center_point.y - drawing_unit * 5,
-                             drawing_unit,
-                             drawing_unit * 2),
-                       drawing_unit / 2,
-                       GCornersAll);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 2,
-                             floor_center_point.y - drawing_unit * 5,
-                             drawing_unit,
-                             drawing_unit * 2),
-                       drawing_unit / 2,
-                       GCornersAll);
   }
   else if (npc->type == OOZE)
   {
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 2),
-                         drawing_unit);
+                         drawing_unit * 2);
   }
   else if (npc->type == WRAITH)
   {
@@ -3110,7 +3086,7 @@ void strcat_stat_value(char *const dest_str, const int8_t stat)
   {
     snprintf(dest_str + strlen(dest_str),
              MAX_INT_DIGITS + 2,
-             "%d/"
+             "%d/",
              g_player->stats[stat + (CURRENT_HEALTH - MAX_HEALTH)]);
   }
   snprintf(dest_str + strlen(dest_str),
