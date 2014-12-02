@@ -2042,6 +2042,18 @@ void draw_cell_contents(GContext *ctx,
   // Goblins, trolls, ogres, minotaurs, and demons:
   else if (npc->type <= DARK_GOBLIN)
   {
+    // Horns (MINOTAUR and DEMON only):
+    if (npc->type <= DEMON)
+    {
+      graphics_fill_rect(ctx,
+                         GRect(floor_center_point.x - drawing_unit * 3,
+                               floor_center_point.y - drawing_unit * 7,
+                               drawing_unit * 6,
+                               drawing_unit / 2),
+                         drawing_unit,
+                         GCornersBottom);
+    }
+
     // Legs:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
                                                          GColorWhite);
@@ -2162,7 +2174,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Wraiths:
-  else if (npc->type == WRAITH)
+  else //if (npc->type == WRAITH)
   {
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_circle(ctx,
@@ -2176,23 +2188,9 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Warriors (human and orc):
-  else
+  /*else
   {
     // Legs:
-    /*graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 2),
-                             floor_center_point.y - drawing_unit * 3,
-                             drawing_unit,
-                             drawing_unit * 3)),
-                       NO_CORNER_RADIUS,
-                       GCornerNone);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit),
-                             floor_center_point.y - drawing_unit * 3,
-                             drawing_unit,
-                             drawing_unit * 3)),
-                       NO_CORNER_RADIUS,
-                       GCornerNone);*/
     draw_shaded_quad(ctx,
                      GPoint(floor_center_point.x - drawing_unit -
                               drawing_unit / 2,
@@ -2223,21 +2221,6 @@ void draw_cell_contents(GContext *ctx,
                               10,
                             g_back_wall_coords[depth][position][TOP_LEFT].y -
                               10));
-
-    // Waist:
-    /*draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x - drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 3),
-                     GPoint(floor_center_point.x + drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x + drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 3),
-                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
-                              10,
-                            g_back_wall_coords[depth][position][TOP_LEFT].y -
-                              10));*/
 
     // Arms (as one big rectangle behind the torso, shield, and weapon):
     draw_shaded_quad(ctx,
@@ -2259,13 +2242,6 @@ void draw_cell_contents(GContext *ctx,
                               10));
 
     // Torso:
-    /*graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 2,
-                             floor_center_point.y - drawing_unit * 8,
-                             drawing_unit * 4,
-                             drawing_unit * 4),
-                       NO_CORNER_RADIUS,
-                       GCornerNone);*/
     draw_shaded_quad(ctx,
                      GPoint(floor_center_point.x - drawing_unit -
                               drawing_unit / 2,
@@ -2299,7 +2275,7 @@ void draw_cell_contents(GContext *ctx,
                                drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 7,
                              drawing_unit / 2,
-                             drawing_unit * 4),
+                             drawing_unit * 3),
                        drawing_unit,
                        GCornersTop);
 
@@ -2325,7 +2301,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit / 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
-  }
+  }*/
 }
 
 /******************************************************************************
