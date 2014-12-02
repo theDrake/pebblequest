@@ -56,13 +56,9 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define HUMAN_WARRIOR 12
 #define ORC_WARRIOR   13
 #define OOZE          14
-#define WORM          15
-#define LIZARD_MAN    16
-#define SKELETON      17
-#define MUMMY         18
-#define WRAITH        19
-#define MAGE          26
-#define NUM_NPC_TYPES 27
+#define WRAITH        15
+#define MAGE          16
+#define NUM_NPC_TYPES 17
 
 // Character stats (the first seven correspond to Pebble effects):
 #define AGILITY             0

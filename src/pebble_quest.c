@@ -1992,7 +1992,8 @@ void draw_cell_contents(GContext *ctx,
     return;
   }
 
-  // For larger NPCs, increase the drawing unit:
+  // Prepare to draw the NPC:
+  graphics_context_set_fill_color(ctx, GColorBlack);
   if (npc->type == ORC_WARRIOR ||
       npc->type == WHITE_BEAR  ||
       npc->type == BLACK_BEAR  ||
@@ -2005,8 +2006,7 @@ void draw_cell_contents(GContext *ctx,
     drawing_unit ++;
   }
 
-  // Draw the NPC:
-  graphics_context_set_fill_color(ctx, GColorBlack);
+  // Mages:
   if (npc->type == MAGE)
   {
     // Body:
@@ -2038,6 +2038,8 @@ void draw_cell_contents(GContext *ctx,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 5);
   }
+
+  // Goblins, trolls, ogres, minotaurs, and demons:
   else if (npc->type <= DARK_GOBLIN)
   {
     // Legs:
@@ -2102,6 +2104,8 @@ void draw_cell_contents(GContext *ctx,
                                 floor_center_point.y - drawing_unit * 6 - 1),
                          drawing_unit / 5);
   }
+
+  // Wolves and bears:
   else if (npc->type >= WHITE_WOLF && npc->type <= BLACK_BEAR)
   {
     // Legs:
@@ -2133,20 +2137,22 @@ void draw_cell_contents(GContext *ctx,
                                                          GColorBlack);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x -
-                               (drawing_unit + drawing_unit / 2),
-                             floor_center_point.y - drawing_unit * 7,
+                               (drawing_unit + drawing_unit / 3),
+                             floor_center_point.y - drawing_unit * 6,
                              drawing_unit,
-                             drawing_unit / 2),
+                             drawing_unit / 3),
                        drawing_unit / 4,
                        GCornersAll);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 2,
-                             floor_center_point.y - drawing_unit * 7,
+                       GRect(floor_center_point.x + drawing_unit / 3,
+                             floor_center_point.y - drawing_unit * 6,
                              drawing_unit,
-                             drawing_unit / 2),
+                             drawing_unit / 3),
                        drawing_unit / 4,
                        GCornersAll);
   }
+
+  // Oozes:
   else if (npc->type == OOZE)
   {
     graphics_fill_circle(ctx,
@@ -2154,6 +2160,8 @@ void draw_cell_contents(GContext *ctx,
                                 floor_center_point.y - drawing_unit * 2),
                          drawing_unit * 2);
   }
+
+  // Wraiths:
   else if (npc->type == WRAITH)
   {
     graphics_context_set_fill_color(ctx, GColorWhite);
@@ -2166,7 +2174,9 @@ void draw_cell_contents(GContext *ctx,
                                 floor_center_point.y - (drawing_unit * 8)),
                          drawing_unit / 4);
   }
-  else // if (npc->type == [humanoid])
+
+  // Warriors (human and orc):
+  else
   {
     // Legs:
     /*graphics_fill_rect(ctx,
