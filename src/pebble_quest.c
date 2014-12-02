@@ -975,8 +975,8 @@ void show_narration(const int8_t narration)
                NARRATION_STR_LEN + 1,
                "Depth: %d\nExp.: %d\nLevel: %d",
                sizeof(int),//g_player->depth,
-               g_player->exp_points,
-               g_player->level);
+               sizeof(int8_t),//g_player->exp_points,
+               sizeof(int16_t),//g_player->level);
       for (i = 0; i < NUM_MAJOR_STATS; ++i)
       {
         strcat(narration_str, "\n");
@@ -2046,9 +2046,9 @@ void draw_cell_contents(GContext *ctx,
     if (npc->type <= DEMON)
     {
       graphics_fill_rect(ctx,
-                         GRect(floor_center_point.x - drawing_unit * 3,
+                         GRect(floor_center_point.x - drawing_unit * 2,
                                floor_center_point.y - drawing_unit * 7,
-                               drawing_unit * 6,
+                               drawing_unit * 4,
                                drawing_unit / 2),
                          drawing_unit,
                          GCornersBottom);
@@ -2125,20 +2125,20 @@ void draw_cell_contents(GContext *ctx,
                                                          GColorWhite);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 4,
+                             floor_center_point.y - drawing_unit * 5,
                              drawing_unit * 2,
-                             drawing_unit * 4),
-                       NO_CORNER_RADIUS,
-                       GCornerNone);
+                             drawing_unit * 5),
+                       drawing_unit,
+                       GCornersTop);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit,
-                             floor_center_point.y - drawing_unit * 4,
+                             floor_center_point.y - drawing_unit * 5,
                              drawing_unit * 2,
-                             drawing_unit * 4),
-                       NO_CORNER_RADIUS,
-                       GCornerNone);
+                             drawing_unit * 5),
+                       drawing_unit,
+                       GCornersTop);
 
-    // Body/Head:
+    // Body and head:
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 5),
@@ -2149,18 +2149,18 @@ void draw_cell_contents(GContext *ctx,
                                                          GColorBlack);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x -
-                               (drawing_unit + drawing_unit / 3),
+                               (drawing_unit + drawing_unit / 2),
                              floor_center_point.y - drawing_unit * 6,
                              drawing_unit,
-                             drawing_unit / 3),
-                       drawing_unit / 4,
+                             drawing_unit / 2),
+                       drawing_unit / 2,
                        GCornersAll);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 3,
+                       GRect(floor_center_point.x + drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 6,
                              drawing_unit,
-                             drawing_unit / 3),
-                       drawing_unit / 4,
+                             drawing_unit / 2),
+                       drawing_unit / 2,
                        GCornersAll);
   }
 
@@ -2170,7 +2170,7 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 2),
-                         drawing_unit * 2);
+                         drawing_unit * 2 + drawing_unit);
   }
 
   // Wraiths:
