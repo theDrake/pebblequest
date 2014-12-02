@@ -451,7 +451,6 @@ void strcat_item_name(char *const dest_str, const int8_t item_type);
 void strcat_magic_type(char *const dest_str, const int8_t magic_type);
 void strcat_stat_name(char *const dest_str, const int8_t stat);
 void strcat_stat_value(char *const dest_str, const int8_t stat);
-void strcat_int(char *const dest_str, int16_t integer);
 void add_current_selection_to_inventory(void);
 void equip_heavy_item(heavy_item_t *const item);
 void unequip_heavy_item(heavy_item_t *const heavy_item);

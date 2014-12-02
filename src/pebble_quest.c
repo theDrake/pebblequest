@@ -971,12 +971,12 @@ void show_narration(const int8_t narration)
                             "depths, never to be found.");
       break;
     case STATS_NARRATION_1: // Total chars: ??
-      strcpy(narration_str, "Depth: ");
-      strcat_int(narration_str, g_player->depth);
-      strcat(narration_str, "\nExp.: ");
-      strcat_int(narration_str, g_player->exp_points);
-      strcat(narration_str, "\nLevel: ");
-      strcat_int(narration_str, g_player->level);
+      snprintf(narration_str,
+               NARRATION_STR_LEN + 1,
+               "Depth: %d\nExp.: %d\nLevel: %d",
+               sizeof(int),//g_player->depth,
+               g_player->exp_points,
+               g_player->level);
       for (i = 0; i < NUM_MAJOR_STATS; ++i)
       {
         strcat(narration_str, "\n");
@@ -1252,9 +1252,10 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
   // Pebbles:
   if (item_type < FIRST_HEAVY_ITEM)
   {
-    strcat(subtitle_str, "(");
-    strcat_int(subtitle_str, g_player->pebbles[item_type]);
-    strcat(subtitle_str, ")");
+    snprintf(subtitle_str,
+             MENU_SUBTITLE_STR_LEN - 8,
+             "(%d)",
+             g_player->pebbles[item_type]);
     if (g_player->equipped_pebble == item_type)
     {
       strcat(subtitle_str, " Equipped");
@@ -3107,72 +3108,15 @@ void strcat_stat_value(char *const dest_str, const int8_t stat)
 {
   if (stat == MAX_HEALTH || stat == MAX_ENERGY)
   {
-    strcat_int(dest_str,
-               g_player->stats[stat + (CURRENT_HEALTH - MAX_HEALTH)]);
-    strcat(dest_str, "/");
+    snprintf(dest_str + strlen(dest_str),
+             MAX_INT_DIGITS + 2,
+             "%d/"
+             g_player->stats[stat + (CURRENT_HEALTH - MAX_HEALTH)]);
   }
-  strcat_int(dest_str, g_player->stats[stat]);
-}
-
-/******************************************************************************
-   Function: strcat_int
-
-Description: Concatenates a "small" integer value onto the end of a string. The
-             absolute value of the integer may not exceed MAX_INT_VALUE (if it
-             does, MAX_INT_VALUE will be used in its place). If the integer is
-             negative, a minus sign will be included.
-
-     Inputs: dest_str - Pointer to the destination string.
-             integer  - Integer value to be converted to characters and
-                        appended to the string.
-
-    Outputs: None.
-******************************************************************************/
-void strcat_int(char *const dest_str, int16_t integer)
-{
-  int8_t i, j;
-  static char int_str[MAX_INT_DIGITS + 1];
-  bool negative = false;
-
-  int_str[0] = '\0';
-  if (integer < 0)
-  {
-    negative = true;
-    integer  *= -1;
-  }
-  if (integer > MAX_INT_VALUE)
-  {
-    integer = MAX_INT_VALUE;
-  }
-  if (integer == 0)
-  {
-    strcpy(int_str, "0");
-  }
-  else
-  {
-    for (i = 0; integer != 0; integer /= 10)
-    {
-      j            = integer % 10;
-      int_str[i++] = '0' + j;
-    }
-    int_str[i] = '\0';
-  }
-
-  i = strlen(dest_str) + strlen(int_str);
-  if (negative)
-  {
-    ++i;
-  }
-  dest_str[i--] = '\0';
-  j             = 0;
-  while (int_str[j] != '\0')
-  {
-    dest_str[i--] = int_str[j++];
-  }
-  if (negative)
-  {
-    dest_str[i--] = '-';
-  }
+  snprintf(dest_str + strlen(dest_str),
+           MAX_INT_DIGITS + 1,
+           "%d",
+           g_player->stats[stat]);
 }
 
 /******************************************************************************
