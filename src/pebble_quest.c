@@ -203,7 +203,7 @@ uint8_t damage_npc(npc_t *const npc, int8_t damage)
 
     // Add experience points and check for a "level up":
     g_player->exp_points += npc->power;
-    if (g_player->exp_points / (5 * g_player->level) >= g_player->level)
+    if (g_player->exp_points / (10 * g_player->level) >= g_player->level)
     {
       g_player->level++;
       show_window(LEVEL_UP_MENU, NOT_ANIMATED);
@@ -2143,7 +2143,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Wraiths:
-  else if (npc->type == WRAITH)
+  else // if (npc->type == WRAITH)
   {
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
@@ -2156,7 +2156,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Warriors (dwarf, human, and orc):
-  else
+  /*else
   {
     // Legs:
     draw_shaded_quad(ctx,
@@ -2269,7 +2269,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit / 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
-  }
+  }*/
 }
 
 /******************************************************************************
@@ -3430,20 +3430,20 @@ void init_location(void)
   switch (builder_direction = rand() % NUM_DIRECTIONS)
   {
     case NORTH:
-      builder_position = RANDOM_POINT_NORTH;
-      set_cell_type(RANDOM_POINT_SOUTH, EXIT);
-      break;
-    case SOUTH:
       builder_position = RANDOM_POINT_SOUTH;
       set_cell_type(RANDOM_POINT_NORTH, EXIT);
       break;
-    case EAST:
-      builder_position = RANDOM_POINT_EAST;
-      set_cell_type(RANDOM_POINT_WEST, EXIT);
+    case SOUTH:
+      builder_position = RANDOM_POINT_NORTH;
+      set_cell_type(RANDOM_POINT_SOUTH, EXIT);
       break;
-    default: // case WEST:
+    case EAST:
       builder_position = RANDOM_POINT_WEST;
       set_cell_type(RANDOM_POINT_EAST, EXIT);
+      break;
+    default: // case WEST:
+      builder_position = RANDOM_POINT_EAST;
+      set_cell_type(RANDOM_POINT_WEST, EXIT);
       break;
   }
   g_player->position = GPoint(builder_position.x, builder_position.y);
