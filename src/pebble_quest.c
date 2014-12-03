@@ -3447,7 +3447,8 @@ void init_location(void)
       set_cell_type(RANDOM_POINT_WEST, EXIT);
       break;
   }
-  g_player->position = builder_position = g_location->entrance;
+  g_player->position = GPoint(g_location->entrance.x, g_location->entrance.y);
+  builder_position   = GPoint(g_location->entrance.x, g_location->entrance.y);
   set_player_direction(builder_direction);
 
   // Now carve a path between the entrance and exit points:
