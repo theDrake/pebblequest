@@ -1981,14 +1981,16 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Prepare to draw the NPC:
-  if (npc->type <= DARK_TROLL  ||
-      npc->type == ORC_WARRIOR ||
+  if (npc->type <= DARK_TROLL    ||
+      npc->type == HUMAN_WARRIOR ||
+      npc->type == ORC_WARRIOR   ||
       (npc->type >= WHITE_BEAR && npc->type <= BLACK_PANTHER))
   {
     drawing_unit++;
   }
-  if (npc->type <= DARK_OGRE  ||
-      npc->type == WHITE_BEAR ||
+  if (npc->type <= DARK_OGRE   ||
+      npc->type == ORC_WARRIOR ||
+      npc->type == WHITE_BEAR  ||
       npc->type == BLACK_BEAR)
   {
     drawing_unit ++;
@@ -2088,11 +2090,11 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
                                 floor_center_point.y - drawing_unit * 6 - 1),
-                         drawing_unit / 5);
+                         drawing_unit / 4);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2 - 1,
                                 floor_center_point.y - drawing_unit * 6 - 1),
-                         drawing_unit / 5);
+                         drawing_unit / 4);
   }
 
   // Wolves, panthers, and bears:
@@ -3037,12 +3039,12 @@ void strcat_stat_value(char *const dest_str, const int8_t stat)
   if (stat == MAX_HEALTH || stat == MAX_ENERGY)
   {
     snprintf(dest_str + strlen(dest_str),
-             MAX_INT_DIGITS + 2,
+             MAX_SMALL_INT_DIGITS + 2,
              "%d/",
              g_player->stats[stat + (CURRENT_HEALTH - MAX_HEALTH)]);
   }
   snprintf(dest_str + strlen(dest_str),
-           MAX_INT_DIGITS + 1,
+           MAX_SMALL_INT_DIGITS + 1,
            "%d",
            g_player->stats[stat]);
 }
