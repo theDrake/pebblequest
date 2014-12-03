@@ -84,10 +84,9 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 // Cell types (for loot, an item type value is used):
-#define EXIT     -1
-#define ENTRANCE -2
-#define EMPTY    -3
-#define SOLID    -4
+#define EXIT  -1
+#define EMPTY -2
+#define SOLID -3
 
 // Directions:
 #define NORTH          0
@@ -272,6 +271,7 @@ typedef struct NonPlayerCharacter {
 
 typedef struct Location {
   int8_t map[MAP_WIDTH][MAP_HEIGHT];
+  GPoint entrance;
   npc_t npcs[MAX_NPCS_AT_ONE_TIME];
 } __attribute__((__packed__)) location_t;
 

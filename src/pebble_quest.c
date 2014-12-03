@@ -1926,7 +1926,7 @@ void draw_cell_contents(GContext *ctx,
   floor_center_point = get_floor_center_point(depth, position);
 
   // Check for an entrance (hole in the ceiling):
-  if (get_cell_type(cell) == ENTRANCE)
+  if (gpoint_equal(&cell, &g_location->entrance))
   {
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x,
@@ -2110,8 +2110,7 @@ void draw_cell_contents(GContext *ctx,
                        drawing_unit,
                        GCornersTop);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit +
-                               drawing_unit / 2,
+                       GRect(floor_center_point.x + drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 4,
                              drawing_unit + drawing_unit / 2,
                              drawing_unit * 4),
@@ -2121,8 +2120,7 @@ void draw_cell_contents(GContext *ctx,
     // Body and head:
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
-                                floor_center_point.y - drawing_unit * 4 -
-                                  drawing_unit / 2),
+                                floor_center_point.y - drawing_unit * 4),
                          drawing_unit * 2 + drawing_unit / 2);
 
     // Eyes:
@@ -3433,23 +3431,23 @@ void init_location(void)
   switch (builder_direction = rand() % NUM_DIRECTIONS)
   {
     case NORTH:
-      builder_position = RANDOM_POINT_SOUTH;
+      g_location->entrance = RANDOM_POINT_SOUTH;
       set_cell_type(RANDOM_POINT_NORTH, EXIT);
       break;
     case SOUTH:
-      builder_position = RANDOM_POINT_NORTH;
+      g_location->entrance = RANDOM_POINT_NORTH;
       set_cell_type(RANDOM_POINT_SOUTH, EXIT);
       break;
     case EAST:
-      builder_position = RANDOM_POINT_WEST;
+      g_location->entrance = RANDOM_POINT_WEST;
       set_cell_type(RANDOM_POINT_EAST, EXIT);
       break;
     default: // case WEST:
-      builder_position = RANDOM_POINT_EAST;
+      g_location->entrance = RANDOM_POINT_EAST;
       set_cell_type(RANDOM_POINT_WEST, EXIT);
       break;
   }
-  g_player->position = GPoint(builder_position.x, builder_position.y);
+  g_player->position = builder_position = g_location->entrance;
   set_player_direction(builder_direction);
 
   // Now carve a path between the entrance and exit points:
@@ -3504,8 +3502,7 @@ void init_location(void)
   // Add an evil wizard at the exit point:
   add_new_npc(MAGE, builder_position);
 
-  // Finally, set the entrance to ENTRANCE and increment the player's depth:
-  set_cell_type(g_player->position, ENTRANCE);
+  // Finally, increment the player's depth:
   g_player->depth++;
 }
 
