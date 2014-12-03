@@ -40,23 +40,25 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define MAX_NPCS_AT_ONE_TIME           2
 
 // NPC types:
-#define PALE_OGRE     0
-#define DARK_OGRE     1
-#define PALE_TROLL    2
-#define DARK_TROLL    3
-#define PALE_GOBLIN   4
-#define DARK_GOBLIN   5
-#define WHITE_BEAR    6
-#define BLACK_BEAR    7
-#define WHITE_PANTHER 8
-#define BLACK_PANTHER 9
-#define WHITE_WOLF    10
-#define BLACK_WOLF    11
-#define HUMAN_WARRIOR 12
-#define ORC_WARRIOR   13
-#define WRAITH        14
-#define MAGE          15
-#define NUM_NPC_TYPES 16
+#define DARK_OGRE     0
+#define PALE_OGRE     1
+#define DARK_TROLL    2
+#define PALE_TROLL    3
+#define DARK_GOBLIN   4
+#define PALE_GOBLIN   5
+#define BLACK_BEAR    6
+#define WHITE_BEAR    7
+#define BLACK_PANTHER 8
+#define WHITE_PANTHER 9
+#define BLACK_WOLF    10
+#define WHITE_WOLF    11
+#define DWARF_WARRIOR 12
+#define SKELETON      13
+#define HUMAN_WARRIOR 14
+#define WRAITH        15
+#define ORC_WARRIOR   16
+#define MAGE          17
+#define NUM_NPC_TYPES 18
 
 // Character stats (the first seven correspond to Pebble effects):
 #define AGILITY             0
@@ -95,7 +97,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NUM_DIRECTIONS 4
 
 // Other:
-#define MAP_WIDTH          12
+#define MAP_WIDTH          10
 #define MAP_HEIGHT         MAP_WIDTH
 #define RANDOM_POINT_NORTH GPoint(rand() % MAP_WIDTH, 0)
 #define RANDOM_POINT_SOUTH GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
@@ -223,8 +225,10 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 #define DEFAULT_TIMER_DURATION 20 // milliseconds
-#define MAX_INT_VALUE          9999
-#define MAX_INT_DIGITS         4
+#define MAX_SMALL_INT_VALUE    99
+#define MAX_SMALL_INT_DIGITS   2
+#define MAX_LARGE_INT_VALUE    9999
+#define MAX_LARGE_INT_DIGITS   4
 #define STORAGE_KEY            841
 #define ANIMATED               true
 #define NOT_ANIMATED           false

@@ -1993,7 +1993,10 @@ void draw_cell_contents(GContext *ctx,
   {
     drawing_unit ++;
   }
-  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_context_set_fill_color(ctx,
+                                  (npc->type % 2 == 0 || npc->type == MAGE) ?
+                                    GColorBlack                             :
+                                    GColorWhite);
 
   // Mages:
   if (npc->type == MAGE)
@@ -2032,8 +2035,6 @@ void draw_cell_contents(GContext *ctx,
   else if (npc->type <= DARK_GOBLIN)
   {
     // Legs:
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
-                                                         GColorWhite);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2,
                              floor_center_point.y - drawing_unit * 3,
@@ -2082,8 +2083,8 @@ void draw_cell_contents(GContext *ctx,
                        GCornersBottom);
 
     // Eyes:
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorWhite :
-                                                         GColorBlack);
+    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
+                                                         GColorWhite);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
                                 floor_center_point.y - drawing_unit * 6 - 1),
@@ -2098,8 +2099,6 @@ void draw_cell_contents(GContext *ctx,
   else if (npc->type >= WHITE_BEAR && npc->type <= BLACK_WOLF)
   {
     // Legs:
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
-                                                         GColorWhite);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
                              floor_center_point.y - drawing_unit * 5,
@@ -2122,29 +2121,28 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit * 3);
 
     // Eyes:
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorWhite :
-                                                         GColorBlack);
+    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
+                                                         GColorWhite);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x -
                                (drawing_unit + drawing_unit / 2),
                              floor_center_point.y - drawing_unit * 6,
                              drawing_unit,
                              drawing_unit / 2),
-                       drawing_unit / 2,
+                       drawing_unit / 4,
                        GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 6,
                              drawing_unit,
                              drawing_unit / 2),
-                       drawing_unit / 2,
+                       drawing_unit / 4,
                        GCornersAll);
   }
 
   // Wraiths:
-  else //if (npc->type == WRAITH)
+  else if (npc->type == WRAITH)
   {
-    graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
                                 floor_center_point.y - (drawing_unit * 8)),
@@ -2155,8 +2153,8 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 4);
   }
 
-  // Warriors (human and orc):
-  /*else
+  // Warriors (dwarf, human, and orc):
+  else
   {
     // Legs:
     draw_shaded_quad(ctx,
@@ -2269,7 +2267,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit / 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
-  }*/
+  }
 }
 
 /******************************************************************************
@@ -2852,7 +2850,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     // Generate new NPCs periodically (does nothing if the NPC array is full):
     if (rand() % 10 == 0)
     {
-      // This may create any NPC type except MAGE:
+      // Add any NPC type other than MAGE:
       add_new_npc(rand() % (NUM_NPC_TYPES - 1), get_npc_spawn_point());
     }
 
@@ -3264,25 +3262,27 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
     g_player->depth * 2;
 
   // Check for increased stats:
-  if (type <= DARK_TROLL  ||
-      type == ORC_WARRIOR ||
+  if (type <= DARK_TROLL    ||
+      type == HUMAN_WARRIOR ||
+      type == ORC_WARRIOR   ||
       (type >= WHITE_BEAR && type <= BLACK_PANTHER))
   {
     npc->power += g_player->depth;
   }
-  if (type <= DARK_OGRE  ||
-      type == WHITE_BEAR ||
+  if (type <= DARK_OGRE   ||
+      type == ORC_WARRIOR ||
+      type == WHITE_BEAR  ||
       type == BLACK_BEAR)
   {
     npc->power += g_player->depth;
   }
   if (type % 2)
   {
-    npc->physical_defense += g_player->depth;
+    npc->magical_defense += g_player->depth;
   }
   else // if (type % 2 == 0)
   {
-    npc->magical_defense += g_player->depth;
+    npc->physical_defense += g_player->depth;
   }
 
   // Some NPCs may carry a random item:
