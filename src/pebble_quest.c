@@ -2090,11 +2090,11 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
                                 floor_center_point.y - drawing_unit * 6 - 1),
-                         drawing_unit / 4);
+                         drawing_unit / 6);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2 - 1,
                                 floor_center_point.y - drawing_unit * 6 - 1),
-                         drawing_unit / 4);
+                         drawing_unit / 6);
   }
 
   // Wolves, panthers, and bears:
@@ -2102,25 +2102,28 @@ void draw_cell_contents(GContext *ctx,
   {
     // Legs:
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 5,
-                             drawing_unit * 2,
-                             drawing_unit * 5),
+                       GRect(floor_center_point.x - drawing_unit * 2 -
+                               drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 4,
+                             drawing_unit + drawing_unit / 2,
+                             drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit,
-                             floor_center_point.y - drawing_unit * 5,
-                             drawing_unit * 2,
-                             drawing_unit * 5),
+                       GRect(floor_center_point.x + drawing_unit +
+                               drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 4,
+                             drawing_unit + drawing_unit / 2,
+                             drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
 
     // Body and head:
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
-                                floor_center_point.y - drawing_unit * 5),
-                         drawing_unit * 3);
+                                floor_center_point.y - drawing_unit * 4 -
+                                  drawing_unit / 2),
+                         drawing_unit * 2 + drawing_unit / 2);
 
     // Eyes:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
@@ -2128,14 +2131,14 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x -
                                (drawing_unit + drawing_unit / 2),
-                             floor_center_point.y - drawing_unit * 6,
+                             floor_center_point.y - drawing_unit * 5,
                              drawing_unit,
                              drawing_unit / 2),
                        drawing_unit / 4,
                        GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit / 2,
-                             floor_center_point.y - drawing_unit * 6,
+                             floor_center_point.y - drawing_unit * 5,
                              drawing_unit,
                              drawing_unit / 2),
                        drawing_unit / 4,
@@ -2147,11 +2150,11 @@ void draw_cell_contents(GContext *ctx,
   {
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
-                                floor_center_point.y - (drawing_unit * 8)),
+                                floor_center_point.y - drawing_unit * 8),
                          drawing_unit / 4);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2,
-                                floor_center_point.y - (drawing_unit * 8)),
+                                floor_center_point.y - drawing_unit * 8),
                          drawing_unit / 4);
   }
 
