@@ -32,12 +32,11 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
   Player- and NPC-related Constants
 ******************************************************************************/
 
-#define DEFAULT_MAJOR_STAT_VALUE       3 // AGILITY, STRENGTH, and INTELLECT.
-#define MIN_DAMAGE                     3 // Min. damage per attack/spell.
-#define MIN_SPELL_POTENCY              MIN_DAMAGE
-#define MIN_ENERGY_LOSS_PER_ACTION     3
-#define DEFAULT_ENERGY_LOSS_PER_ACTION 10
-#define MAX_NPCS_AT_ONE_TIME           2
+#define DEFAULT_MAJOR_STAT_VALUE   1 // AGILITY, STRENGTH, and INTELLECT.
+#define MIN_DAMAGE                 3 // Min. damage per attack/spell.
+#define MIN_SPELL_POTENCY          MIN_DAMAGE
+#define MIN_ENERGY_LOSS_PER_ACTION 3
+#define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
 #define DARK_OGRE     0
@@ -336,6 +335,7 @@ int8_t get_opposite_direction(const int8_t direction);
 int8_t get_nth_item_type(const int8_t n);
 int8_t get_num_pebble_types_owned(void);
 int8_t get_inventory_row_for_pebble(const int8_t pebble_type);
+int8_t get_num_heavy_items_owned(void);
 heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target);
 int8_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int8_t type);

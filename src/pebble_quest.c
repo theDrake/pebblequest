@@ -666,7 +666,7 @@ int8_t get_nth_item_type(const int8_t n)
   // Search heavy items:
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    if (item_count + i == n)
+    if (g_player->heavy_items[i].type > NONE && item_count++ == n)
     {
       return g_player->heavy_items[i].type;
     }
@@ -724,6 +724,30 @@ int8_t get_inventory_row_for_pebble(const int8_t pebble_type)
   }
 
   return 0;
+}
+
+/******************************************************************************
+   Function: get_num_heavy_items_owned
+
+Description: Returns the number of heavy items in the player's inventory.
+
+     Inputs: None.
+
+    Outputs: Number of heavy items owned by the player.
+******************************************************************************/
+int8_t get_num_heavy_items_owned(void)
+{
+  int8_t i, num_heavy_items = 0;
+
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
+  {
+    if (g_player->heavy_items[i].type > NONE)
+    {
+      num_heavy_items++;
+    }
+  }
+
+  return num_heavy_items;
 }
 
 /******************************************************************************
@@ -1437,7 +1461,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   {
     show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
 
-    // Pebbles:
+    // If it's a Pebble, simply add it to the player's inventory:
     if (g_current_selection < FIRST_HEAVY_ITEM)
     {
       g_player->pebbles[g_current_selection]++;
@@ -1445,9 +1469,22 @@ void menu_select_callback(MenuLayer *menu_layer,
       show_window(INVENTORY_MENU, NOT_ANIMATED);
     }
 
-    // Heavy items:
+    // If it's a heavy item, attempt to add it to the player's inventory:
     else
     {
+      for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
+      {
+        if (g_player->heavy_items[i].type == NONE)
+        {
+          init_heavy_item(&g_player->heavy_items[i], g_current_selection);
+          g_current_selection = i + get_num_pebble_types_owned();
+          show_window(INVENTORY_MENU, NOT_ANIMATED);
+
+          return;
+        }
+      }
+
+      // If we reach this point, a heavy item must be dropped to add a new one:
       show_window(HEAVY_ITEMS_MENU, ANIMATED);
     }
   }
@@ -1573,11 +1610,11 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
 {
   if (menu_layer == g_menu_layers[INVENTORY_MENU])
   {
-    return get_num_pebble_types_owned() + MAX_HEAVY_ITEMS;
+    return get_num_pebble_types_owned() + get_num_heavy_items_owned();
   }
   else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
-    return MAX_HEAVY_ITEMS;
+    return get_num_heavy_items_owned();
   }
   else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
@@ -1909,12 +1946,6 @@ void draw_cell_contents(GContext *ctx,
   GPoint floor_center_point;
   npc_t *npc = get_npc_at(cell);
 
-  // Check for a completely empty cell:
-  if (get_cell_type(cell) == EMPTY && npc == NULL)
-  {
-    return;
-  }
-
   // Determine the drawing unit and floor center point:
   drawing_unit = (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
                   g_back_wall_coords[depth][position][TOP_LEFT].x) / 10;
@@ -1939,8 +1970,8 @@ void draw_cell_contents(GContext *ctx,
                     (GRAPHICS_FRAME_HEIGHT -
                      g_back_wall_coords[depth][position][BOTTOM_RIGHT].y) :
                    ELLIPSE_RADIUS_RATIO *
-                      (g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y -
-                       g_back_wall_coords[depth][position][BOTTOM_RIGHT].y),
+                     (g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y -
+                      g_back_wall_coords[depth][position][BOTTOM_RIGHT].y),
                  GColorBlack);
   }
 
@@ -2102,45 +2133,37 @@ void draw_cell_contents(GContext *ctx,
   {
     // Legs:
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 2 -
-                               drawing_unit / 2,
-                             floor_center_point.y - drawing_unit * 4,
-                             drawing_unit + drawing_unit / 2,
-                             drawing_unit * 4),
+                       GRect(floor_center_point.x - drawing_unit * 2,
+                             floor_center_point.y - drawing_unit * 3,
+                             drawing_unit,
+                             drawing_unit * 3),
                        drawing_unit,
                        GCornersTop);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 2,
-                             floor_center_point.y - drawing_unit * 4,
-                             drawing_unit + drawing_unit / 2,
-                             drawing_unit * 4),
+                       GRect(floor_center_point.x + drawing_unit,
+                             floor_center_point.y - drawing_unit * 3,
+                             drawing_unit,
+                             drawing_unit * 3),
                        drawing_unit,
                        GCornersTop);
 
     // Body and head:
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
-                                floor_center_point.y - drawing_unit * 4),
-                         drawing_unit * 2 + drawing_unit / 2);
+                                floor_center_point.y - drawing_unit * 3),
+                         drawing_unit * 2);
 
     // Eyes:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
                                                          GColorWhite);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x -
-                               (drawing_unit + drawing_unit / 2),
-                             floor_center_point.y - drawing_unit * 5,
-                             drawing_unit,
-                             drawing_unit / 2),
-                       drawing_unit / 4,
-                       GCornersAll);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 2,
-                             floor_center_point.y - drawing_unit * 5,
-                             drawing_unit,
-                             drawing_unit / 2),
-                       drawing_unit / 4,
-                       GCornersAll);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x - drawing_unit / 2,
+                                floor_center_point.y - drawing_unit * 6 - 1),
+                         drawing_unit / 6);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x + drawing_unit / 2 - 1,
+                                floor_center_point.y - drawing_unit * 6 - 1),
+                         drawing_unit / 6);
   }
 
   // Wraiths:
@@ -3144,8 +3167,9 @@ void adjust_minor_stats(void)
 
   // Set minor stats according to major stats:
   g_player->stats[MAX_HEALTH]       = g_player->stats[STRENGTH]  * 10;
-  g_player->stats[MAX_ENERGY]       = g_player->stats[STRENGTH] * 5 +
-                                        g_player->stats[INTELLECT] * 5;
+  g_player->stats[MAX_ENERGY]       = g_player->stats[INTELLECT] * 4 +
+                                        g_player->stats[AGILITY] * 3 +
+                                        g_player->stats[STRENGTH] * 3;
   g_player->stats[PHYSICAL_POWER]   = g_player->stats[STRENGTH] +
                                         g_player->stats[AGILITY] / 2;
   g_player->stats[PHYSICAL_DEFENSE] = g_player->stats[AGILITY] +
@@ -3154,8 +3178,7 @@ void adjust_minor_stats(void)
                                         g_player->stats[AGILITY] / 2;
   g_player->stats[MAGICAL_DEFENSE]  = g_player->stats[AGILITY] +
                                         g_player->stats[INTELLECT] / 2;
-  g_player->energy_loss_per_action  = DEFAULT_ENERGY_LOSS_PER_ACTION -
-                                        g_player->stats[AGILITY];
+  g_player->energy_loss_per_action  = MIN_ENERGY_LOSS_PER_ACTION;
 
   // Weapon (or equipped Pebble):
   if (get_heavy_item_equipped_at(RIGHT_HAND))
@@ -3186,12 +3209,6 @@ void adjust_minor_stats(void)
     g_player->stats[MAGICAL_POWER]--;
     g_player->energy_loss_per_action++;
   }
-
-  // Adjust energy loss per action, if necessary:
-  if (g_player->energy_loss_per_action < MIN_ENERGY_LOSS_PER_ACTION)
-  {
-    g_player->energy_loss_per_action = MIN_ENERGY_LOSS_PER_ACTION;
-  }
 }
 
 /******************************************************************************
@@ -3216,19 +3233,16 @@ void init_player(void)
   {
     g_player->pebbles[i] = 0;
   }
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
+  {
+    g_player->heavy_items[i].type = NONE;//init_heavy_item(&g_player->heavy_items[i], NONE);
+  }
   for (i = 0; i < NUM_MAJOR_STATS; ++i)
   {
     g_player->stats[i] = DEFAULT_MAJOR_STAT_VALUE;
   }
   g_player->stats[HEALTH_REGEN]    = g_player->stats[ENERGY_REGEN]     = 1;
   g_player->stats[BACKLASH_DAMAGE] = g_player->stats[SPELL_ABSORPTION] = 0;
-
-  // Add starting inventory items:
-  init_heavy_item(&g_player->heavy_items[0], DAGGER);
-  init_heavy_item(&g_player->heavy_items[1], STAFF);
-  init_heavy_item(&g_player->heavy_items[2], ROBE);
-  equip_heavy_item(&g_player->heavy_items[0]);
-  equip_heavy_item(&g_player->heavy_items[2]);
 
   // Assign minor stats, then ensure health and energy are at 100%:
   adjust_minor_stats();
@@ -3431,24 +3445,24 @@ void init_location(void)
   switch (builder_direction = rand() % NUM_DIRECTIONS)
   {
     case NORTH:
-      g_location->entrance = RANDOM_POINT_SOUTH;
+      builder_position = RANDOM_POINT_SOUTH;
       set_cell_type(RANDOM_POINT_NORTH, EXIT);
       break;
     case SOUTH:
-      g_location->entrance = RANDOM_POINT_NORTH;
+      builder_position = RANDOM_POINT_NORTH;
       set_cell_type(RANDOM_POINT_SOUTH, EXIT);
       break;
     case EAST:
-      g_location->entrance = RANDOM_POINT_WEST;
+      builder_position = RANDOM_POINT_WEST;
       set_cell_type(RANDOM_POINT_EAST, EXIT);
       break;
     default: // case WEST:
-      g_location->entrance = RANDOM_POINT_EAST;
+      builder_position = RANDOM_POINT_EAST;
       set_cell_type(RANDOM_POINT_WEST, EXIT);
       break;
   }
-  g_player->position = GPoint(g_location->entrance.x, g_location->entrance.y);
-  builder_position   = GPoint(g_location->entrance.x, g_location->entrance.y);
+  g_player->position   = GPoint(builder_position.x, builder_position.y);
+  g_location->entrance = GPoint(builder_position.x, builder_position.y);
   set_player_direction(builder_direction);
 
   // Now carve a path between the entrance and exit points:
