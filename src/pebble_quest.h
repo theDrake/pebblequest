@@ -139,8 +139,8 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define FLAIL                12
 #define SHIELD               13
 #define ROBE                 14
-#define HEAVY_ARMOR          15
-#define LIGHT_ARMOR          16
+#define LIGHT_ARMOR          15
+#define HEAVY_ARMOR          16
 #define NUM_ITEM_TYPES       17
 #define NUM_PEBBLE_TYPES     7
 #define NUM_HEAVY_ITEM_TYPES 10 // Excludes Pebbles.

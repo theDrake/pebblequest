@@ -130,7 +130,7 @@ void determine_npc_behavior(npc_t *const npc)
       flash_screen();
       if (g_player->stats[SPELL_ABSORPTION] &&
           damage > 0                        &&
-          rand() % g_player->stats[MAGICAL_POWER] +
+          rand() % g_player->stats[INTELLECT] +
             g_player->stats[SPELL_ABSORPTION] > rand() % damage)
       {
         adjust_player_current_energy(damage);
@@ -2145,11 +2145,11 @@ void draw_cell_contents(GContext *ctx,
                                                          GColorWhite);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 6 - 1),
+                                floor_center_point.y - drawing_unit * 6),
                          drawing_unit / 6);
     graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x + drawing_unit / 2 - 1,
-                                floor_center_point.y - drawing_unit * 6 - 1),
+                         GPoint(floor_center_point.x + drawing_unit / 2,
+                                floor_center_point.y - drawing_unit * 6),
                          drawing_unit / 6);
   }
 
@@ -2183,11 +2183,11 @@ void draw_cell_contents(GContext *ctx,
                                                          GColorWhite);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 6 - 1),
+                                floor_center_point.y - drawing_unit * 3),
                          drawing_unit / 6);
     graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x + drawing_unit / 2 - 1,
-                                floor_center_point.y - drawing_unit * 6 - 1),
+                         GPoint(floor_center_point.x + drawing_unit / 2,
+                                floor_center_point.y - drawing_unit * 3),
                          drawing_unit / 6);
   }
 
