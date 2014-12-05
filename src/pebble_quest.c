@@ -341,9 +341,9 @@ void add_new_npc(const int8_t npc_type, const GPoint position)
 /******************************************************************************
    Function: get_npc_spawn_point
 
-Description: Returns a suitable NPC spawn point, outside the player's sphere of
-             visibility. If the algorithm fails to find one, (-1, -1) is
-             returned instead.
+Description: Returns a suitable NPC spawn point along the edge of the player's
+             sphere of visibility. If the algorithm fails to find one, (-1, -1)
+             is returned instead.
 
      Inputs: None.
 
@@ -352,7 +352,7 @@ Description: Returns a suitable NPC spawn point, outside the player's sphere of
 ******************************************************************************/
 GPoint get_npc_spawn_point(void)
 {
-  int8_t i;
+  int8_t i, direction = rand() % NUM_DIRECTIONS;
   GPoint spawn_point;
 
   for (i = 0; i < NUM_DIRECTIONS; ++i)
@@ -363,6 +363,11 @@ GPoint get_npc_spawn_point(void)
     if (occupiable(spawn_point))
     {
       return spawn_point;
+    }
+    direction++;
+    if (direction == NUM_DIRECTIONS)
+    {
+      direction = 0;
     }
   }
 
