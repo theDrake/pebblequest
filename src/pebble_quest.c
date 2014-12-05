@@ -1407,7 +1407,7 @@ void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data)
 {
-  int8_t old_item_equip_target;
+  int8_t i, old_item_equip_target;
   bool item_was_equipped = false;
 
   if (menu_layer == g_menu_layers[MAIN_MENU])
