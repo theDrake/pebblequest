@@ -148,7 +148,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NUM_PEBBLE_TYPES     7
 #define NUM_HEAVY_ITEM_TYPES 10 // Excludes Pebbles.
 #define FIRST_HEAVY_ITEM     DAGGER
-#define MAX_HEAVY_ITEMS      3
+#define MAX_HEAVY_ITEMS      4
 #define RANDOM_ITEM          (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
 
 // Equip targets (i.e., places where an item may be equipped):
@@ -223,10 +223,12 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 #define DEFAULT_TIMER_DURATION 20 // milliseconds
-#define MAX_SMALL_INT_VALUE    99
-#define MAX_SMALL_INT_DIGITS   2
 #define MAX_LARGE_INT_VALUE    9999
 #define MAX_LARGE_INT_DIGITS   4
+#define MAX_SMALL_INT_VALUE    100
+#define MAX_SMALL_INT_DIGITS   3
+#define MAX_DEPTH              MAX_SMALL_INT_VALUE
+#define MAX_LEVEL              MAX_SMALL_INT_VALUE
 #define STORAGE_KEY            841
 #define ANIMATED               true
 #define NOT_ANIMATED           false
@@ -248,21 +250,19 @@ typedef struct PlayerCharacter {
          pebbles[NUM_PEBBLE_TYPES],
          equipped_pebble,
          energy_loss_per_action,
-         health_regen_per_second,
-         energy_regen_per_second,
          level,
          depth;
-  int16_t stats[NUM_CHARACTER_STATS],
-          exp_points;
+  int16_t stats[NUM_CHARACTER_STATS];
+  int32_t exp_points;
   heavy_item_t heavy_items[MAX_HEAVY_ITEMS]; // Clothing, armor, and weapons.
 } __attribute__((__packed__)) player_t;
 
 typedef struct NonPlayerCharacter {
   GPoint position;
   int8_t type,
-         health,
          item;
-  uint8_t power,
+  int16_t health,
+          power,
           physical_defense,
           magical_defense,
           status_effects[NUM_STATUS_EFFECTS];
@@ -451,7 +451,7 @@ void strcat_stat_value(char *const dest_str, const int8_t stat);
 void equip_heavy_item(heavy_item_t *const item);
 void unequip_heavy_item(heavy_item_t *const heavy_item);
 void unequip_item_at(const int8_t equip_target);
-void adjust_minor_stats(void);
+void set_player_minor_stats(void);
 void init_player(void);
 void init_npc(npc_t *const npc, const int8_t type, const GPoint position);
 void init_heavy_item(heavy_item_t *const item, const int8_t n);

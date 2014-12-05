@@ -972,7 +972,7 @@ void show_narration(const int8_t narration)
     case STATS_NARRATION_1: // Total chars: ??
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
-               "Depth: %d\nExp.: %d\nLevel: %d",
+               "Depth: %d\nExp.: %ld\nLevel: %d",
                g_player->depth,
                g_player->exp_points,
                g_player->level);
@@ -1434,7 +1434,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   else if (menu_layer == g_menu_layers[LEVEL_UP_MENU])
   {
     g_player->stats[cell_index->row]++;
-    adjust_minor_stats();
+    set_player_minor_stats();
     g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
     g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
     window_stack_pop(NOT_ANIMATED);
@@ -1570,7 +1570,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     }
 
     // In either mode, we want to adjust minor stats:
-    adjust_minor_stats();
+    set_player_minor_stats();
   }
 }
 
@@ -3100,7 +3100,7 @@ void equip_heavy_item(heavy_item_t *const heavy_item)
     {
       g_player->stats[heavy_item->infused_pebble]++;
     }
-    adjust_minor_stats();
+    set_player_minor_stats();
   }
 }
 
@@ -3122,7 +3122,7 @@ void unequip_heavy_item(heavy_item_t *const heavy_item)
   {
     g_player->stats[heavy_item->infused_pebble]--;
   }
-  adjust_minor_stats();
+  set_player_minor_stats();
 }
 
 /******************************************************************************
@@ -3151,7 +3151,7 @@ void unequip_item_at(const int8_t equip_target)
 }
 
 /******************************************************************************
-   Function: adjust_minor_stats
+   Function: set_player_minor_stats
 
 Description: Assigns values to the player's minor stats according to major stat
              values (AGILITY, STRENGTH, and INTELLECT) then adjusts them
@@ -3161,11 +3161,10 @@ Description: Assigns values to the player's minor stats according to major stat
 
     Outputs: None.
 ******************************************************************************/
-void adjust_minor_stats(void)
+void set_player_minor_stats(void)
 {
   int8_t i;
 
-  // Set minor stats according to major stats:
   g_player->stats[MAX_HEALTH]       = g_player->stats[STRENGTH]  * 10;
   g_player->stats[MAX_ENERGY]       = g_player->stats[INTELLECT] * 4 +
                                         g_player->stats[AGILITY] * 3 +
@@ -3180,10 +3179,9 @@ void adjust_minor_stats(void)
                                         g_player->stats[INTELLECT] / 2;
   g_player->energy_loss_per_action  = MIN_ENERGY_LOSS_PER_ACTION;
 
-  // Weapon (or equipped Pebble):
+  // Weapon/Pebble:
   if (get_heavy_item_equipped_at(RIGHT_HAND))
   {
-    // Weapons:
     for (i = DAGGER; i <= get_heavy_item_equipped_at(RIGHT_HAND)->type; i += 2)
     {
       g_player->stats[PHYSICAL_POWER]++;
@@ -3225,18 +3223,10 @@ void init_player(void)
 {
   int8_t i;
 
-  g_player->level           = 1;
-  g_player->exp_points      = 0;
-  g_player->depth           = 0;
-  g_player->equipped_pebble = NONE;
-  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
-  {
-    g_player->pebbles[i] = 0;
-  }
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
-    g_player->heavy_items[i].type = NONE;//init_heavy_item(&g_player->heavy_items[i], NONE);
-  }
+  // Set major stats:
+  g_player->level      = 1;
+  g_player->exp_points = 0;
+  g_player->depth      = 0;
   for (i = 0; i < NUM_MAJOR_STATS; ++i)
   {
     g_player->stats[i] = DEFAULT_MAJOR_STAT_VALUE;
@@ -3244,8 +3234,22 @@ void init_player(void)
   g_player->stats[HEALTH_REGEN]    = g_player->stats[ENERGY_REGEN]     = 1;
   g_player->stats[BACKLASH_DAMAGE] = g_player->stats[SPELL_ABSORPTION] = 0;
 
-  // Assign minor stats, then ensure health and energy are at 100%:
-  adjust_minor_stats();
+  // Assign starting inventory:
+  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
+  {
+    g_player->pebbles[i] = 0;
+  }
+  g_player->equipped_pebble = NONE;
+  for (i = 1; i < MAX_HEAVY_ITEMS; ++i)
+  {
+    init_heavy_item(&g_player->heavy_items[i], NONE);
+  }
+  init_heavy_item(&g_player->heavy_items[0], ROBE);
+
+  // Equip the robe, causing all minor stats to be set:
+  equip_heavy_item(&g_player->heavy_items[0]);
+
+  // Finally, ensure health and energy are at 100%:
   g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
   g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
 }
