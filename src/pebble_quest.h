@@ -91,7 +91,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NUM_DIRECTIONS 4
 
 // Other:
-#define MAP_WIDTH          10
+#define MAP_WIDTH          11
 #define MAP_HEIGHT         MAP_WIDTH
 #define RANDOM_POINT_NORTH GPoint(rand() % MAP_WIDTH, 0)
 #define RANDOM_POINT_SOUTH GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
@@ -249,7 +249,9 @@ typedef struct PlayerCharacter {
          level,
          depth;
   int16_t health,
-          energy;
+          energy,
+          max_health,
+          max_energy;
   uint16_t exp_points;
   heavy_item_t heavy_items[MAX_HEAVY_ITEMS]; // Clothing, armor, and weapons.
 } __attribute__((__packed__)) player_t;
@@ -443,13 +445,9 @@ void narration_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
 void strcat_item_name(char *const dest_str, const int8_t item_type);
 void strcat_magic_type(char *const dest_str, const int8_t magic_type);
-void strcat_stat_name(char *const dest_str, const int8_t stat);
-void strcat_stat_value(char *const dest_str, const int8_t stat);
 void equip_heavy_item(heavy_item_t *const item);
 void unequip_heavy_item(heavy_item_t *const heavy_item);
 void unequip_item_at(const int8_t equip_target);
-int16_t get_player_max_health(void);
-int16_t get_player_max_energy(void);
 void set_player_minor_stats(void);
 void init_player(void);
 void init_npc(npc_t *const npc, const int8_t type, const GPoint position);

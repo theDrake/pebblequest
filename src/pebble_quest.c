@@ -274,9 +274,9 @@ Description: Adjusts the player's current health by a given amount, which may
 void adjust_player_current_health(const int8_t amount)
 {
   g_player->health += amount;
-  if (g_player->health > get_player_max_health())
+  if (g_player->health > g_player->max_health)
   {
-    g_player->health = get_player_max_health();
+    g_player->health = g_player->max_health;
   }
   else if (g_player->health <= 0)
   {
@@ -299,9 +299,9 @@ Description: Adjusts the player's current energy by a given amount, which may
 void adjust_player_current_energy(const int8_t amount)
 {
   g_player->energy += amount;
-  if (g_player->energy > get_player_max_energy())
+  if (g_player->energy > g_player->max_energy)
   {
-    g_player->energy = get_player_max_energy();
+    g_player->energy = g_player->max_energy;
   }
 }
 
@@ -944,7 +944,6 @@ Description: Displays desired narration text via the narration window.
 ******************************************************************************/
 void show_narration(const int8_t narration)
 {
-  int8_t i;
   static char narration_str[NARRATION_STR_LEN + 1];
 
   g_current_narration = narration;
@@ -981,21 +980,13 @@ void show_narration(const int8_t narration)
                g_player->depth);
       break;
     case STATS_NARRATION_2: // Max. total chars: 53
-      /*snprintf(narration_str,
+      snprintf(narration_str,
                NARRATION_STR_LEN + 1,
                "Agility:\n  %d\nStrength:\n  %d\nIntellect:\n  %d/%d",
                g_player->stats[PHYSICAL_POWER],
                g_player->stats[MAGICAL_POWER],
                g_player->energy,
-               get_player_max_energy());*/
-      strcpy(narration_str, "");
-      for (i = 0; i < NUM_MAJOR_STATS; ++i)
-      {
-        strcat_stat_name(narration_str, i);
-        strcat(narration_str, "\n  ");
-        strcat_stat_value(narration_str, i);
-        strcat(narration_str, "\n");
-      }
+               g_player->max_energy);
       break;
     case STATS_NARRATION_3: // Max. total chars: 56
       snprintf(narration_str,
@@ -1004,7 +995,7 @@ void show_narration(const int8_t narration)
                g_player->stats[PHYSICAL_POWER],
                g_player->stats[MAGICAL_POWER],
                g_player->energy,
-               get_player_max_energy());
+               g_player->max_energy);
       break;
     case STATS_NARRATION_4: // Max. total chars: 60
       snprintf(narration_str,
@@ -1013,7 +1004,7 @@ void show_narration(const int8_t narration)
                g_player->stats[PHYSICAL_DEFENSE],
                g_player->stats[MAGICAL_DEFENSE],
                g_player->health,
-               get_player_max_health());
+               g_player->max_health);
 
       // If the player has died, this is where a new character is created:
       if (g_player->health <= 0)
@@ -1320,10 +1311,24 @@ static void level_up_menu_draw_row_callback(GContext *ctx,
                                             MenuIndex *cell_index,
                                             void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1] = "";
+  char title_str[MENU_TITLE_STR_LEN + 1];
 
-  strcat_stat_name(title_str, cell_index->row);
-  strcat_stat_value(title_str, cell_index->row);
+  switch(cell_index->row)
+  {
+    case AGILITY:
+      strcpy(title_str, "Agility");
+      break;
+    case STRENGTH:
+      strcpy(title_str, "Strength");
+      break;
+    default: // case INTELLECT:
+      strcpy(title_str, "Intellect");
+      break;
+  }
+  snprintf(title_str + strlen(title_str),
+           MAX_SMALL_INT_DIGITS + 3,
+           ": %d",
+           g_player->stats[cell_index->row]);
   menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
 }
 
@@ -1460,8 +1465,8 @@ void menu_select_callback(MenuLayer *menu_layer,
   {
     g_player->stats[cell_index->row]++;
     set_player_minor_stats();
-    g_player->health = get_player_max_health();
-    g_player->energy = get_player_max_energy();
+    g_player->health = g_player->max_health;
+    g_player->energy = g_player->max_energy;
     window_stack_pop(NOT_ANIMATED);
     show_narration(STATS_NARRATION_1);
   }
@@ -2403,14 +2408,14 @@ void draw_status_bar(GContext *ctx)
   draw_status_meter(ctx,
                     GPoint (STATUS_METER_PADDING,
                             GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-                    (float) g_player->health / get_player_max_health());
+                    (float) g_player->health / g_player->max_health);
 
   // Energy meter:
   draw_status_meter(ctx,
                     GPoint (SCREEN_CENTER_POINT_X + STATUS_METER_PADDING +
                               COMPASS_RADIUS + 1,
                             GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-                    (float) g_player->energy / get_player_max_energy());
+                    (float) g_player->energy / g_player->max_energy);
 
   // Compass:
   graphics_fill_circle(ctx,
@@ -3024,58 +3029,6 @@ void strcat_magic_type(char *const dest_str, const int8_t magic_type)
 }
 
 /******************************************************************************
-   Function: strcat_stat_name
-
-Description: Concatenates the name of a given stat onto a given string.
-
-     Inputs: dest_str - Pointer to the destination string.
-             stat     - Integer representing the stat of interest.
-
-    Outputs: None.
-******************************************************************************/
-void strcat_stat_name(char *const dest_str, const int8_t stat)
-{
-  switch(stat)
-  {
-    case AGILITY:
-      strcat(dest_str, "Agility");
-      break;
-    case STRENGTH:
-      strcat(dest_str, "Strength");
-      break;
-    default: // case INTELLECT:
-      strcat(dest_str, "Intellect");
-      break;
-  }
-  strcat(dest_str, ": ");
-}
-
-/******************************************************************************
-   Function: strcat_stat_value
-
-Description: Concatenates the value of a given stat onto a given string.
-
-     Inputs: dest_str - Pointer to the destination string.
-             stat     - Integer representing the stat of interest.
-
-    Outputs: None.
-******************************************************************************/
-void strcat_stat_value(char *const dest_str, const int8_t stat)
-{
-  /*if (stat == MAX_HEALTH || stat == MAX_ENERGY)
-  {
-    snprintf(dest_str + strlen(dest_str),
-             MAX_SMALL_INT_DIGITS + 2,
-             "%d/",
-             g_player->stats[stat + (CURRENT_HEALTH - MAX_HEALTH)]);
-  }*/
-  snprintf(dest_str + strlen(dest_str),
-           MAX_SMALL_INT_DIGITS + 1,
-           "%d",
-           g_player->stats[stat]);
-}
-
-/******************************************************************************
    Function: equip_heavy_item
 
 Description: Equips a given heavy item to its appropriate equip target,
@@ -3153,36 +3106,6 @@ void unequip_item_at(const int8_t equip_target)
 }
 
 /******************************************************************************
-   Function: get_player_max_health
-
-Description: Returns the player's maximum health value.
-
-     Inputs: None.
-
-    Outputs: The player's max. health value.
-******************************************************************************/
-int16_t get_player_max_health(void)
-{
-  return g_player->stats[STRENGTH] * 10;
-}
-
-/******************************************************************************
-   Function: get_player_max_energy
-
-Description: Returns the player's maximum energy value.
-
-     Inputs: None.
-
-    Outputs: The player's max. energy value.
-******************************************************************************/
-int16_t get_player_max_energy(void)
-{
-  return g_player->stats[INTELLECT] * 4 +
-         g_player->stats[STRENGTH]  * 3 +
-         g_player->stats[AGILITY]   * 3;
-}
-
-/******************************************************************************
    Function: set_player_minor_stats
 
 Description: Assigns values to the player's minor stats according to major stat
@@ -3205,6 +3128,10 @@ void set_player_minor_stats(void)
                                         g_player->stats[AGILITY] / 2;
   g_player->stats[MAGICAL_DEFENSE]  = g_player->stats[AGILITY] +
                                         g_player->stats[INTELLECT] / 2;
+  g_player->max_health              = g_player->stats[STRENGTH] * 10;
+  g_player->max_energy              = g_player->stats[INTELLECT]  * 4 +
+                                        g_player->stats[STRENGTH] * 3 +
+                                        g_player->stats[AGILITY]  * 3;
   g_player->energy_loss_per_action  = MIN_ENERGY_LOSS_PER_ACTION;
 
   // Weapon/Pebble:
@@ -3278,8 +3205,8 @@ void init_player(void)
   equip_heavy_item(&g_player->heavy_items[0]);
 
   // Finally, ensure health and energy are at 100%:
-  g_player->health = get_player_max_health();
-  g_player->energy = get_player_max_energy();
+  g_player->health = g_player->max_health;
+  g_player->energy = g_player->max_energy;
 }
 
 /******************************************************************************
