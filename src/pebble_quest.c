@@ -115,7 +115,7 @@ Description: Determines what a given NPC should do.
 ******************************************************************************/
 void determine_npc_behavior(npc_t *const npc)
 {
-  int8_t damage = npc->power - npc->status_effects[WEAKNESS] / 2;
+  int16_t damage = npc->power - npc->status_effects[WEAKNESS] / 2;
 
   if (npc->status_effects[STUN] == 0 && npc->status_effects[SLOW] % 2 == 0)
   {
@@ -165,7 +165,7 @@ Description: Damages the player according to a given damage value (or
 
     Outputs: None.
 ******************************************************************************/
-void damage_player(int8_t damage)
+void damage_player(int16_t damage)
 {
   if (damage < MIN_DAMAGE)
   {
@@ -188,7 +188,7 @@ Description: Damages a given NPC according to a given damage value (or
     Outputs: The amount of damage actually dealt (as a positive value), which
              will be at least MIN_DAMAGE.
 ******************************************************************************/
-uint8_t damage_npc(npc_t *const npc, int8_t damage)
+int16_t damage_npc(npc_t *const npc, int16_t damage)
 {
   if (damage < MIN_DAMAGE)
   {
@@ -237,9 +237,9 @@ Description: Applies the effects of a given spell, with a given potency, to a
 ******************************************************************************/
 void cast_spell_on_npc(npc_t *const npc,
                        const int8_t magic_type,
-                       int8_t potency)
+                       int16_t potency)
 {
-  uint8_t damage;
+  int16_t damage;
 
   if (npc)
   {
@@ -271,7 +271,7 @@ Description: Adjusts the player's current health by a given amount, which may
 
     Outputs: None.
 ******************************************************************************/
-void adjust_player_current_health(const int8_t amount)
+void adjust_player_current_health(const int16_t amount)
 {
   g_player->health += amount;
   if (g_player->health > g_player->max_health)
@@ -296,7 +296,7 @@ Description: Adjusts the player's current energy by a given amount, which may
 
     Outputs: None.
 ******************************************************************************/
-void adjust_player_current_energy(const int8_t amount)
+void adjust_player_current_energy(const int16_t amount)
 {
   g_player->energy += amount;
   if (g_player->energy > g_player->max_energy)
@@ -971,7 +971,7 @@ void show_narration(const int8_t narration)
       strcpy(narration_str, "\nAlas, you have perished in the dank, dark "
                             "depths, never to be found.");
       break;
-    case STATS_NARRATION_1: // Max. total chars: 46
+    case STATS_NARRATION_1: // Max. total chars: ~46
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
                "Level:\n  %d\nExp. Points:\n  %u\nDepth:\n  %d",
@@ -979,16 +979,15 @@ void show_narration(const int8_t narration)
                g_player->exp_points,
                g_player->depth);
       break;
-    case STATS_NARRATION_2: // Max. total chars: 53
+    case STATS_NARRATION_2: // Max. total chars: ~45
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
-               "Agility:\n  %d\nStrength:\n  %d\nIntellect:\n  %d/%d",
-               g_player->stats[PHYSICAL_POWER],
-               g_player->stats[MAGICAL_POWER],
-               g_player->energy,
-               g_player->max_energy);
+               "Agility:\n  %d\nStrength:\n  %d\nIntellect:\n  %d",
+               g_player->stats[AGILITY],
+               g_player->stats[STRENGTH],
+               g_player->stats[INTELLECT]);
       break;
-    case STATS_NARRATION_3: // Max. total chars: 56
+    case STATS_NARRATION_3: // Max. total chars: ~56
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
                "Phys. Power:\n  %d\nMag. Power:\n  %d\nEnergy:\n  %d/%d",
@@ -997,7 +996,7 @@ void show_narration(const int8_t narration)
                g_player->energy,
                g_player->max_energy);
       break;
-    case STATS_NARRATION_4: // Max. total chars: 60
+    case STATS_NARRATION_4: // Max. total chars: ~60
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
                "Phys. Defense:\n  %d\nMag. Defense:\n  %d\nHealth:\n  %d/%d",

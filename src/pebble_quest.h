@@ -314,13 +314,13 @@ void set_player_direction(const int8_t new_direction);
 void move_player(const int8_t direction);
 void move_npc(npc_t *const npc, const int8_t direction);
 void determine_npc_behavior(npc_t *const npc);
-void damage_player(int8_t damage);
-uint8_t damage_npc(npc_t *const npc, int8_t damage);
+void damage_player(int16_t damage);
+int16_t damage_npc(npc_t *const npc, int16_t damage);
 void cast_spell_on_npc(npc_t *const npc,
                        const int8_t magic_type,
-                       int8_t potency);
-void adjust_player_current_health(const int8_t amount);
-void adjust_player_current_energy(const int8_t amount);
+                       int16_t potency);
+void adjust_player_current_health(const int16_t amount);
+void adjust_player_current_energy(const int16_t amount);
 void add_new_npc(const int8_t npc_type, const GPoint position);
 GPoint get_npc_spawn_point(void);
 GPoint get_floor_center_point(const int8_t depth, const int8_t position);
