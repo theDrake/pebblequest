@@ -115,8 +115,9 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define STATS_NARRATION_1   5
 #define STATS_NARRATION_2   6
 #define STATS_NARRATION_3   7
-#define LEVEL_UP_NARRATION  8
-#define NUM_NARRATION_TYPES 9
+#define STATS_NARRATION_4   8
+#define LEVEL_UP_NARRATION  9
+#define NUM_NARRATION_TYPES 10
 
 /******************************************************************************
   Pebble- and Item-related Constants
