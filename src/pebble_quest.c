@@ -202,12 +202,15 @@ uint8_t damage_npc(npc_t *const npc, int8_t damage)
     npc->type = NONE;
 
     // Add experience points and check for a "level up":
-    g_player->exp_points += npc->power;
-    if (g_player->exp_points / (10 * g_player->level) >= g_player->level)
+    if (g_player->level < MAX_LEVEL)
     {
-      g_player->level++;
-      show_window(LEVEL_UP_MENU, NOT_ANIMATED);
-      show_narration(LEVEL_UP_NARRATION);
+      g_player->exp_points += npc->power;
+      if (g_player->exp_points / (6 * g_player->level) >= g_player->level)
+      {
+        g_player->level++;
+        show_window(LEVEL_UP_MENU, NOT_ANIMATED);
+        show_narration(LEVEL_UP_NARRATION);
+      }
     }
 
     // If the NPC had an item, leave it behind as loot:
@@ -270,12 +273,12 @@ Description: Adjusts the player's current health by a given amount, which may
 ******************************************************************************/
 void adjust_player_current_health(const int8_t amount)
 {
-  g_player->stats[CURRENT_HEALTH] += amount;
-  if (g_player->stats[CURRENT_HEALTH] > g_player->stats[MAX_HEALTH])
+  g_player->health += amount;
+  if (g_player->health > get_player_max_health())
   {
-    g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
+    g_player->health = get_player_max_health();
   }
-  else if (g_player->stats[CURRENT_HEALTH] <= 0)
+  else if (g_player->health <= 0)
   {
     show_window(MAIN_MENU, NOT_ANIMATED);
     show_narration(DEATH_NARRATION);
@@ -295,10 +298,10 @@ Description: Adjusts the player's current energy by a given amount, which may
 ******************************************************************************/
 void adjust_player_current_energy(const int8_t amount)
 {
-  g_player->stats[CURRENT_ENERGY] += amount;
-  if (g_player->stats[CURRENT_ENERGY] > g_player->stats[MAX_ENERGY])
+  g_player->energy += amount;
+  if (g_player->energy > get_player_max_energy())
   {
-    g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
+    g_player->energy = get_player_max_energy();
   }
 }
 
@@ -969,29 +972,51 @@ void show_narration(const int8_t narration)
       strcpy(narration_str, "\nAlas, you have perished in the dank, dark "
                             "depths, never to be found.");
       break;
-    case STATS_NARRATION_1: // Total chars: ??
+    case STATS_NARRATION_1: // Max. total chars: 46
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
-               "Depth: %d\nExp.: %ld\nLevel: %d",
-               g_player->depth,
+               "Level:\n  %d\nExp. Points:\n  %u\nDepth:\n  %d",
+               g_player->level,
                g_player->exp_points,
-               g_player->level);
+               g_player->depth);
+      break;
+    case STATS_NARRATION_2: // Max. total chars: 53
+      /*snprintf(narration_str,
+               NARRATION_STR_LEN + 1,
+               "Agility:\n  %d\nStrength:\n  %d\nIntellect:\n  %d/%d",
+               g_player->stats[PHYSICAL_POWER],
+               g_player->stats[MAGICAL_POWER],
+               g_player->energy,
+               get_player_max_energy());*/
+      strcpy(narration_str, "");
       for (i = 0; i < NUM_MAJOR_STATS; ++i)
       {
-        strcat(narration_str, "\n");
         strcat_stat_name(narration_str, i);
+        strcat(narration_str, "\n  ");
         strcat_stat_value(narration_str, i);
+        strcat(narration_str, "\n");
       }
       break;
-    case STATS_NARRATION_2: // Total chars: ??
-      strcpy(narration_str, "");
-      for (i = PHYSICAL_POWER; i < CURRENT_HEALTH; ++i)
-      {
-        strcat_stat_name(narration_str, i);
-        strcat_stat_value(narration_str, i);
-        strcat(narration_str, "\n");
-      }
-      if (g_player->stats[CURRENT_HEALTH] <= 0)
+    case STATS_NARRATION_3: // Max. total chars: 56
+      snprintf(narration_str,
+               NARRATION_STR_LEN + 1,
+               "Phys. Power:\n  %d\nMag. Power:\n  %d\nEnergy:\n  %d/%d",
+               g_player->stats[PHYSICAL_POWER],
+               g_player->stats[MAGICAL_POWER],
+               g_player->energy,
+               get_player_max_energy());
+      break;
+    case STATS_NARRATION_4: // Max. total chars: 60
+      snprintf(narration_str,
+               NARRATION_STR_LEN + 1,
+               "Phys. Defense:\n  %d\nMag. Defense:\n  %d\nHealth:\n  %d/%d",
+               g_player->stats[PHYSICAL_DEFENSE],
+               g_player->stats[MAGICAL_DEFENSE],
+               g_player->health,
+               get_player_max_health());
+
+      // If the player has died, this is where a new character is created:
+      if (g_player->health <= 0)
       {
         init_player();
       }
@@ -1435,8 +1460,8 @@ void menu_select_callback(MenuLayer *menu_layer,
   {
     g_player->stats[cell_index->row]++;
     set_player_minor_stats();
-    g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
-    g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
+    g_player->health = get_player_max_health();
+    g_player->energy = get_player_max_energy();
     window_stack_pop(NOT_ANIMATED);
     show_narration(STATS_NARRATION_1);
   }
@@ -2378,16 +2403,14 @@ void draw_status_bar(GContext *ctx)
   draw_status_meter(ctx,
                     GPoint (STATUS_METER_PADDING,
                             GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-                    (float) g_player->stats[CURRENT_HEALTH] /
-                      g_player->stats[MAX_HEALTH]);
+                    (float) g_player->health / get_player_max_health());
 
   // Energy meter:
   draw_status_meter(ctx,
                     GPoint (SCREEN_CENTER_POINT_X + STATUS_METER_PADDING +
                               COMPASS_RADIUS + 1,
                             GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-                    (float) g_player->stats[CURRENT_ENERGY] /
-                      g_player->stats[MAX_ENERGY]);
+                    (float) g_player->energy / get_player_max_energy());
 
   // Compass:
   graphics_fill_circle(ctx,
@@ -2666,7 +2689,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
   //Window *window = (Window *) context;
 
   if (g_current_window == GRAPHICS_WINDOW &&
-      g_player->stats[CURRENT_ENERGY] >= g_player->energy_loss_per_action)
+      g_player->energy >= g_player->energy_loss_per_action)
   {
     adjust_player_current_energy(g_player->energy_loss_per_action * -1);
 
@@ -2798,7 +2821,7 @@ void narration_single_click(ClickRecognizerRef recognizer, void *context)
 
   if (g_current_narration < INTRO_NARRATION_4 ||
       (g_current_narration > INTRO_NARRATION_4 &&
-       g_current_narration < STATS_NARRATION_2))
+       g_current_narration < STATS_NARRATION_4))
   {
     show_narration(++g_current_narration);
   }
@@ -2850,7 +2873,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         determine_npc_behavior(&g_location->npcs[i]);
 
         // Check for player death:
-        if (g_player->stats[CURRENT_HEALTH] <= 0)
+        if (g_player->health <= 0)
         {
           return;
         }
@@ -3020,26 +3043,8 @@ void strcat_stat_name(char *const dest_str, const int8_t stat)
     case STRENGTH:
       strcat(dest_str, "Strength");
       break;
-    case INTELLECT:
+    default: // case INTELLECT:
       strcat(dest_str, "Intellect");
-      break;
-    case MAX_HEALTH:
-      strcat(dest_str, "Health");
-      break;
-    case MAX_ENERGY:
-      strcat(dest_str, "Energy");
-      break;
-    case PHYSICAL_POWER:
-      strcat(dest_str, "Ph. Power");
-      break;
-    case PHYSICAL_DEFENSE:
-      strcat(dest_str, "Ph. Defense");
-      break;
-    case MAGICAL_POWER:
-      strcat(dest_str, "M. Power");
-      break;
-    default: // case MAGICAL_DEFENSE:
-      strcat(dest_str, "M. Defense");
       break;
   }
   strcat(dest_str, ": ");
@@ -3048,10 +3053,7 @@ void strcat_stat_name(char *const dest_str, const int8_t stat)
 /******************************************************************************
    Function: strcat_stat_value
 
-Description: Concatenates the value of a given stat onto a given string. (This
-             function was created because of the anomalous cases of MAX_HEALTH
-             and MAX_ENERGY, wherein the current health/energy and a "slash"
-             are also concatenated.)
+Description: Concatenates the value of a given stat onto a given string.
 
      Inputs: dest_str - Pointer to the destination string.
              stat     - Integer representing the stat of interest.
@@ -3060,13 +3062,13 @@ Description: Concatenates the value of a given stat onto a given string. (This
 ******************************************************************************/
 void strcat_stat_value(char *const dest_str, const int8_t stat)
 {
-  if (stat == MAX_HEALTH || stat == MAX_ENERGY)
+  /*if (stat == MAX_HEALTH || stat == MAX_ENERGY)
   {
     snprintf(dest_str + strlen(dest_str),
              MAX_SMALL_INT_DIGITS + 2,
              "%d/",
              g_player->stats[stat + (CURRENT_HEALTH - MAX_HEALTH)]);
-  }
+  }*/
   snprintf(dest_str + strlen(dest_str),
            MAX_SMALL_INT_DIGITS + 1,
            "%d",
@@ -3151,6 +3153,36 @@ void unequip_item_at(const int8_t equip_target)
 }
 
 /******************************************************************************
+   Function: get_player_max_health
+
+Description: Returns the player's maximum health value.
+
+     Inputs: None.
+
+    Outputs: The player's max. health value.
+******************************************************************************/
+int16_t get_player_max_health(void)
+{
+  return g_player->stats[STRENGTH] * 10;
+}
+
+/******************************************************************************
+   Function: get_player_max_energy
+
+Description: Returns the player's maximum energy value.
+
+     Inputs: None.
+
+    Outputs: The player's max. energy value.
+******************************************************************************/
+int16_t get_player_max_energy(void)
+{
+  return g_player->stats[INTELLECT] * 4 +
+         g_player->stats[STRENGTH]  * 3 +
+         g_player->stats[AGILITY]   * 3;
+}
+
+/******************************************************************************
    Function: set_player_minor_stats
 
 Description: Assigns values to the player's minor stats according to major stat
@@ -3165,10 +3197,6 @@ void set_player_minor_stats(void)
 {
   int8_t i;
 
-  g_player->stats[MAX_HEALTH]       = g_player->stats[STRENGTH]  * 10;
-  g_player->stats[MAX_ENERGY]       = g_player->stats[INTELLECT] * 4 +
-                                        g_player->stats[AGILITY] * 3 +
-                                        g_player->stats[STRENGTH] * 3;
   g_player->stats[PHYSICAL_POWER]   = g_player->stats[STRENGTH] +
                                         g_player->stats[AGILITY] / 2;
   g_player->stats[PHYSICAL_DEFENSE] = g_player->stats[AGILITY] +
@@ -3250,8 +3278,8 @@ void init_player(void)
   equip_heavy_item(&g_player->heavy_items[0]);
 
   // Finally, ensure health and energy are at 100%:
-  g_player->stats[CURRENT_HEALTH] = g_player->stats[MAX_HEALTH];
-  g_player->stats[CURRENT_ENERGY] = g_player->stats[MAX_ENERGY];
+  g_player->health = get_player_max_health();
+  g_player->energy = get_player_max_energy();
 }
 
 /******************************************************************************
@@ -3518,11 +3546,15 @@ void init_location(void)
     }
   }
 
-  // Add an evil wizard at the exit point:
+  // Add a mage at the exit:
   add_new_npc(MAGE, builder_position);
 
-  // Finally, increment the player's depth:
+  // Increment the player's depth, then remove the exit if we're at max. depth:
   g_player->depth++;
+  if (g_player->depth == MAX_DEPTH)
+  {
+    set_cell_type(builder_position, EMPTY);
+  }
 }
 
 /******************************************************************************
