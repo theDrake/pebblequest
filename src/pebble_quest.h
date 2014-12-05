@@ -33,8 +33,8 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 #define DEFAULT_MAJOR_STAT_VALUE   1 // AGILITY, STRENGTH, and INTELLECT.
-#define MIN_DAMAGE                 3 // Min. damage per attack/spell.
-#define MIN_SPELL_POTENCY          MIN_DAMAGE
+#define MIN_DAMAGE_VS_PLAYER       3
+#define MIN_DAMAGE_VS_NPC          1
 #define MIN_ENERGY_LOSS_PER_ACTION 3
 #define MAX_NPCS_AT_ONE_TIME       2
 

@@ -159,7 +159,8 @@ void determine_npc_behavior(npc_t *const npc)
    Function: damage_player
 
 Description: Damages the player according to a given damage value (or
-             MIN_DAMAGE if the value's too low) and vibrates the Pebble watch.
+             MIN_DAMAGE_VS_PLAYER if the value's too low) and vibrates the
+             Pebble watch.
 
      Inputs: damage - Potential amount of damage.
 
@@ -167,9 +168,9 @@ Description: Damages the player according to a given damage value (or
 ******************************************************************************/
 void damage_player(int16_t damage)
 {
-  if (damage < MIN_DAMAGE)
+  if (damage < MIN_DAMAGE_VS_PLAYER)
   {
-    damage = MIN_DAMAGE;
+    damage = MIN_DAMAGE_VS_PLAYER;
   }
   vibes_short_pulse();
   adjust_player_current_health(damage * -1);
@@ -179,20 +180,21 @@ void damage_player(int16_t damage)
    Function: damage_npc
 
 Description: Damages a given NPC according to a given damage value (or
-             MIN_DAMAGE if the value's too low). If this reduces the NPC's
-             health to zero or below, the NPC's death is handled.
+             MIN_DAMAGE_VS_NPC if the value's too low). If this reduces the
+             NPC's health to zero or below, the NPC's death is handled, the
+             player gains experience points, and a "level up" check is made.
 
      Inputs: npc    - Pointer to the NPC to be damaged.
              damage - Amount of damage.
 
     Outputs: The amount of damage actually dealt (as a positive value), which
-             will be at least MIN_DAMAGE.
+             will be at least MIN_DAMAGE_VS_NPC.
 ******************************************************************************/
 int16_t damage_npc(npc_t *const npc, int16_t damage)
 {
-  if (damage < MIN_DAMAGE)
+  if (damage < MIN_DAMAGE_VS_NPC)
   {
-    damage = MIN_DAMAGE;
+    damage = MIN_DAMAGE_VS_NPC;
   }
   npc->health -= damage;
 
@@ -244,8 +246,9 @@ void cast_spell_on_npc(npc_t *const npc,
   if (npc)
   {
     // First, apply a status effect (if applicable):
-    if (magic_type < PEBBLE_OF_DEATH ||
-        (rand() % potency > rand() % npc->magical_defense))
+    if (potency > 0 &&
+        (magic_type < PEBBLE_OF_DEATH ||
+         (rand() % potency > rand() % npc->magical_defense)))
     {
       npc->status_effects[magic_type] += potency;
     }
@@ -2061,8 +2064,8 @@ void draw_cell_contents(GContext *ctx,
                                     GColorWhite);
 
   // Mages:
-  if (npc->type == MAGE)
-  {
+  //if (npc->type == MAGE)
+  //{
     // Body:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2,
@@ -2082,7 +2085,11 @@ void draw_cell_contents(GContext *ctx,
                        GCornersTop);
 
     // Eyes:
-    graphics_context_set_fill_color(ctx, GColorWhite);
+    //graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_context_set_fill_color(ctx,
+                                    (npc->type % 2 == 0 || npc->type == MAGE) ?
+                                      GColorWhite                             :
+                                      GColorBlack);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 3,
                                 floor_center_point.y - (drawing_unit * 9)),
@@ -2091,10 +2098,10 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x + drawing_unit / 3,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 5);
-  }
+  //}
 
   // Goblins, trolls, and ogres:
-  else if (npc->type <= DARK_GOBLIN)
+  /*else if (npc->type <= DARK_GOBLIN)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2196,7 +2203,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Wraiths:
-  else // if (npc->type == WRAITH)
+  else if (npc->type == WRAITH)
   {
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
@@ -2209,7 +2216,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Warriors (dwarf, human, and orc):
-  /*else
+  else
   {
     // Legs:
     draw_shaded_quad(ctx,
