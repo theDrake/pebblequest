@@ -422,52 +422,6 @@ GPoint get_floor_center_point(const int8_t depth, const int8_t position)
 }
 
 /******************************************************************************
-   Function: get_midair_center_point
-
-Description: Returns the midair central point, with respect to the graphics
-             layer, of the cell at a given visual depth and position.
-
-     Inputs: depth    - Front-back visual depth in "g_back_wall_coords".
-             position - Left-right visual position in "g_back_wall_coords".
-
-    Outputs: GPoint coordinates of the midair central point within the
-             designated cell.
-******************************************************************************/
-/*GPoint get_midair_center_point(const int8_t depth, const int8_t position)
-{
-  uint8_t x_midpoint1, x_midpoint2, x, y;
-
-  x_midpoint1 = 0.5 * (g_back_wall_coords[depth][position][TOP_LEFT].x +
-                       g_back_wall_coords[depth][position][BOTTOM_RIGHT].x);
-  if (depth == 0)
-  {
-    if (position < STRAIGHT_AHEAD) // Just to the left of the player.
-    {
-      x_midpoint2 = -0.5 * GRAPHICS_FRAME_WIDTH;
-    }
-    else if (position > STRAIGHT_AHEAD) // Just to the right of the player.
-    {
-      x_midpoint2 = 1.5 * GRAPHICS_FRAME_WIDTH;
-    }
-    else // Directly under the player.
-    {
-      x_midpoint2 = x_midpoint1;
-    }
-    //y = GRAPHICS_FRAME_HEIGHT;
-  }
-  else
-  {
-    x_midpoint2 = 0.5 *
-      (g_back_wall_coords[depth - 1][position][TOP_LEFT].x +
-       g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].x);
-  }
-  x = 0.5 * (x_midpoint1 + x_midpoint2);
-  y = SCREEN_CENTER_POINT_Y;
-
-  return GPoint(x, y);
-}*/
-
-/******************************************************************************
    Function: get_cell_farther_away
 
 Description: Given a set of cell coordinates, returns new cell coordinates a
@@ -2069,8 +2023,8 @@ void draw_cell_contents(GContext *ctx,
                                     GColorWhite);
 
   // Mages:
-  //if (npc->type == MAGE)
-  //{
+  if (npc->type == MAGE)
+  {
     // Body:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2,
@@ -2103,10 +2057,48 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x + drawing_unit / 3,
                                 floor_center_point.y - (drawing_unit * 9)),
                          drawing_unit / 5);
-  //}
+  }
+
+  // Creatures:
+  /*else if (npc->type >= WHITE_BEAR && npc->type <= BLACK_WOLF)
+  {
+    // Legs:
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit * 2,
+                             floor_center_point.y - drawing_unit * 3,
+                             drawing_unit,
+                             drawing_unit * 3),
+                       drawing_unit,
+                       GCornersTop);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x + drawing_unit,
+                             floor_center_point.y - drawing_unit * 3,
+                             drawing_unit,
+                             drawing_unit * 3),
+                       drawing_unit,
+                       GCornersTop);
+
+    // Body and head:
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x,
+                                floor_center_point.y - drawing_unit * 3),
+                         drawing_unit * 2);
+
+    // Eyes:
+    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
+                                                         GColorWhite);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x - drawing_unit / 2,
+                                floor_center_point.y - drawing_unit * 3),
+                         drawing_unit / 6);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x + drawing_unit / 2,
+                                floor_center_point.y - drawing_unit * 3),
+                         drawing_unit / 6);
+  }
 
   // Goblins, trolls, and ogres:
-  /*else if (npc->type <= DARK_GOBLIN)
+  else if (npc->type <= DARK_GOBLIN)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2167,58 +2159,7 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2,
                                 floor_center_point.y - drawing_unit * 6),
                          drawing_unit / 6);
-  }
-
-  // Wolves, panthers, and bears:
-  else if (npc->type >= WHITE_BEAR && npc->type <= BLACK_WOLF)
-  {
-    // Legs:
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 2,
-                             floor_center_point.y - drawing_unit * 3,
-                             drawing_unit,
-                             drawing_unit * 3),
-                       drawing_unit,
-                       GCornersTop);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit,
-                             floor_center_point.y - drawing_unit * 3,
-                             drawing_unit,
-                             drawing_unit * 3),
-                       drawing_unit,
-                       GCornersTop);
-
-    // Body and head:
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x,
-                                floor_center_point.y - drawing_unit * 3),
-                         drawing_unit * 2);
-
-    // Eyes:
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
-                                                         GColorWhite);
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x - drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 3),
-                         drawing_unit / 6);
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x + drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 3),
-                         drawing_unit / 6);
-  }
-
-  // Wraiths:
-  else if (npc->type == WRAITH)
-  {
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x - drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 8),
-                         drawing_unit / 4);
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x + drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 8),
-                         drawing_unit / 4);
-  }
+  }*/
 
   // Warriors (dwarf, human, and orc):
   else
@@ -2293,25 +2234,6 @@ void draw_cell_contents(GContext *ctx,
                             g_back_wall_coords[depth][position][TOP_LEFT].y +
                               4));
 
-    // Shield:
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 2,
-                             floor_center_point.y - drawing_unit * 6,
-                             drawing_unit * 3,
-                             drawing_unit * 3),
-                       drawing_unit,
-                       GCornersBottom);
-
-    // Weapon:
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 2 -
-                               drawing_unit / 4,
-                             floor_center_point.y - drawing_unit * 7,
-                             drawing_unit / 2,
-                             drawing_unit * 3),
-                       drawing_unit,
-                       GCornersTop);
-
     // Head:
     draw_shaded_quad(ctx,
                      GPoint(floor_center_point.x - drawing_unit + 1,
@@ -2334,7 +2256,27 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit / 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
-  }*/
+
+    // Shield:
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x + drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 6,
+                             drawing_unit * 3,
+                             drawing_unit * 3),
+                       drawing_unit,
+                       GCornersBottom);
+
+    // Weapon:
+    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit * 2 -
+                               drawing_unit / 4,
+                             floor_center_point.y - drawing_unit * 8,
+                             drawing_unit / 2,
+                             drawing_unit * 4),
+                       drawing_unit,
+                       GCornersTop);
+  }
 }
 
 /******************************************************************************
