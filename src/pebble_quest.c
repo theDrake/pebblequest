@@ -364,8 +364,7 @@ GPoint get_npc_spawn_point(void)
     {
       return spawn_point;
     }
-    direction++;
-    if (direction == NUM_DIRECTIONS)
+    if (++direction == NUM_DIRECTIONS)
     {
       direction = 0;
     }
@@ -2204,13 +2203,13 @@ void draw_cell_contents(GContext *ctx,
                             floor_center_point.y - drawing_unit * 7),
                      GPoint(floor_center_point.x - drawing_unit * 2 -
                               drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 3),
+                            floor_center_point.y - drawing_unit * 4),
                      GPoint(floor_center_point.x + drawing_unit * 2 +
                               drawing_unit / 2,
                             floor_center_point.y - drawing_unit * 7),
                      GPoint(floor_center_point.x + drawing_unit * 2 +
                               drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 3),
+                            floor_center_point.y - drawing_unit * 4),
                      GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
                               10,
                             g_back_wall_coords[depth][position][TOP_LEFT].y -
@@ -2272,7 +2271,7 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 -
                                drawing_unit / 4,
-                             floor_center_point.y - drawing_unit * 8,
+                             floor_center_point.y - drawing_unit * 9,
                              drawing_unit / 2,
                              drawing_unit * 4),
                        drawing_unit,
@@ -3218,13 +3217,13 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   }
 
   // Some NPCs may carry a random item:
-  if (type < MAGE && type > WHITE_BEAST_SMALL)
+  if (type > WHITE_BEAST_SMALL)
   {
     npc->item = rand() % 2 ? NONE : RANDOM_ITEM; // Excludes Pebbles.
   }
 
   // Mages are the only source of Pebbles:
-  else // if (type == MAGE)
+  if (type == MAGE)
   {
     npc->item = rand() % NUM_PEBBLE_TYPES;
   }

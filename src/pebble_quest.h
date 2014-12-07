@@ -89,7 +89,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NUM_DIRECTIONS 4
 
 // Other:
-#define MAP_WIDTH          11
+#define MAP_WIDTH          10
 #define MAP_HEIGHT         MAP_WIDTH
 #define RANDOM_POINT_NORTH GPoint(rand() % MAP_WIDTH, 0)
 #define RANDOM_POINT_SOUTH GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
