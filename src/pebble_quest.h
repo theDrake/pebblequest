@@ -39,23 +39,23 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
-#define DARK_OGRE     0
-#define PALE_OGRE     1
-#define DARK_TROLL    2
-#define PALE_TROLL    3
-#define DARK_GOBLIN   4
-#define PALE_GOBLIN   5
-#define BLACK_BEAR    6
-#define WHITE_BEAR    7
-#define BLACK_PANTHER 8
-#define WHITE_PANTHER 9
-#define BLACK_WOLF    10
-#define WHITE_WOLF    11
-#define DWARF_WARRIOR 12
-#define HUMAN_WARRIOR 13
-#define ORC_WARRIOR   14
-#define MAGE          15
-#define NUM_NPC_TYPES 16
+#define BLACK_BEAST_LARGE  0
+#define WHITE_BEAST_LARGE  1
+#define BLACK_BEAST_MEDIUM 2
+#define WHITE_BEAST_MEDIUM 3
+#define BLACK_BEAST_SMALL  4
+#define WHITE_BEAST_SMALL  5
+#define DARK_OGRE          6
+#define PALE_OGRE          7
+#define DARK_TROLL         8
+#define PALE_TROLL         9
+#define DARK_GOBLIN        10
+#define PALE_GOBLIN        11
+#define WARRIOR_LARGE      12
+#define WARRIOR_MEDIUM     13
+#define WARRIOR_SMALL      14
+#define MAGE               15
+#define NUM_NPC_TYPES      16
 
 // Character stats (the first seven correspond to Pebble effects):
 #define AGILITY             0

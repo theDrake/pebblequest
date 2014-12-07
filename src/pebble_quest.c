@@ -2003,24 +2003,25 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Prepare to draw the NPC:
-  if (npc->type <= DARK_TROLL    ||
-      npc->type == HUMAN_WARRIOR ||
-      npc->type == ORC_WARRIOR   ||
-      (npc->type >= WHITE_BEAR && npc->type <= BLACK_PANTHER))
+  if (npc->type <= WHITE_BEAST_MEDIUM ||
+      npc->type == WARRIOR_MEDIUM     ||
+      npc->type == WARRIOR_LARGE      ||
+      (npc->type >= DARK_OGRE && npc->type <= PALE_TROLL))
   {
     drawing_unit++;
   }
-  if (npc->type <= DARK_OGRE   ||
-      npc->type == ORC_WARRIOR ||
-      npc->type == WHITE_BEAR  ||
-      npc->type == BLACK_BEAR)
+  if (npc->type <= WHITE_BEAST_LARGE ||
+      npc->type == WARRIOR_LARGE     ||
+      npc->type == DARK_OGRE         ||
+      npc->type == PALE_OGRE)
   {
-    drawing_unit ++;
+    drawing_unit++;
   }
-  graphics_context_set_fill_color(ctx,
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  /*graphics_context_set_fill_color(ctx,
                                   (npc->type % 2 == 0 || npc->type == MAGE) ?
                                     GColorBlack                             :
-                                    GColorWhite);
+                                    GColorWhite);*/
 
   // Mages:
   if (npc->type == MAGE)
@@ -2059,8 +2060,8 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 5);
   }
 
-  // Creatures:
-  /*else if (npc->type >= WHITE_BEAR && npc->type <= BLACK_WOLF)
+  // Beasts:
+  /*else if (npc->type <= WHITE_BEAST_SMALL)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2098,7 +2099,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Goblins, trolls, and ogres:
-  else if (npc->type <= DARK_GOBLIN)
+  else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2161,7 +2162,7 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 6);
   }*/
 
-  // Warriors (dwarf, human, and orc):
+  // Warriors:
   else
   {
     // Legs:
@@ -2253,7 +2254,7 @@ void draw_cell_contents(GContext *ctx,
                              floor_center_point.y - drawing_unit * 8 -
                                drawing_unit / 2,
                              drawing_unit,
-                             drawing_unit / 4),
+                             drawing_unit / 3),
                        NO_CORNER_RADIUS,
                        GCornerNone);
 
@@ -3187,35 +3188,37 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   }
 
   // Set stats according to current dungeon depth:
-  npc->health = npc->power = npc->physical_defense = npc->magical_defense =
-    g_player->depth * 2;
+  npc->power  = npc->physical_defense = npc->magical_defense = g_player->depth;
+  npc->health = g_player->depth * 2;
 
-  // Check for increased stats:
-  if (type <= DARK_TROLL    ||
-      type == HUMAN_WARRIOR ||
-      type == ORC_WARRIOR   ||
-      (type >= WHITE_BEAR && type <= BLACK_PANTHER))
+  // Check for increased power:
+  if (type <= WHITE_BEAST_MEDIUM ||
+      type == WARRIOR_MEDIUM     ||
+      type == WARRIOR_LARGE      ||
+      (type >= DARK_OGRE && type <= PALE_TROLL))
   {
     npc->power += g_player->depth;
   }
-  if (type <= DARK_OGRE   ||
-      type == ORC_WARRIOR ||
-      type == WHITE_BEAR  ||
-      type == BLACK_BEAR)
+  if (type <= WHITE_BEAST_LARGE ||
+      type == WARRIOR_LARGE     ||
+      type == DARK_OGRE         ||
+      type == PALE_OGRE)
   {
     npc->power += g_player->depth;
   }
-  if (type % 2)
+
+  // Check for increased defenses:
+  if (type == MAGE || (type < WARRIOR_LARGE && type % 2)
   {
     npc->magical_defense += g_player->depth;
   }
-  else // if (type % 2 == 0)
+  else
   {
     npc->physical_defense += g_player->depth;
   }
 
   // Some NPCs may carry a random item:
-  if (type < MAGE)
+  if (type < MAGE && type > WHITE_BEAST_SMALL)
   {
     npc->item = rand() % 2 ? NONE : RANDOM_ITEM; // Excludes Pebbles.
   }
@@ -3303,6 +3306,7 @@ void init_wall_coords(void)
                    g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].x;
     for (j = 1; j <= STRAIGHT_AHEAD; ++j)
     {
+
       g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT]       =
         g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT];
       g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT].x     -= wall_width *
