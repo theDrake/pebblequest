@@ -871,7 +871,8 @@ Description: Determines whether the player is "visible" from a given position,
 ******************************************************************************/
 bool player_is_visible_from(GPoint cell)
 {
-  int8_t diff_x = cell.x - g_player->position.x,
+  int8_t count  = 0,
+         diff_x = cell.x - g_player->position.x,
          diff_y = cell.y - g_player->position.y;
   const int8_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
                vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
@@ -888,7 +889,7 @@ bool player_is_visible_from(GPoint cell)
       {
         return true;
       }
-    }while (occupiable(cell));
+    }while (occupiable(cell) && ++count < MAX_VISIBILITY_DEPTH);
   }
 
   return false;
@@ -2060,7 +2061,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Beasts:
-  /*else if (npc->type <= WHITE_BEAST_SMALL)
+  else if (npc->type <= WHITE_BEAST_SMALL)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2159,10 +2160,10 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2,
                                 floor_center_point.y - drawing_unit * 6),
                          drawing_unit / 6);
-  }*/
+  }
 
   // Warriors:
-  else
+  /*else
   {
     // Legs:
     draw_shaded_quad(ctx,
@@ -2203,13 +2204,13 @@ void draw_cell_contents(GContext *ctx,
                             floor_center_point.y - drawing_unit * 7),
                      GPoint(floor_center_point.x - drawing_unit * 2 -
                               drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
+                            floor_center_point.y - drawing_unit * 5),
                      GPoint(floor_center_point.x + drawing_unit * 2 +
                               drawing_unit / 2,
                             floor_center_point.y - drawing_unit * 7),
                      GPoint(floor_center_point.x + drawing_unit * 2 +
                               drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
+                            floor_center_point.y - drawing_unit * 5),
                      GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
                               10,
                             g_back_wall_coords[depth][position][TOP_LEFT].y -
@@ -2271,12 +2272,12 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 -
                                drawing_unit / 4,
-                             floor_center_point.y - drawing_unit * 9,
+                             floor_center_point.y - drawing_unit * 10,
                              drawing_unit / 2,
                              drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
-  }
+  }*/
 }
 
 /******************************************************************************

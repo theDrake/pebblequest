@@ -143,7 +143,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NUM_PEBBLE_TYPES     7
 #define NUM_HEAVY_ITEM_TYPES 10 // Excludes Pebbles.
 #define FIRST_HEAVY_ITEM     DAGGER
-#define MAX_HEAVY_ITEMS      4
+#define MAX_HEAVY_ITEMS      5
 #define RANDOM_ITEM          (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
 
 // Equip targets (i.e., places where an item may be equipped):
