@@ -3208,7 +3208,7 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   }
 
   // Check for increased defenses:
-  if (type == MAGE || (type < WARRIOR_LARGE && type % 2)
+  if (type == MAGE || (type < WARRIOR_LARGE && type % 2))
   {
     npc->magical_defense += g_player->depth;
   }
