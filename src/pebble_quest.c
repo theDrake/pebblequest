@@ -2017,11 +2017,10 @@ void draw_cell_contents(GContext *ctx,
   {
     drawing_unit++;
   }
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  /*graphics_context_set_fill_color(ctx,
+  graphics_context_set_fill_color(ctx,
                                   (npc->type % 2 == 0 || npc->type == MAGE) ?
                                     GColorBlack                             :
-                                    GColorWhite);*/
+                                    GColorWhite);
 
   // Mages:
   if (npc->type == MAGE)
