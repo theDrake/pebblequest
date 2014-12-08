@@ -173,7 +173,7 @@ void damage_player(int16_t damage)
     damage = MIN_DAMAGE_VS_PLAYER;
   }
   vibes_short_pulse();
-  adjust_player_current_health(damage * -1);
+  //adjust_player_current_health(damage * -1);
 }
 
 /******************************************************************************
@@ -889,7 +889,7 @@ bool player_is_visible_from(GPoint cell)
       {
         return true;
       }
-    }while (occupiable(cell) && ++count < MAX_VISIBILITY_DEPTH);
+    }while (occupiable(cell) && ++count < (MAX_VISIBILITY_DEPTH - 2));
   }
 
   return false;
@@ -2018,9 +2018,9 @@ void draw_cell_contents(GContext *ctx,
     drawing_unit++;
   }
   graphics_context_set_fill_color(ctx,
-                                  (npc->type % 2 == 0 || npc->type == MAGE) ?
-                                    GColorBlack                             :
-                                    GColorWhite);
+                                  (npc->type % 2 == 0 ||
+                                   npc->type >= WARRIOR_LARGE) ? GColorBlack :
+                                                                 GColorWhite);
 
   // Mages:
   if (npc->type == MAGE)
@@ -2064,25 +2064,26 @@ void draw_cell_contents(GContext *ctx,
   {
     // Legs:
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 2,
+                       GRect(floor_center_point.x - drawing_unit -
+                               drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 3,
-                             drawing_unit,
+                             drawing_unit - 1,
                              drawing_unit * 3),
-                       drawing_unit,
-                       GCornersTop);
+                       NO_CORNER_RADIUS,
+                       GCornerNone);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit,
+                       GRect(floor_center_point.x + drawing_unit / 2 + 2,
                              floor_center_point.y - drawing_unit * 3,
-                             drawing_unit,
+                             drawing_unit - 1,
                              drawing_unit * 3),
-                       drawing_unit,
-                       GCornersTop);
+                       NO_CORNER_RADIUS,
+                       GCornerNone);
 
     // Body and head:
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 3),
-                         drawing_unit * 2);
+                         drawing_unit + drawing_unit / 2);
 
     // Eyes:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
@@ -2090,15 +2091,15 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
                                 floor_center_point.y - drawing_unit * 3),
-                         drawing_unit / 6);
+                         drawing_unit / 5);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2,
                                 floor_center_point.y - drawing_unit * 3),
-                         drawing_unit / 6);
+                         drawing_unit / 5);
   }
 
   // Goblins, trolls, and ogres:
-  else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
+  else //if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2156,7 +2157,7 @@ void draw_cell_contents(GContext *ctx,
                                 floor_center_point.y - drawing_unit * 6),
                          drawing_unit / 6);
     graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x + drawing_unit / 2,
+                         GPoint(floor_center_point.x + drawing_unit / 2 - 1,
                                 floor_center_point.y - drawing_unit * 6),
                          drawing_unit / 6);
   }
