@@ -2064,15 +2064,16 @@ void draw_cell_contents(GContext *ctx,
   {
     // Legs:
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit -
-                               drawing_unit / 2,
+                       GRect(floor_center_point.x - drawing_unit * 2 +
+                               drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 3,
                              drawing_unit - 1,
                              drawing_unit * 3),
                        NO_CORNER_RADIUS,
                        GCornerNone);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 2 + 2,
+                       GRect(floor_center_point.x + drawing_unit -
+                               drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 3,
                              drawing_unit - 1,
                              drawing_unit * 3),
@@ -2083,7 +2084,7 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 3),
-                         drawing_unit + drawing_unit / 2);
+                         drawing_unit * 2 - drawing_unit / 4);
 
     // Eyes:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
@@ -3197,24 +3198,24 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
       type == WARRIOR_LARGE      ||
       (type >= DARK_OGRE && type <= PALE_TROLL))
   {
-    npc->power += g_player->depth;
+    npc->power++;
   }
   if (type <= WHITE_BEAST_LARGE ||
       type == WARRIOR_LARGE     ||
       type == DARK_OGRE         ||
       type == PALE_OGRE)
   {
-    npc->power += g_player->depth;
+    npc->power++;
   }
 
   // Check for increased defenses:
   if (type == MAGE || (type < WARRIOR_LARGE && type % 2))
   {
-    npc->magical_defense += g_player->depth;
+    npc->magical_defense++;
   }
   else
   {
-    npc->physical_defense += g_player->depth;
+    npc->physical_defense++;
   }
 
   // Some NPCs may carry a random item:
