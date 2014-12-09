@@ -913,15 +913,16 @@ void show_narration(const int8_t narration)
   {
     case INTRO_NARRATION_1: // Total chars: 82
       strcpy(narration_str, "The Elderstone was sundered long ago, splintering"
-                            " into countless Pebbles of Power.");
+                            " into a hundred Pebbles of Power.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 85
-      strcpy(narration_str, "You have descended into a vast dungeon where the "
-                            "Pebbles are guarded by evil wizards.");
+    case INTRO_NARRATION_2: // Total chars: 97
+      strcpy(narration_str, "You have descended into a vast dungeon to "
+                            "retrieve the Pebbles from the clutches of evil "
+                            "wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 91
-      strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
-                            "Drake:\ndavidcdrake.com/\n"
+    case INTRO_NARRATION_3: // Total chars: 97
+      strcpy(narration_str, "Welcome to PebbleQuest, developed by David "
+                            "Cannon Drake!\ndavidcdrake.com/\n"
                             "            pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
