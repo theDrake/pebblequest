@@ -2130,8 +2130,7 @@ void draw_cell_contents(GContext *ctx,
     // Arms:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 5 -
-                               drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 5,
                              drawing_unit * 6,
                              drawing_unit),
                        drawing_unit / 2,
@@ -3090,12 +3089,16 @@ void set_player_minor_stats(void)
                                         g_player->stats[AGILITY]  * 3;
   g_player->energy_loss_per_action  = MIN_ENERGY_LOSS_PER_ACTION;
 
-  // Weapon/Pebble:
+  // Weapon:
   if (get_heavy_item_equipped_at(RIGHT_HAND))
   {
     for (i = DAGGER; i <= get_heavy_item_equipped_at(RIGHT_HAND)->type; i += 2)
     {
       g_player->stats[PHYSICAL_POWER]++;
+      g_player->energy_loss_per_action++;
+    }
+    if (get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
+    {
       g_player->energy_loss_per_action++;
     }
   }
