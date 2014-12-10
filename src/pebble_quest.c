@@ -215,8 +215,9 @@ int16_t damage_npc(npc_t *const npc, int16_t damage)
       }
     }
 
-    // If the NPC had an item, leave it behind as loot:
-    if (npc->item > NONE)
+    // Loot (extra checks here are to avoid overwriting Pebbles):
+    if (npc->type == MAGE ||
+        (npc->item > NONE && get_cell_type(npc->position) < 0))
     {
       set_cell_type(npc->position, npc->item);
     }
@@ -913,25 +914,23 @@ void show_narration(const int8_t narration)
   {
     case INTRO_NARRATION_1: // Total chars: 82
       strcpy(narration_str, "The Elderstone was sundered long ago, splintering"
-                            " into a hundred Pebbles of Power.");
+                            " into countless Pebbles of Power.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 97
+    case INTRO_NARRATION_2: // Total chars: 80
       strcpy(narration_str, "You have descended into a vast dungeon to "
-                            "retrieve the Pebbles from the clutches of evil "
-                            "wizards.");
+                            "reclaim the Pebbles from evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 97
-      strcpy(narration_str, "Welcome to PebbleQuest, developed by David "
-                            "Cannon Drake!\ndavidcdrake.com/\n"
-                            "            pebblequest");
+    case INTRO_NARRATION_3: // Total chars: 87
+      strcpy(narration_str, "Welcome to PebbleQuest, by David Cannon Drake!\n"
+                            "davidcdrake.com/\n            pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
       strcpy(narration_str, "       CONTROLS\nForward: \"Up\"\nBack: \"Down\""
                             "\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
                             "\"Select\"");
       break;
-    case DEATH_NARRATION: // Total chars: 69
-      strcpy(narration_str, "\nAlas, you have perished in the dank, dark "
+    case DEATH_NARRATION: // Total chars: 68
+      strcpy(narration_str, "Alas, you have perished in the dank, dark "
                             "depths, never to be found.");
       break;
     case STATS_NARRATION_1: // Max. total chars: ~46
@@ -2131,25 +2130,26 @@ void draw_cell_contents(GContext *ctx,
     // Arms:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 6,
+                             floor_center_point.y - drawing_unit * 5 -
+                               drawing_unit / 2,
                              drawing_unit * 6,
                              drawing_unit),
-                       drawing_unit,
-                       GCornersTop);
+                       drawing_unit / 2,
+                       GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
                              floor_center_point.y - drawing_unit * 5,
                              drawing_unit,
-                             drawing_unit),
+                             drawing_unit * 2),
                        drawing_unit / 2,
-                       GCornersBottom);
+                       GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit * 2,
-                             floor_center_point.y - drawing_unit * 5,
+                             floor_center_point.y - drawing_unit * 6,
                              drawing_unit,
-                             drawing_unit),
+                             drawing_unit * 2),
                        drawing_unit / 2,
-                       GCornersBottom);
+                       GCornersAll);
 
     // Eyes:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
