@@ -119,7 +119,7 @@ void determine_npc_behavior(npc_t *const npc)
 
   if (npc->status_effects[STUN] == 0 && npc->status_effects[SLOW] % 2 == 0)
   {
-    if (npc->status_effects[INTIMIDATION] || npc->health < g_player->depth)
+    if (npc->status_effects[INTIMIDATION] || npc->health < g_player->depth / 2)
     {
       move_npc(npc,
                get_opposite_direction(get_pursuit_direction(npc->position,
@@ -916,9 +916,9 @@ void show_narration(const int8_t narration)
       strcpy(narration_str, "The Elderstone was sundered long ago, splintering"
                             " into countless Pebbles of Power.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 88
-      strcpy(narration_str, "You have descended into a vast dungeon to reclaim"
-                            "them from the clutches of evil wizards.");
+    case INTRO_NARRATION_2: // Total chars: 94
+      strcpy(narration_str, "You have descended into a vast dungeon to wrest "
+                            "the Pebbles from the clutches of evil wizards.");
       break;
     case INTRO_NARRATION_3: // Total chars: 91
       strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
@@ -2122,7 +2122,7 @@ void draw_cell_contents(GContext *ctx,
     // Torso and head:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit,
-                             floor_center_point.y - drawing_unit * 8,
+                             floor_center_point.y - drawing_unit * 7,
                              drawing_unit * 2,
                              drawing_unit * 5),
                        drawing_unit,
@@ -3436,15 +3436,15 @@ void init_location(void)
     }
   }
 
-  // Add a mage at the exit:
-  add_new_npc(MAGE, builder_position);
-
   // Increment the player's depth, then remove the exit if we're at max. depth:
   g_player->depth++;
   if (g_player->depth == MAX_DEPTH)
   {
     set_cell_type(builder_position, EMPTY);
   }
+
+  // Finally, add a mage at the exit point:
+  add_new_npc(MAGE, builder_position);
 }
 
 /******************************************************************************
