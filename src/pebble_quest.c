@@ -119,10 +119,10 @@ void determine_npc_behavior(npc_t *const npc)
 
   if (npc->status_effects[STUN] == 0 && npc->status_effects[SLOW] % 2 == 0)
   {
-    if (npc->status_effects[INTIMIDATION])
+    if (npc->status_effects[INTIMIDATION] || npc->health < g_player->depth)
     {
       move_npc(npc,
-            get_opposite_direction(get_pursuit_direction(npc->position,
+               get_opposite_direction(get_pursuit_direction(npc->position,
                                                          g_player->position)));
     }
     else if (npc->type == MAGE && player_is_visible_from(npc->position))
@@ -916,13 +916,14 @@ void show_narration(const int8_t narration)
       strcpy(narration_str, "The Elderstone was sundered long ago, splintering"
                             " into countless Pebbles of Power.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 80
-      strcpy(narration_str, "You have descended into a vast dungeon to "
-                            "reclaim the Pebbles from evil wizards.");
+    case INTRO_NARRATION_2: // Total chars: 88
+      strcpy(narration_str, "You have descended into a vast dungeon to reclaim"
+                            "them from the clutches of evil wizards.");
       break;
-    case INTRO_NARRATION_3: // Total chars: 87
-      strcpy(narration_str, "Welcome to PebbleQuest, by David Cannon Drake!\n"
-                            "davidcdrake.com/\n            pebblequest");
+    case INTRO_NARRATION_3: // Total chars: 91
+      strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
+                            "Drake:\ndavidcdrake.com/"
+                            "\n            pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
       strcpy(narration_str, "       CONTROLS\nForward: \"Up\"\nBack: \"Down\""
@@ -2121,7 +2122,7 @@ void draw_cell_contents(GContext *ctx,
     // Torso and head:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit,
-                             floor_center_point.y - drawing_unit * 7,
+                             floor_center_point.y - drawing_unit * 8,
                              drawing_unit * 2,
                              drawing_unit * 5),
                        drawing_unit,
@@ -2130,21 +2131,21 @@ void draw_cell_contents(GContext *ctx,
     // Arms:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 5,
+                             floor_center_point.y - drawing_unit * 6,
                              drawing_unit * 6,
                              drawing_unit),
                        drawing_unit / 2,
                        GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 5,
+                             floor_center_point.y - drawing_unit * 6,
                              drawing_unit,
                              drawing_unit * 2),
                        drawing_unit / 2,
                        GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit * 2,
-                             floor_center_point.y - drawing_unit * 6,
+                             floor_center_point.y - drawing_unit * 7,
                              drawing_unit,
                              drawing_unit * 2),
                        drawing_unit / 2,
@@ -2155,11 +2156,11 @@ void draw_cell_contents(GContext *ctx,
                                                          GColorWhite);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 6),
+                                floor_center_point.y - drawing_unit * 7),
                          drawing_unit / 6);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2 - 1,
-                                floor_center_point.y - drawing_unit * 6),
+                                floor_center_point.y - drawing_unit * 7),
                          drawing_unit / 6);
   }
 
