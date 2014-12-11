@@ -2139,7 +2139,7 @@ void draw_cell_contents(GContext *ctx,
                        GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 6 -
+                             floor_center_point.y - drawing_unit * 5 -
                                drawing_unit / 2,
                              drawing_unit,
                              drawing_unit * 2),
@@ -2832,31 +2832,34 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
   if (g_current_window == GRAPHICS_WINDOW)
   {
     // Handle NPC behavior:
-    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
+    if (time(NULL) % 2)
     {
-      if (g_location->npcs[i].type > NONE)
+      for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
       {
-        determine_npc_behavior(&g_location->npcs[i]);
-
-        // Check for player death:
-        if (g_player->health <= 0)
+        if (g_location->npcs[i].type > NONE)
         {
-          return;
-        }
+          determine_npc_behavior(&g_location->npcs[i]);
 
-        // Apply wounding/burning damage:
-        if (g_location->npcs[i].status_effects[DAMAGE_OVER_TIME])
-        {
-          damage_npc(&g_location->npcs[i],
-                     g_location->npcs[i].status_effects[DAMAGE_OVER_TIME] / 2);
-        }
-
-        // Reduce all status effects:
-        for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
-        {
-          if (g_location->npcs[i].status_effects[j] > 0)
+          // Check for player death:
+          if (g_player->health <= 0)
           {
-            g_location->npcs[i].status_effects[j]--;
+            return;
+          }
+
+          // Apply wounding/burning damage:
+          if (g_location->npcs[i].status_effects[DAMAGE_OVER_TIME])
+          {
+            damage_npc(&g_location->npcs[i],
+                       g_location->npcs[i].status_effects[DAMAGE_OVER_TIME] / 2);
+          }
+
+          // Reduce all status effects:
+          for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
+          {
+            if (g_location->npcs[i].status_effects[j] > 0)
+            {
+              g_location->npcs[i].status_effects[j]--;
+            }
           }
         }
       }
