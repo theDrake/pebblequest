@@ -119,7 +119,7 @@ void determine_npc_behavior(npc_t *const npc)
 
   if (npc->status_effects[STUN] == 0 && npc->status_effects[SLOW] % 2 == 0)
   {
-    if (npc->status_effects[INTIMIDATION] || npc->health < g_player->depth / 2)
+    if (npc->status_effects[INTIMIDATION])
     {
       move_npc(npc,
                get_opposite_direction(get_pursuit_direction(npc->position,
@@ -912,13 +912,13 @@ void show_narration(const int8_t narration)
   g_current_narration = narration;
   switch (narration)
   {
-    case INTRO_NARRATION_1: // Total chars: 82
-      strcpy(narration_str, "The Elderstone was sundered long ago, splintering"
-                            " into countless Pebbles of Power.");
+    case INTRO_NARRATION_1: // Total chars: 89
+      strcpy(narration_str, "The Elderstone was sundered by evil wizards, "
+                            "splintering into countless Pebbles of Power.");
       break;
     case INTRO_NARRATION_2: // Total chars: 93
-      strcpy(narration_str, "You've bravely entered a vast dungeon to wrest "
-                            "the Pebbles from the clutches of evil wizards.");
+      strcpy(narration_str, "You've entered the dungeons of Ba'azoth to defeat"
+                            " the wizards and recover the Pebbles.");
       break;
     case INTRO_NARRATION_3: // Total chars: 91
       strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
@@ -931,13 +931,13 @@ void show_narration(const int8_t narration)
                             "\"Select\"");
       break;
     case DEATH_NARRATION: // Total chars: 69
-      strcpy(narration_str, "\nAlas, you have perished in the dank, dark "
-                            "depths, never to be found.");
+      strcpy(narration_str, "Alas, you have perished in the dank, dark depths "
+                            "of Ba'azoth. Rest in peace, brave adventurer.");
       break;
-    case STATS_NARRATION_1: // Max. total chars: ~46
+    case STATS_NARRATION_1: // Max. total chars: ~52
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
-               "Level:\n  %d\nExp. Points:\n  %u\nDepth:\n  %d",
+               "Level:\n  %d\nExperience Points:\n  %u\nDepth:\n  %d",
                g_player->level,
                g_player->exp_points,
                g_player->depth);
@@ -2863,7 +2863,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Generate new NPCs periodically (does nothing if the NPC array is full):
-    if (rand() % 10 == 0)
+    if (rand() % 5 == 0)
     {
       // Add any NPC type other than MAGE:
       add_new_npc(rand() % (NUM_NPC_TYPES - 1), get_npc_spawn_point());
