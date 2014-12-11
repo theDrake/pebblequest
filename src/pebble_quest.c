@@ -912,13 +912,13 @@ void show_narration(const int8_t narration)
   g_current_narration = narration;
   switch (narration)
   {
-    case INTRO_NARRATION_1: // Total chars: 89
-      strcpy(narration_str, "The Elderstone was sundered by evil wizards, "
-                            "splintering into countless Pebbles of Power.");
+    case INTRO_NARRATION_1: // Total chars: 90
+      strcpy(narration_str, "Evil wizards have sundered the Elderstone, "
+                            "splintering it into countless Pebbles of Power.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 93
-      strcpy(narration_str, "You've entered the dungeons of Ba'azoth to defeat"
-                            " the wizards and recover the Pebbles.");
+    case INTRO_NARRATION_2: // Total chars: 98
+      strcpy(narration_str, "You've entered the vast dungeons of Ba'azoth to "
+                            "defeat the wizards and recover the Pebbles.");
       break;
     case INTRO_NARRATION_3: // Total chars: 91
       strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
@@ -930,9 +930,10 @@ void show_narration(const int8_t narration)
                             "\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
                             "\"Select\"");
       break;
-    case DEATH_NARRATION: // Total chars: 69
-      strcpy(narration_str, "Alas, you have perished in the dank, dark depths "
-                            "of Ba'azoth. Rest in peace, brave adventurer.");
+    case DEATH_NARRATION: // Total chars: 97
+      strcpy(narration_str, "Alas, another adventurer falls in the dank, dark "
+                            "depths of Ba'azoth. A new adventurer must "
+                            "arise!");
       break;
     case STATS_NARRATION_1: // Max. total chars: ~52
       snprintf(narration_str,
@@ -954,7 +955,7 @@ void show_narration(const int8_t narration)
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
                "Physical Defense:\n  %d\nMagical Defense:\n  %d\n"
-               "Health:\n  %d/%d",
+                 "Health:\n  %d/%d",
                g_player->stats[PHYSICAL_DEFENSE],
                g_player->stats[MAGICAL_DEFENSE],
                g_player->health,
@@ -968,6 +969,15 @@ void show_narration(const int8_t narration)
                g_player->stats[MAGICAL_POWER],
                g_player->energy,
                g_player->max_energy);
+      break;
+    case STATS_NARRATION_5: // Max. total chars: ~75
+      snprintf(narration_str,
+               NARRATION_STR_LEN + 1,
+               "Fatigue Rate:\n  %d per attack\nEnergy Recovery:\n  %d/s\n"
+                 "Health Recovery:\n  %d/s",
+               g_player->energy_loss_per_action,
+               g_player->stats[ENERGY_REGEN],
+               g_player->stats[HEALTH_REGEN]);
       if (g_player->health <= 0)
       {
         init_player();
@@ -2787,7 +2797,7 @@ void narration_single_click(ClickRecognizerRef recognizer, void *context)
 
   if (g_current_narration < INTRO_NARRATION_4 ||
       (g_current_narration > INTRO_NARRATION_4 &&
-       g_current_narration < STATS_NARRATION_4))
+       g_current_narration < STATS_NARRATION_5))
   {
     show_narration(++g_current_narration);
   }
