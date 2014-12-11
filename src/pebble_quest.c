@@ -916,8 +916,8 @@ void show_narration(const int8_t narration)
       strcpy(narration_str, "The Elderstone was sundered long ago, splintering"
                             " into countless Pebbles of Power.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 94
-      strcpy(narration_str, "You have descended into a vast dungeon to wrest "
+    case INTRO_NARRATION_2: // Total chars: 93
+      strcpy(narration_str, "You've bravely entered a vast dungeon to wrest "
                             "the Pebbles from the clutches of evil wizards.");
       break;
     case INTRO_NARRATION_3: // Total chars: 91
@@ -2832,34 +2832,31 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
   if (g_current_window == GRAPHICS_WINDOW)
   {
     // Handle NPC behavior:
-    if (time(NULL) % 2)
+    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
+      if (g_location->npcs[i].type > NONE)
       {
-        if (g_location->npcs[i].type > NONE)
+        determine_npc_behavior(&g_location->npcs[i]);
+
+        // Check for player death:
+        if (g_player->health <= 0)
         {
-          determine_npc_behavior(&g_location->npcs[i]);
+          return;
+        }
 
-          // Check for player death:
-          if (g_player->health <= 0)
-          {
-            return;
-          }
+        // Apply wounding/burning damage:
+        if (g_location->npcs[i].status_effects[DAMAGE_OVER_TIME])
+        {
+          damage_npc(&g_location->npcs[i],
+                     g_location->npcs[i].status_effects[DAMAGE_OVER_TIME] / 2);
+        }
 
-          // Apply wounding/burning damage:
-          if (g_location->npcs[i].status_effects[DAMAGE_OVER_TIME])
+        // Reduce all status effects:
+        for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
+        {
+          if (g_location->npcs[i].status_effects[j] > 0)
           {
-            damage_npc(&g_location->npcs[i],
-                       g_location->npcs[i].status_effects[DAMAGE_OVER_TIME] / 2);
-          }
-
-          // Reduce all status effects:
-          for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
-          {
-            if (g_location->npcs[i].status_effects[j] > 0)
-            {
-              g_location->npcs[i].status_effects[j]--;
-            }
+            g_location->npcs[i].status_effects[j]--;
           }
         }
       }
