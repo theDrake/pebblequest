@@ -210,7 +210,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define MULTI_CLICK_MIN               2
 #define MULTI_CLICK_MAX               2   // We only care about double-clicks.
 #define MULTI_CLICK_TIMEOUT           0   // milliseconds
-#define PLAYER_ACTION_REPEAT_INTERVAL 300 // milliseconds
+#define PLAYER_ACTION_REPEAT_INTERVAL 250 // milliseconds
 #define LAST_CLICK_ONLY               true
 
 /******************************************************************************

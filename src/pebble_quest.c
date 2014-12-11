@@ -930,8 +930,8 @@ void show_narration(const int8_t narration)
                             "\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
                             "\"Select\"");
       break;
-    case DEATH_NARRATION: // Total chars: 68
-      strcpy(narration_str, "Alas, you have perished in the dank, dark "
+    case DEATH_NARRATION: // Total chars: 69
+      strcpy(narration_str, "\nAlas, you have perished in the dank, dark "
                             "depths, never to be found.");
       break;
     case STATS_NARRATION_1: // Max. total chars: ~46
@@ -950,25 +950,24 @@ void show_narration(const int8_t narration)
                g_player->stats[STRENGTH],
                g_player->stats[INTELLECT]);
       break;
-    case STATS_NARRATION_3: // Max. total chars: ~56
+    case STATS_NARRATION_3: // Max. total chars: ~66
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
-               "Phys. Power:\n  %d\nMag. Power:\n  %d\nEnergy:\n  %d/%d",
-               g_player->stats[PHYSICAL_POWER],
-               g_player->stats[MAGICAL_POWER],
-               g_player->energy,
-               g_player->max_energy);
-      break;
-    case STATS_NARRATION_4: // Max. total chars: ~60
-      snprintf(narration_str,
-               NARRATION_STR_LEN + 1,
-               "Phys. Defense:\n  %d\nMag. Defense:\n  %d\nHealth:\n  %d/%d",
+               "Physical Defense:\n  %d\nMagical Defense:\n  %d\n"
+               "Health:\n  %d/%d",
                g_player->stats[PHYSICAL_DEFENSE],
                g_player->stats[MAGICAL_DEFENSE],
                g_player->health,
                g_player->max_health);
-
-      // If the player has died, this is where a new character is created:
+      break;
+    case STATS_NARRATION_4: // Max. total chars: ~62
+      snprintf(narration_str,
+               NARRATION_STR_LEN + 1,
+               "Physical Power:\n  %d\nMagical Power:\n  %d\nEnergy:\n  %d/%d",
+               g_player->stats[PHYSICAL_POWER],
+               g_player->stats[MAGICAL_POWER],
+               g_player->energy,
+               g_player->max_energy);
       if (g_player->health <= 0)
       {
         init_player();
@@ -2066,7 +2065,7 @@ void draw_cell_contents(GContext *ctx,
     // Legs:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 +
-                               drawing_unit / 4,
+                               drawing_unit / 5,
                              floor_center_point.y - drawing_unit * 3,
                              drawing_unit - 1,
                              drawing_unit * 3),
@@ -2074,7 +2073,7 @@ void draw_cell_contents(GContext *ctx,
                        GCornerNone);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit + 2 -
-                               drawing_unit / 4,
+                               drawing_unit / 5,
                              floor_center_point.y - drawing_unit * 3,
                              drawing_unit - 1,
                              drawing_unit * 3),
@@ -2085,7 +2084,7 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 3),
-                         drawing_unit * 2 - drawing_unit / 4);
+                         drawing_unit * 2 - drawing_unit / 5);
 
     // Eyes:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
@@ -2122,30 +2121,34 @@ void draw_cell_contents(GContext *ctx,
     // Torso and head:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit,
-                             floor_center_point.y - drawing_unit * 7,
+                             floor_center_point.y - drawing_unit * 6 -
+                               drawing_unit / 2,
                              drawing_unit * 2,
-                             drawing_unit * 5),
+                             drawing_unit * 4 + drawing_unit / 2),
                        drawing_unit,
                        GCornersTop);
 
     // Arms:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 6,
+                             floor_center_point.y - drawing_unit * 5 -
+                               drawing_unit / 2,
                              drawing_unit * 6,
                              drawing_unit),
                        drawing_unit / 2,
                        GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 3,
-                             floor_center_point.y - drawing_unit * 6,
+                             floor_center_point.y - drawing_unit * 6 -
+                               drawing_unit / 2,
                              drawing_unit,
                              drawing_unit * 2),
                        drawing_unit / 2,
                        GCornersAll);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit * 2,
-                             floor_center_point.y - drawing_unit * 7,
+                             floor_center_point.y - drawing_unit * 6 -
+                               drawing_unit / 2,
                              drawing_unit,
                              drawing_unit * 2),
                        drawing_unit / 2,
@@ -2156,11 +2159,13 @@ void draw_cell_contents(GContext *ctx,
                                                          GColorWhite);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 7),
+                                floor_center_point.y - drawing_unit * 5 -
+                                  drawing_unit / 2),
                          drawing_unit / 6);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2 - 1,
-                                floor_center_point.y - drawing_unit * 7),
+                                floor_center_point.y - drawing_unit * 5 -
+                                  drawing_unit / 2),
                          drawing_unit / 6);
   }
 
