@@ -912,14 +912,14 @@ void show_narration(const int8_t narration)
   g_current_narration = narration;
   switch (narration)
   {
-    case INTRO_NARRATION_1: // Total chars: 88
-      strcpy(narration_str, "The Elderstone has been shattered by evil "
-                            "wizards, producing countless Pebbles of Power.");
+    case INTRO_NARRATION_1: // Total chars: 100
+      strcpy(narration_str, "The Elderstone was shattered by evil wizards, "
+                            "producing countless Pebbles of Power they now "
+                            "control.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 104
+    case INTRO_NARRATION_2: // Total chars: 94
       strcpy(narration_str, "You have entered the wizards' vast underground "
-                            "lair to recover the Pebbles and bring peace "
-                            "to the Realm.");
+                            "lair to recover the Pebbles and save the Realm.");
       break;
     case INTRO_NARRATION_3: // Total chars: 91
       strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
