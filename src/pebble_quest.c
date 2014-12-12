@@ -912,13 +912,14 @@ void show_narration(const int8_t narration)
   g_current_narration = narration;
   switch (narration)
   {
-    case INTRO_NARRATION_1: // Total chars: 89
-      strcpy(narration_str, "The Elderstone has been destroyed, split by evil "
-                            "wizards into countless Pebbles of Power.");
+    case INTRO_NARRATION_1: // Total chars: 88
+      strcpy(narration_str, "The Elderstone has been shattered by evil "
+                            "wizards, producing countless Pebbles of Power.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 98
-      strcpy(narration_str, "You've entered the wizards' underground lair to "
-                            "slay the wizards and recover the Pebbles.");
+    case INTRO_NARRATION_2: // Total chars: 104
+      strcpy(narration_str, "You have entered the wizards' vast underground "
+                            "lair to recover the Pebbles and bring peace "
+                            "to the Realm.");
       break;
     case INTRO_NARRATION_3: // Total chars: 91
       strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
@@ -930,9 +931,10 @@ void show_narration(const int8_t narration)
                             "\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
                             "\"Select\"");
       break;
-    case DEATH_NARRATION: // Total chars: 89
+    case DEATH_NARRATION: // Total chars: 102
       strcpy(narration_str, "Alas, another hero has perished in the dank, dark"
-                            " depths. Now, a new champion must arise!");
+                            " depths. A new champion must arise to save the "
+                            "realm!");
       break;
     case STATS_NARRATION_1: // Max. total chars: ~45
       snprintf(narration_str,
@@ -953,21 +955,21 @@ void show_narration(const int8_t narration)
     case STATS_NARRATION_3: // Max. total chars: ~66
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
-               "Physical Defense:\n  %d\nMagical Defense:\n  %d\n"
-                 "Health:\n  %d/%d",
-               g_player->stats[PHYSICAL_DEFENSE],
-               g_player->stats[MAGICAL_DEFENSE],
+               "Health:\n  %d/%d\nPhysical Defense:\n  %d\n"
+                 "Magical Defense:\n  %d",
                g_player->health,
-               g_player->max_health);
+               g_player->max_health,
+               g_player->stats[PHYSICAL_DEFENSE],
+               g_player->stats[MAGICAL_DEFENSE]);
       break;
     case STATS_NARRATION_4: // Max. total chars: ~62
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
-               "Physical Power:\n  %d\nMagical Power:\n  %d\nEnergy:\n  %d/%d",
-               g_player->stats[PHYSICAL_POWER],
-               g_player->stats[MAGICAL_POWER],
+               "Energy:\n  %d/%d\nPhysical Power:\n  %d\nMagical Power:\n  %d",
                g_player->energy,
-               g_player->max_energy);
+               g_player->max_energy,
+               g_player->stats[PHYSICAL_POWER],
+               g_player->stats[MAGICAL_POWER]);
       break;
     case STATS_NARRATION_5: // Max. total chars: ~70
       snprintf(narration_str,
