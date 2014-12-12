@@ -912,13 +912,13 @@ void show_narration(const int8_t narration)
   g_current_narration = narration;
   switch (narration)
   {
-    case INTRO_NARRATION_1: // Total chars: 90
-      strcpy(narration_str, "Evil wizards have sundered the Elderstone, "
-                            "splintering it into countless Pebbles of Power.");
+    case INTRO_NARRATION_1: // Total chars: 89
+      strcpy(narration_str, "The Elderstone has been destroyed, split by evil "
+                            "wizards into countless Pebbles of Power.");
       break;
     case INTRO_NARRATION_2: // Total chars: 98
-      strcpy(narration_str, "You've entered the vast dungeons of Ba'azoth to "
-                            "defeat the wizards and recover the Pebbles.");
+      strcpy(narration_str, "You've entered the wizards' underground lair to "
+                            "slay the wizards and recover the Pebbles.");
       break;
     case INTRO_NARRATION_3: // Total chars: 91
       strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
@@ -930,15 +930,14 @@ void show_narration(const int8_t narration)
                             "\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
                             "\"Select\"");
       break;
-    case DEATH_NARRATION: // Total chars: 97
-      strcpy(narration_str, "Alas, another adventurer falls in the dank, dark "
-                            "depths of Ba'azoth. A new adventurer must "
-                            "arise!");
+    case DEATH_NARRATION: // Total chars: 89
+      strcpy(narration_str, "Alas, another hero has perished in the dank, dark"
+                            " depths. Now, a new champion must arise!");
       break;
-    case STATS_NARRATION_1: // Max. total chars: ~52
+    case STATS_NARRATION_1: // Max. total chars: ~45
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
-               "Level:\n  %d\nExperience Points:\n  %u\nDepth:\n  %d",
+               "Level:\n  %d\nExperience:\n  %u\nDepth:\n  %d",
                g_player->level,
                g_player->exp_points,
                g_player->depth);
@@ -970,10 +969,10 @@ void show_narration(const int8_t narration)
                g_player->energy,
                g_player->max_energy);
       break;
-    case STATS_NARRATION_5: // Max. total chars: ~75
+    case STATS_NARRATION_5: // Max. total chars: ~70
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
-               "Fatigue Rate:\n  %d per attack\nEnergy Recovery:\n  %d/s\n"
+               "Energy Loss:\n  %d/attack\nEnergy Recovery:\n  %d/s\n"
                  "Health Recovery:\n  %d/s",
                g_player->energy_loss_per_action,
                g_player->stats[ENERGY_REGEN],
