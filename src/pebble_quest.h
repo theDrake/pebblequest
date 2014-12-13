@@ -33,9 +33,9 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 #define DEFAULT_MAJOR_STAT_VALUE   1 // AGILITY, STRENGTH, and INTELLECT.
-#define MIN_DAMAGE_VS_PLAYER       3
+#define MIN_DAMAGE_VS_PLAYER       2
 #define MIN_DAMAGE_VS_NPC          1
-#define MIN_ENERGY_LOSS_PER_ACTION 3
+#define MIN_ENERGY_LOSS_PER_ACTION 2
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
@@ -100,7 +100,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
   Narration-related Constants
 ******************************************************************************/
 
-#define NARRATION_STR_LEN          105
+#define NARRATION_STR_LEN          102
 #define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 

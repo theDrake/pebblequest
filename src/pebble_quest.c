@@ -3229,12 +3229,13 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
     npc->power++;
   }
 
-  // Check for increased defenses:
+  // Check for increased/decreased defenses:
   if (type == MAGE || (type < WARRIOR_LARGE && type % 2))
   {
     npc->magical_defense++;
+    npc->physical_defense--;
   }
-  else
+  else if (type >= WARRIOR_LARGE)
   {
     npc->physical_defense++;
   }
