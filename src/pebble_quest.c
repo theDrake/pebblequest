@@ -145,7 +145,7 @@ void determine_npc_behavior(npc_t *const npc)
       damage_player(damage - g_player->stats[PHYSICAL_DEFENSE]);
       if (g_player->stats[BACKLASH_DAMAGE])
       {
-        damage_npc(npc, damage / 2 + g_player->stats[BACKLASH_DAMAGE]);
+        damage_npc(npc, damage / 4 + g_player->stats[BACKLASH_DAMAGE]);
       }
     }
     else
@@ -2102,12 +2102,36 @@ void draw_cell_contents(GContext *ctx,
                                                          GColorWhite);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 3),
+                                floor_center_point.y - drawing_unit * 4),
                          drawing_unit / 5);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x + drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 3),
+                                floor_center_point.y - drawing_unit * 4),
                          drawing_unit / 5);
+
+    // Mouth:
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit -
+                               drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 3,
+                             drawing_unit,
+                             drawing_unit + drawing_unit / 2),
+                       drawing_unit / 2,
+                       GCornersAll);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 3,
+                             drawing_unit,
+                             drawing_unit + drawing_unit / 2),
+                       drawing_unit / 2,
+                       GCornersAll);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x + drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 3,
+                             drawing_unit,
+                             drawing_unit + drawing_unit / 2),
+                       drawing_unit / 2,
+                       GCornersAll);
   }
 
   // Goblins, trolls, and ogres:
@@ -2874,7 +2898,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Generate new NPCs periodically (does nothing if the NPC array is full):
-    if (rand() % 5 == 0)
+    if (rand() % 8 == 0)
     {
       // Add any NPC type other than MAGE:
       add_new_npc(rand() % (NUM_NPC_TYPES - 1), get_npc_spawn_point());
@@ -3408,7 +3432,7 @@ void init_location(void)
   while (get_cell_type(builder_position) != EXIT)
   {
     // Add random loot or simply make the cell EMPTY:
-    if (rand() % 50 == 0)
+    if (rand() % 30 == 0)
     {
       set_cell_type(builder_position, RANDOM_ITEM); // Excludes Pebbles.
     }
