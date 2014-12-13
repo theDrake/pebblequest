@@ -158,9 +158,9 @@ void determine_npc_behavior(npc_t *const npc)
 /******************************************************************************
    Function: damage_player
 
-Description: Damages the player according to a given damage value (or
-             MIN_DAMAGE_VS_PLAYER if the value's too low) and vibrates the
-             Pebble watch.
+Description: Damages the player according to a given damage value (which will
+             be adjusted, if necessary, to be at least one more than the
+             player's current health recovery rate) and vibrates the watch.
 
      Inputs: damage - Potential amount of damage.
 
@@ -168,9 +168,9 @@ Description: Damages the player according to a given damage value (or
 ******************************************************************************/
 void damage_player(int16_t damage)
 {
-  if (damage < MIN_DAMAGE_VS_PLAYER)
+  if (damage <= g_player->stats[HEALTH_REGEN])
   {
-    damage = MIN_DAMAGE_VS_PLAYER;
+    damage = g_player->stats[HEALTH_REGEN] + 1;
   }
   vibes_short_pulse();
   adjust_player_current_health(damage * -1);
@@ -3219,25 +3219,25 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
       type == WARRIOR_LARGE      ||
       (type >= DARK_OGRE && type <= PALE_TROLL))
   {
-    npc->power++;
+    npc->power += g_player->depth / 2;
   }
   if (type <= WHITE_BEAST_LARGE ||
       type == WARRIOR_LARGE     ||
       type == DARK_OGRE         ||
       type == PALE_OGRE)
   {
-    npc->power++;
+    npc->power += g_player->depth / 2;
   }
 
   // Check for increased/decreased defenses:
   if (type == MAGE || (type < WARRIOR_LARGE && type % 2))
   {
-    npc->magical_defense++;
-    npc->physical_defense--;
+    npc->magical_defense  += g_player->depth / 2;
+    npc->physical_defense -= g_player->depth / 2;
   }
   else if (type >= WARRIOR_LARGE)
   {
-    npc->physical_defense++;
+    npc->physical_defense += g_player->depth / 2;
   }
 
   // Some NPCs may carry a random item:

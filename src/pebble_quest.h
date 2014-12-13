@@ -33,9 +33,8 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 #define DEFAULT_MAJOR_STAT_VALUE   1 // AGILITY, STRENGTH, and INTELLECT.
-#define MIN_DAMAGE_VS_PLAYER       2
 #define MIN_DAMAGE_VS_NPC          1
-#define MIN_ENERGY_LOSS_PER_ACTION 2
+#define MIN_ENERGY_LOSS_PER_ACTION 1
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
@@ -144,7 +143,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NUM_PEBBLE_TYPES     7
 #define NUM_HEAVY_ITEM_TYPES 10 // Excludes Pebbles.
 #define FIRST_HEAVY_ITEM     DAGGER
-#define MAX_HEAVY_ITEMS      5
+#define MAX_HEAVY_ITEMS      4
 #define RANDOM_ITEM          (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
 
 // Equip targets (i.e., places where an item may be equipped):
