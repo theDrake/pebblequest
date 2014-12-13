@@ -914,13 +914,13 @@ void show_narration(const int8_t narration)
   {
     case INTRO_NARRATION_1: // Total chars: 94
       strcpy(narration_str,
-             "The Elderstone was shattered by evil wizards, producing 100 "
+             "The Elderstone was shattered by evil wizards, producing the "
                "Pebbles of Power they now control.");
       break;
-    case INTRO_NARRATION_2: // Total chars: 94
+    case INTRO_NARRATION_2: // Total chars: 98
       strcpy(narration_str,
              "You have entered the wizards' vast underground lair to recover "
-               "the Pebbles and save the realm.");
+               "all 100 Pebbles and save the realm.");
       break;
     case INTRO_NARRATION_3: // Total chars: 91
       strcpy(narration_str,
@@ -2111,25 +2111,25 @@ void draw_cell_contents(GContext *ctx,
 
     // Mouth:
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit -
-                               drawing_unit / 2,
+                       GRect(floor_center_point.x - drawing_unit / 2 -
+                               drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 3,
-                             drawing_unit,
-                             drawing_unit + drawing_unit / 2),
+                             drawing_unit / 2,
+                             drawing_unit),
                        drawing_unit / 2,
                        GCornersAll);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit / 2,
+                       GRect(floor_center_point.x - drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 3,
-                             drawing_unit,
-                             drawing_unit + drawing_unit / 2),
+                             drawing_unit / 2,
+                             drawing_unit),
                        drawing_unit / 2,
                        GCornersAll);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 2,
+                       GRect(floor_center_point.x + drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 3,
-                             drawing_unit,
-                             drawing_unit + drawing_unit / 2),
+                             drawing_unit / 2,
+                             drawing_unit),
                        drawing_unit / 2,
                        GCornersAll);
   }
