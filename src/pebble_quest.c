@@ -932,10 +932,10 @@ void show_narration(const int8_t narration)
              "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" "
                "x 2\nRight: \"Down\" x 2\nAttack: \"Select\"");
       break;
-    case DEATH_NARRATION: // Total chars: 102
+    case DEATH_NARRATION: // Total chars: 101
       strcpy(narration_str,
              "Alas, another hero has perished in the dank, dark depths. A new "
-               "champion must arise to save the realm!");
+               "champion must arise to save humanity!");
       break;
     case STATS_NARRATION_1: // Max. total chars: ~45
       snprintf(narration_str,
@@ -985,9 +985,14 @@ void show_narration(const int8_t narration)
         init_player();
       }
       break;
-    default: // case LEVEL_UP_NARRATION: // Total chars: 55
+    case LEVEL_UP_NARRATION: // Total chars: 55
       strcpy(narration_str,
              "\n  You have gained\n        a level of\n      experience!");
+      break;
+    default: // case ENDING_NARRATION: // Total chars: 98
+      strcpy(narration_str,
+             "Congratulations, Hero of the Realm! You've recovered all 100 "
+               "Pebbles and restored peace and order.");
       break;
   }
   text_layer_set_text(g_narration_text_layer, narration_str);
@@ -1469,6 +1474,12 @@ void menu_select_callback(MenuLayer *menu_layer,
       g_player->pebbles[g_current_selection]++;
       g_current_selection = get_inventory_row_for_pebble(g_current_selection);
       show_window(INVENTORY_MENU, NOT_ANIMATED);
+
+      // Check for game completion (collection of the 100th Pebble):
+      if (g_player->depth == MAX_DEPTH)
+      {
+        show_narration(ENDING_NARRATION);
+      }
     }
 
     // If it's a heavy item, attempt to add it to the player's inventory:

@@ -99,7 +99,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
   Narration-related Constants
 ******************************************************************************/
 
-#define NARRATION_STR_LEN          102
+#define NARRATION_STR_LEN          101
 #define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 
@@ -115,7 +115,8 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define STATS_NARRATION_4   8
 #define STATS_NARRATION_5   9
 #define LEVEL_UP_NARRATION  10
-#define NUM_NARRATION_TYPES 11
+#define ENDING_NARRATION    11
+#define NUM_NARRATION_TYPES 12
 
 /******************************************************************************
   Pebble- and Item-related Constants
