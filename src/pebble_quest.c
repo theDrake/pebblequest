@@ -912,29 +912,30 @@ void show_narration(const int8_t narration)
   g_current_narration = narration;
   switch (narration)
   {
-    case INTRO_NARRATION_1: // Total chars: 100
-      strcpy(narration_str, "The Elderstone was shattered by evil wizards, "
-                            "producing countless Pebbles of Power they now "
-                            "control.");
+    case INTRO_NARRATION_1: // Total chars: 94
+      strcpy(narration_str,
+             "The Elderstone was shattered by evil wizards, producing 100 "
+               "Pebbles of Power they now control.");
       break;
     case INTRO_NARRATION_2: // Total chars: 94
-      strcpy(narration_str, "You have entered the wizards' vast underground "
-                            "lair to recover the Pebbles and save the Realm.");
+      strcpy(narration_str,
+             "You have entered the wizards' vast underground lair to recover "
+               "the Pebbles and save the realm.");
       break;
     case INTRO_NARRATION_3: // Total chars: 91
-      strcpy(narration_str, "Welcome, hero, to PebbleQuest!\n\nBy David C. "
-                            "Drake:\ndavidcdrake.com/"
-                            "\n            pebblequest");
+      strcpy(narration_str,
+             "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\n"
+               "davidcdrake.com/\n            pebblequest");
       break;
     case INTRO_NARRATION_4: // Total chars: 93
-      strcpy(narration_str, "       CONTROLS\nForward: \"Up\"\nBack: \"Down\""
-                            "\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: "
-                            "\"Select\"");
+      strcpy(narration_str,
+             "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" "
+               "x 2\nRight: \"Down\" x 2\nAttack: \"Select\"");
       break;
     case DEATH_NARRATION: // Total chars: 102
-      strcpy(narration_str, "Alas, another hero has perished in the dank, dark"
-                            " depths. A new champion must arise to save the "
-                            "realm!");
+      strcpy(narration_str,
+             "Alas, another hero has perished in the dank, dark depths. A new "
+               "champion must arise to save the realm!");
       break;
     case STATS_NARRATION_1: // Max. total chars: ~45
       snprintf(narration_str,
@@ -985,9 +986,8 @@ void show_narration(const int8_t narration)
       }
       break;
     default: // case LEVEL_UP_NARRATION: // Total chars: 55
-      strcpy(narration_str, "\n  You have gained"
-                            "\n        a level of"
-                            "\n      experience!");
+      strcpy(narration_str,
+             "\n  You have gained\n        a level of\n      experience!");
       break;
   }
   text_layer_set_text(g_narration_text_layer, narration_str);
