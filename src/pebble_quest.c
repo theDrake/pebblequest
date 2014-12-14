@@ -102,70 +102,15 @@ Description: Attempts to move a given NPC one cell forward in a given
      Inputs: npc       - Pointer to the NPC to be moved.
              direction - Desired direction of movement.
 
-    Outputs: True if the move is successful.
+    Outputs: None.
 ******************************************************************************/
-bool move_npc(npc_t *const npc, const int8_t direction)
+void move_npc(npc_t *const npc, const int8_t direction)
 {
   GPoint destination = get_cell_farther_away(npc->position, direction, 1);
 
   if (occupiable(destination) && get_cell_type(destination) != EXIT)
   {
     npc->position = destination;
-
-    return true;
-  }
-
-  return false;
-}
-
-/******************************************************************************
-   Function: determine_npc_behavior
-
-Description: Determines what a given NPC should do.
-
-     Inputs: npc - Pointer to the NPC of interest.
-
-    Outputs: None.
-******************************************************************************/
-void determine_npc_behavior(npc_t *const npc)
-{
-  int16_t damage = npc->power - npc->status_effects[WEAKNESS] / 2;
-
-  if (npc->status_effects[STUN] == 0 && npc->status_effects[SLOW] % 2 == 0)
-  {
-    if (npc->status_effects[INTIMIDATION])
-    {
-      move_npc(npc,
-               get_opposite_direction(get_pursuit_direction(npc->position,
-                                                         g_player->position)));
-    }
-    else if (npc->type == MAGE && player_is_visible_from(npc->position))
-    {
-      flash_screen();
-      if (g_player->stats[SPELL_ABSORPTION] &&
-          damage > 0                        &&
-          rand() % g_player->stats[INTELLECT] +
-            g_player->stats[SPELL_ABSORPTION] > rand() % damage)
-      {
-        adjust_player_current_energy(damage);
-      }
-      else
-      {
-        damage_player(damage - g_player->stats[MAGICAL_DEFENSE]);
-      }
-    }
-    else if (touching(npc->position, g_player->position))
-    {
-      damage_player(damage - g_player->stats[PHYSICAL_DEFENSE]);
-      if (g_player->stats[BACKLASH_DAMAGE])
-      {
-        damage_npc(npc, damage / 4 + g_player->stats[BACKLASH_DAMAGE]);
-      }
-    }
-    else
-    {
-      move_npc(npc, get_pursuit_direction(npc->position, g_player->position));
-    }
   }
 }
 
@@ -2866,15 +2811,56 @@ Description: Handles changes to the game world every second while in active
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 {
   int8_t i, j;
+  int16_t damage;
+  npc_t *npc;
 
   if (g_current_window == GRAPHICS_WINDOW)
   {
     // Handle NPC behavior:
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      if (g_location->npcs[i].type > NONE)
+      npc = &g_location->npcs[i];
+      if (npc->type > NONE)
       {
-        determine_npc_behavior(&g_location->npcs[i]);
+        damage = npc->power - npc->status_effects[WEAKNESS] / 2;
+        if (npc->status_effects[STUN]     == 0 &&
+            npc->status_effects[SLOW] % 2 == 0)
+        {
+          if (npc->status_effects[INTIMIDATION])
+          {
+            move_npc(npc,
+                    get_opposite_direction(get_pursuit_direction(npc->position,
+                                                         g_player->position)));
+          }
+          else if (npc->type == MAGE && player_is_visible_from(npc->position))
+          {
+            flash_screen();
+            if (g_player->stats[SPELL_ABSORPTION] &&
+                damage > 0                        &&
+                rand() % g_player->stats[INTELLECT] +
+                  g_player->stats[SPELL_ABSORPTION] > rand() % damage)
+            {
+              adjust_player_current_energy(damage);
+            }
+            else
+            {
+              damage_player(damage - g_player->stats[MAGICAL_DEFENSE]);
+            }
+          }
+          else if (touching(npc->position, g_player->position))
+          {
+            damage_player(damage - g_player->stats[PHYSICAL_DEFENSE]);
+            if (g_player->stats[BACKLASH_DAMAGE])
+            {
+              damage_npc(npc, damage / 4 + g_player->stats[BACKLASH_DAMAGE]);
+            }
+          }
+          else
+          {
+            move_npc(npc,
+                     get_pursuit_direction(npc->position, g_player->position));
+          }
+        }
 
         // Check for player death:
         if (g_player->health <= 0)
@@ -2883,19 +2869,15 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         }
 
         // Apply wounding/burning damage:
-        if (g_location->npcs[i].status_effects[DAMAGE_OVER_TIME])
+        if (npc->status_effects[DAMAGE_OVER_TIME])
         {
-          damage_npc(&g_location->npcs[i],
-                     g_location->npcs[i].status_effects[DAMAGE_OVER_TIME] / 2);
+          damage_npc(npc, npc->status_effects[DAMAGE_OVER_TIME] / 2);
         }
 
         // Reduce all status effects:
         for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
         {
-          if (g_location->npcs[i].status_effects[j] > 0)
-          {
-            g_location->npcs[i].status_effects[j]--;
-          }
+          npc->status_effects[j] /= 2;
         }
       }
     }

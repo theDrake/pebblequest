@@ -311,8 +311,7 @@ static const GPathInfo COMPASS_PATH_INFO = {
 
 int8_t set_player_direction(const int8_t new_direction);
 bool move_player(const int8_t direction);
-bool move_npc(npc_t *const npc, const int8_t direction);
-void determine_npc_behavior(npc_t *const npc);
+void move_npc(npc_t *const npc, const int8_t direction);
 void damage_player(int16_t damage);
 int16_t damage_npc(npc_t *const npc, int16_t damage);
 void cast_spell_on_npc(npc_t *const npc,
