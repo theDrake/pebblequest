@@ -309,9 +309,9 @@ static const GPathInfo COMPASS_PATH_INFO = {
   Function Declarations
 ******************************************************************************/
 
-void set_player_direction(const int8_t new_direction);
-void move_player(const int8_t direction);
-void move_npc(npc_t *const npc, const int8_t direction);
+int8_t set_player_direction(const int8_t new_direction);
+bool move_player(const int8_t direction);
+bool move_npc(npc_t *const npc, const int8_t direction);
 void determine_npc_behavior(npc_t *const npc);
 void damage_player(int16_t damage);
 int16_t damage_npc(npc_t *const npc, int16_t damage);

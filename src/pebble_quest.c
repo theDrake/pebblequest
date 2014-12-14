@@ -18,27 +18,33 @@ Description: Sets the player's orientation to a given direction and updates the
 
      Inputs: new_direction - Desired orientation.
 
-    Outputs: None.
+    Outputs: The player's new direction.
 ******************************************************************************/
-void set_player_direction(const int8_t new_direction)
+int8_t set_player_direction(const int8_t new_direction)
 {
   g_player->direction = new_direction;
-  switch(new_direction)
+
+  // Update compass graphic:
+  if (new_direction == NORTH)
   {
-    case NORTH:
-      gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 2);
-      break;
-    case SOUTH:
-      gpath_rotate_to(g_compass_path, 0);
-      break;
-    case EAST:
-      gpath_rotate_to(g_compass_path, (TRIG_MAX_ANGLE * 3) / 4);
-      break;
-    default: // case WEST:
-      gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 4);
-      break;
+    gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 2);
   }
+  else if (new_direction == SOUTH)
+  {
+    gpath_rotate_to(g_compass_path, 0);
+  }
+  else if (new_direction == EAST)
+  {
+    gpath_rotate_to(g_compass_path, (TRIG_MAX_ANGLE * 3) / 4);
+  }
+  else // if (new_direction == WEST)
+  {
+    gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 4);
+  }
+
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
+
+  return new_direction;
 }
 
 /******************************************************************************
@@ -51,9 +57,9 @@ Description: Attempts to move the player one cell forward (or backward) in a
 
      Inputs: direction - Desired direction of movement.
 
-    Outputs: None.
+    Outputs: True if the move is successful.
 ******************************************************************************/
-void move_player(const int8_t direction)
+bool move_player(const int8_t direction)
 {
   GPoint destination = get_cell_farther_away(g_player->position, direction, 1);
 
@@ -80,7 +86,11 @@ void move_player(const int8_t direction)
     }
 
     layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
+
+    return true;
   }
+
+  return false;
 }
 
 /******************************************************************************
@@ -92,16 +102,20 @@ Description: Attempts to move a given NPC one cell forward in a given
      Inputs: npc       - Pointer to the NPC to be moved.
              direction - Desired direction of movement.
 
-    Outputs: None.
+    Outputs: True if the move is successful.
 ******************************************************************************/
-void move_npc(npc_t *const npc, const int8_t direction)
+bool move_npc(npc_t *const npc, const int8_t direction)
 {
   GPoint destination = get_cell_farther_away(npc->position, direction, 1);
 
   if (occupiable(destination) && get_cell_type(destination) != EXIT)
   {
     npc->position = destination;
+
+    return true;
   }
+
+  return false;
 }
 
 /******************************************************************************
@@ -912,10 +926,10 @@ void show_narration(const int8_t narration)
   g_current_narration = narration;
   switch (narration)
   {
-    case INTRO_NARRATION_1: // Total chars: 91
+    case INTRO_NARRATION_1: // Total chars: 100
       strcpy(narration_str,
              "The Elderstone was destroyed by evil wizards, split into "
-               "Pebbles of Power they now control.");
+               "Pebbles of Power they now use to vile ends.");
       break;
     case INTRO_NARRATION_2: // Total chars: 94
       strcpy(narration_str,
