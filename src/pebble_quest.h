@@ -99,7 +99,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
   Narration-related Constants
 ******************************************************************************/
 
-#define NARRATION_STR_LEN          101
+#define NARRATION_STR_LEN          103
 #define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 
@@ -335,8 +335,6 @@ int8_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int8_t type);
 npc_t *get_npc_at(const GPoint cell);
 bool occupiable(const GPoint cell);
-bool touching(const GPoint cell, const GPoint cell_2);
-bool player_is_visible_from(GPoint cell);
 void show_narration(const int8_t narration);
 void show_window(const int8_t window, const bool animated);
 static void main_menu_draw_header_callback(GContext *ctx,

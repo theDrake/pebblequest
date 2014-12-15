@@ -706,63 +706,6 @@ bool occupiable(const GPoint cell)
 }
 
 /******************************************************************************
-   Function: touching
-
-Description: Determines whether two cells are "touching," meaning they are next
-             to each other (diagonal doesn't count).
-
-     Inputs: cell   - First set of cell coordinates.
-             cell_2 - Second set of cell coordinates.
-
-    Outputs: "True" if the two cells are touching.
-******************************************************************************/
-bool touching(const GPoint cell, const GPoint cell_2)
-{
-  const int8_t diff_x = cell.x - cell_2.x,
-               diff_y = cell.y - cell_2.y;
-
-  return ((diff_x == 0 && abs(diff_y) == 1) ||
-          (diff_y == 0 && abs(diff_x) == 1));
-}
-
-/******************************************************************************
-   Function: player_is_visible_from
-
-Description: Determines whether the player is "visible" from a given position,
-             where "visible" means aligned along the x- or y-axis with no wall
-             or NPC in the way.
-
-     Inputs: cell - Cell coordinates from which to look for the player.
-
-    Outputs: "True" if the player is "visible" from the given position.
-******************************************************************************/
-bool player_is_visible_from(GPoint cell)
-{
-  int8_t count  = 0,
-         diff_x = cell.x - g_player->position.x,
-         diff_y = cell.y - g_player->position.y;
-  const int8_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
-               vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
-
-  if (diff_x == 0 || diff_y == 0)
-  {
-    do
-    {
-      cell = get_cell_farther_away(cell,
-                                   diff_x == 0 ? vertical_direction :
-                                                 horizontal_direction,
-                                   1);
-      if (gpoint_equal(&g_player->position, &cell))
-      {
-        return true;
-      }
-    }while (occupiable(cell) && ++count < (MAX_VISIBILITY_DEPTH - 2));
-  }
-
-  return false;
-}
-
-/******************************************************************************
    Function: show_narration
 
 Description: Displays desired narration text via the narration window.
@@ -855,10 +798,10 @@ void show_narration(const int8_t narration)
       strcpy(narration_str,
              "\n  You have gained\n        a level of\n      experience!");
       break;
-    default: // case ENDING_NARRATION: // Total chars: 98
+    default: // case ENDING_NARRATION: // Total chars: 103
       strcpy(narration_str,
-             "Congratulations, Hero of the Realm! You've recovered all 100 "
-               "Pebbles and restored peace and order.");
+             "Congratulations, Hero of the Realm! You've slain all the evil "
+               "mages and recovered every Pebble. Huzzah!");
       break;
   }
   text_layer_set_text(g_narration_text_layer, narration_str);
@@ -1551,10 +1494,6 @@ void draw_scene(Layer *layer, GContext *ctx)
     cell = get_cell_farther_away(g_player->position,
                                  g_player->direction,
                                  depth);
-    /*if (out_of_bounds(cell))
-    {
-      continue;
-    }*/
     if (get_cell_type(cell) >= EMPTY)
     {
       draw_cell_walls(ctx, cell, depth, STRAIGHT_AHEAD);
@@ -2758,10 +2697,17 @@ Description: Handles changes to the game world every second while in active
 ******************************************************************************/
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 {
-  int8_t i, j, direction = rand() % NUM_DIRECTIONS;
+  int8_t i,
+         j,
+         diff_x,
+         diff_y,
+         horizontal_direction,
+         vertical_direction,
+         direction = rand() % NUM_DIRECTIONS;
   int16_t damage;
   npc_t *npc;
-  GPoint spawn_point;
+  GPoint cell;
+  bool player_is_visible_to_npc = false;
 
   if (g_current_window == GRAPHICS_WINDOW)
   {
@@ -2771,17 +2717,42 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
       npc = &g_location->npcs[i];
       if (npc->type > NONE)
       {
-        damage = npc->power - npc->status_effects[WEAKNESS] / 2;
         if (npc->status_effects[STUN]     == 0 &&
             npc->status_effects[SLOW] % 2 == 0)
         {
+          damage = npc->power - npc->status_effects[WEAKNESS] / 2;
+          diff_x = npc->position.x - g_player->position.x;
+          diff_y = npc->position.y - g_player->position.y;
+
+          // Determine whether the NPC can "see" the player:
+          if (diff_x == 0 || diff_y == 0)
+          {
+            j                    = 0;
+            cell                 = npc->position;
+            horizontal_direction = diff_x > 0 ? WEST  : EAST;
+            vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
+            do
+            {
+              cell = get_cell_farther_away(cell,
+                                           diff_x == 0 ?
+                                             vertical_direction :
+                                             horizontal_direction,
+                                           1);
+              if (gpoint_equal(&g_player->position, &cell))
+              {
+                player_is_visible_to_npc = true;
+                break;
+              }
+            }while (occupiable(cell) && ++j < (MAX_VISIBILITY_DEPTH - 2));
+          }
+
           if (npc->status_effects[INTIMIDATION])
           {
             move_npc(npc,
                     get_opposite_direction(get_pursuit_direction(npc->position,
                                                          g_player->position)));
           }
-          else if (npc->type == MAGE && player_is_visible_from(npc->position))
+          else if (npc->type == MAGE && player_is_visible_to_npc)
           {
             flash_screen();
             if (g_player->stats[SPELL_ABSORPTION] &&
@@ -2796,7 +2767,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
               damage_player(damage - g_player->stats[MAGICAL_DEFENSE]);
             }
           }
-          else if (touching(npc->position, g_player->position))
+          else if ((diff_x == 0 && abs(diff_y) == 1) ||
+                   (diff_y == 0 && abs(diff_x) == 1))
           {
             damage_player(damage - g_player->stats[PHYSICAL_DEFENSE]);
             if (g_player->stats[BACKLASH_DAMAGE])
@@ -2840,10 +2812,10 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
       // Attempt to find a viable spawn point:
       for (i = 0; i < NUM_DIRECTIONS; ++i)
       {
-        spawn_point = get_cell_farther_away(g_player->position,
-                                            direction,
-                                            MAX_VISIBILITY_DEPTH - 1);
-        if (occupiable(spawn_point))
+        cell = get_cell_farther_away(g_player->position,
+                                     direction,
+                                     MAX_VISIBILITY_DEPTH - 1);
+        if (occupiable(cell))
         {
           break;
         }
@@ -2854,7 +2826,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
       }
 
       // Add any NPC type other than MAGE:
-      add_new_npc(rand() % (NUM_NPC_TYPES - 1), spawn_point);
+      add_new_npc(rand() % (NUM_NPC_TYPES - 1), cell);
     }
 
     // Handle player stat recovery:
@@ -3196,25 +3168,25 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
       type == WARRIOR_LARGE      ||
       (type >= DARK_OGRE && type <= PALE_TROLL))
   {
-    npc->power += g_player->depth / 2;
+    npc->power += 1 + g_player->depth / 10;
   }
   if (type <= WHITE_BEAST_LARGE ||
       type == WARRIOR_LARGE     ||
       type == DARK_OGRE         ||
       type == PALE_OGRE)
   {
-    npc->power += g_player->depth / 2;
+    npc->power += 1 + g_player->depth / 10;
   }
 
   // Check for increased/decreased defenses:
   if (type == MAGE || (type < WARRIOR_LARGE && type % 2))
   {
-    npc->magical_defense  += g_player->depth / 2;
-    npc->physical_defense -= g_player->depth / 2;
+    npc->magical_defense  += 1 + g_player->depth / 10;
+    npc->physical_defense -= 1 + g_player->depth / 10;
   }
   else if (type >= WARRIOR_LARGE)
   {
-    npc->physical_defense += g_player->depth / 2;
+    npc->physical_defense += 1 + g_player->depth / 10;
   }
 
   // Some NPCs may carry a random item:
