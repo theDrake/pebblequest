@@ -310,53 +310,6 @@ bool add_new_npc(const int8_t npc_type, const GPoint position)
 }
 
 /******************************************************************************
-   Function: get_floor_center_point
-
-Description: Returns the central point, with respect to the graphics layer, of
-             the floor of the cell at a given visual depth and position.
-
-     Inputs: depth    - Front-back visual depth in "g_back_wall_coords".
-             position - Left-right visual position in "g_back_wall_coords".
-
-    Outputs: GPoint coordinates of the floor's central point within the
-             designated cell.
-******************************************************************************/
-GPoint get_floor_center_point(const int8_t depth, const int8_t position)
-{
-  int16_t x_midpoint1, x_midpoint2, x, y;
-
-  x_midpoint1 = (g_back_wall_coords[depth][position][TOP_LEFT].x +
-                 g_back_wall_coords[depth][position][BOTTOM_RIGHT].x) / 2;
-  if (depth == 0)
-  {
-    if (position < STRAIGHT_AHEAD)      // Just to the left of the player.
-    {
-      x_midpoint2 = GRAPHICS_FRAME_WIDTH / -2;
-    }
-    else if (position > STRAIGHT_AHEAD) // Just to the right of the player.
-    {
-      x_midpoint2 = GRAPHICS_FRAME_WIDTH + GRAPHICS_FRAME_WIDTH / 2;
-    }
-    else                                // Directly under the player.
-    {
-      x_midpoint2 = x_midpoint1;
-    }
-    y = GRAPHICS_FRAME_HEIGHT;
-  }
-  else
-  {
-    x_midpoint2 = (g_back_wall_coords[depth - 1][position][TOP_LEFT].x +
-                   g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].x) /
-                     2;
-    y = (g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
-         g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y) / 2;
-  }
-  x = (x_midpoint1 + x_midpoint2) / 2;
-
-  return GPoint(x, y);
-}
-
-/******************************************************************************
    Function: get_cell_farther_away
 
 Description: Given a set of cell coordinates, returns new cell coordinates a
@@ -639,30 +592,6 @@ int8_t get_inventory_row_for_pebble(const int8_t pebble_type)
   }
 
   return 0;
-}
-
-/******************************************************************************
-   Function: get_num_heavy_items_owned
-
-Description: Returns the number of heavy items in the player's inventory.
-
-     Inputs: None.
-
-    Outputs: Number of heavy items owned by the player.
-******************************************************************************/
-int8_t get_num_heavy_items_owned(void)
-{
-  int8_t i, num_heavy_items = 0;
-
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
-    if (g_player->heavy_items[i].type > NONE)
-    {
-      num_heavy_items++;
-    }
-  }
-
-  return num_heavy_items;
 }
 
 /******************************************************************************
@@ -1571,13 +1500,24 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
                                            uint16_t section_index,
                                            void *data)
 {
+  int8_t i, num_heavy_items = 0;
+
+  // Determine the number of heavy items owned:
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
+  {
+    if (g_player->heavy_items[i].type > NONE)
+    {
+      num_heavy_items++;
+    }
+  }
+
   if (menu_layer == g_menu_layers[INVENTORY_MENU])
   {
-    return get_num_pebble_types_owned() + get_num_heavy_items_owned();
+    return get_num_pebble_types_owned() + num_heavy_items;
   }
   else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
-    return get_num_heavy_items_owned();
+    return num_heavy_items;
   }
   else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
@@ -1906,6 +1846,7 @@ void draw_cell_contents(GContext *ctx,
                         const int8_t position)
 {
   uint8_t drawing_unit; // Reference variable for drawing contents at depth.
+  int16_t x_midpoint1, x_midpoint2;
   GPoint floor_center_point;
   npc_t *npc = get_npc_at(cell);
 
@@ -1917,7 +1858,36 @@ void draw_cell_contents(GContext *ctx,
   {
     drawing_unit++;
   }
-  floor_center_point = get_floor_center_point(depth, position);
+
+  // Determine floor center point:
+  x_midpoint1 = (g_back_wall_coords[depth][position][TOP_LEFT].x +
+                 g_back_wall_coords[depth][position][BOTTOM_RIGHT].x) / 2;
+  if (depth == 0)
+  {
+    if (position < STRAIGHT_AHEAD)      // Just to the left of the player.
+    {
+      x_midpoint2 = GRAPHICS_FRAME_WIDTH / -2;
+    }
+    else if (position > STRAIGHT_AHEAD) // Just to the right of the player.
+    {
+      x_midpoint2 = GRAPHICS_FRAME_WIDTH + GRAPHICS_FRAME_WIDTH / 2;
+    }
+    else                                // Directly under the player.
+    {
+      x_midpoint2 = x_midpoint1;
+    }
+    floor_center_point.y = GRAPHICS_FRAME_HEIGHT;
+  }
+  else
+  {
+    x_midpoint2          =
+      (g_back_wall_coords[depth - 1][position][TOP_LEFT].x +
+       g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].x) / 2;
+    floor_center_point.y =
+      (g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
+       g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y) / 2;
+  }
+  floor_center_point.x = (x_midpoint1 + x_midpoint2) / 2;
 
   // Check for an entrance (hole in the ceiling):
   if (gpoint_equal(&cell, &g_location->entrance))
@@ -2897,7 +2867,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
       }
 
       // Add any NPC type other than MAGE:
-      add_new_npc(rand() % (NUM_NPC_TYPES - 1), get_npc_spawn_point());
+      add_new_npc(rand() % (NUM_NPC_TYPES - 1), spawn_point);
     }
 
     // Handle player stat recovery:

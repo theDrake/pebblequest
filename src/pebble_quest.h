@@ -320,7 +320,6 @@ int16_t cast_spell_on_npc(npc_t *const npc,
 int16_t adjust_player_current_health(const int16_t amount);
 int16_t adjust_player_current_energy(const int16_t amount);
 bool add_new_npc(const int8_t npc_type, const GPoint position);
-GPoint get_floor_center_point(const int8_t depth, const int8_t position);
 GPoint get_cell_farther_away(const GPoint reference_point,
                              const int8_t direction,
                              const int8_t distance);
@@ -331,7 +330,6 @@ int8_t get_opposite_direction(const int8_t direction);
 int8_t get_nth_item_type(const int8_t n);
 int8_t get_num_pebble_types_owned(void);
 int8_t get_inventory_row_for_pebble(const int8_t pebble_type);
-int8_t get_num_heavy_items_owned(void);
 heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target);
 int8_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int8_t type);
