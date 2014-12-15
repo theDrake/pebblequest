@@ -320,7 +320,6 @@ int16_t cast_spell_on_npc(npc_t *const npc,
 int16_t adjust_player_current_health(const int16_t amount);
 int16_t adjust_player_current_energy(const int16_t amount);
 bool add_new_npc(const int8_t npc_type, const GPoint position);
-GPoint get_npc_spawn_point(void);
 GPoint get_floor_center_point(const int8_t depth, const int8_t position);
 GPoint get_cell_farther_away(const GPoint reference_point,
                              const int8_t direction,

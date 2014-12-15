@@ -310,41 +310,6 @@ bool add_new_npc(const int8_t npc_type, const GPoint position)
 }
 
 /******************************************************************************
-   Function: get_npc_spawn_point
-
-Description: Returns a suitable NPC spawn point along the edge of the player's
-             sphere of visibility. If the algorithm fails to find one, (-1, -1)
-             is returned instead.
-
-     Inputs: None.
-
-    Outputs: The coordinates of a suitable NPC spawn point, or (-1, -1) if the
-             algorithm fails to find one.
-******************************************************************************/
-GPoint get_npc_spawn_point(void)
-{
-  int8_t i, direction = rand() % NUM_DIRECTIONS;
-  GPoint spawn_point;
-
-  for (i = 0; i < NUM_DIRECTIONS; ++i)
-  {
-    spawn_point = get_cell_farther_away(g_player->position,
-                                        direction,
-                                        MAX_VISIBILITY_DEPTH - 1);
-    if (occupiable(spawn_point))
-    {
-      return spawn_point;
-    }
-    if (++direction == NUM_DIRECTIONS)
-    {
-      direction = 0;
-    }
-  }
-
-  return GPoint(-1, -1);
-}
-
-/******************************************************************************
    Function: get_floor_center_point
 
 Description: Returns the central point, with respect to the graphics layer, of
@@ -512,16 +477,21 @@ Description: Given a north/south/east/west reference direction, returns the
 ******************************************************************************/
 int8_t get_direction_to_the_left(const int8_t reference_direction)
 {
-  switch (reference_direction)
+  if (reference_direction == NORTH)
   {
-    case NORTH:
-      return WEST;
-    case WEST:
-      return SOUTH;
-    case SOUTH:
-      return EAST;
-    default: // case EAST:
-      return NORTH;
+    return WEST;
+  }
+  else if (reference_direction == WEST)
+  {
+    return SOUTH;
+  }
+  else if (reference_direction == SOUTH)
+  {
+    return EAST;
+  }
+  else // if (reference_direction == EAST)
+  {
+    return NORTH;
   }
 }
 
@@ -538,16 +508,21 @@ Description: Given a north/south/east/west reference direction, returns the
 ******************************************************************************/
 int8_t get_direction_to_the_right(const int8_t reference_direction)
 {
-  switch (reference_direction)
+  if (reference_direction == NORTH)
   {
-    case NORTH:
-      return EAST;
-    case EAST:
-      return SOUTH;
-    case SOUTH:
-      return WEST;
-    default: // case WEST:
-      return NORTH;
+    return EAST;
+  }
+  else if (reference_direction == EAST)
+  {
+    return SOUTH;
+  }
+  else if (reference_direction == SOUTH)
+  {
+    return WEST;
+  }
+  else // if (reference_direction == WEST)
+  {
+    return NORTH;
   }
 }
 
@@ -563,16 +538,21 @@ Description: Returns the opposite of a given direction value (i.e., given the
 ******************************************************************************/
 int8_t get_opposite_direction(const int8_t direction)
 {
-  switch (direction)
+  if (direction == NORTH)
   {
-    case NORTH:
-      return SOUTH;
-    case SOUTH:
-      return NORTH;
-    case EAST:
-      return WEST;
-    default: // case WEST:
-      return EAST;
+    return SOUTH;
+  }
+  else if (direction == SOUTH)
+  {
+    return NORTH;
+  }
+  else if (direction == EAST)
+  {
+    return WEST;
+  }
+  else // if (direction == WEST)
+  {
+    return EAST;
   }
 }
 
@@ -2821,9 +2801,10 @@ Description: Handles changes to the game world every second while in active
 ******************************************************************************/
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 {
-  int8_t i, j;
+  int8_t i, j, direction = rand() % NUM_DIRECTIONS;
   int16_t damage;
   npc_t *npc;
+  GPoint spawn_point;
 
   if (g_current_window == GRAPHICS_WINDOW)
   {
@@ -2899,6 +2880,22 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     // Generate new NPCs periodically (does nothing if the NPC array is full):
     if (rand() % 8 == 0)
     {
+      // Attempt to find a viable spawn point:
+      for (i = 0; i < NUM_DIRECTIONS; ++i)
+      {
+        spawn_point = get_cell_farther_away(g_player->position,
+                                            direction,
+                                            MAX_VISIBILITY_DEPTH - 1);
+        if (occupiable(spawn_point))
+        {
+          break;
+        }
+        if (++direction == NUM_DIRECTIONS)
+        {
+          direction = 0;
+        }
+      }
+
       // Add any NPC type other than MAGE:
       add_new_npc(rand() % (NUM_NPC_TYPES - 1), get_npc_spawn_point());
     }
