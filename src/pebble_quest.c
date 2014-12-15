@@ -360,17 +360,17 @@ GPoint get_floor_center_point(const int8_t depth, const int8_t position)
 {
   int16_t x_midpoint1, x_midpoint2, x, y;
 
-  x_midpoint1 = 0.5 * (g_back_wall_coords[depth][position][TOP_LEFT].x +
-                       g_back_wall_coords[depth][position][BOTTOM_RIGHT].x);
+  x_midpoint1 = (g_back_wall_coords[depth][position][TOP_LEFT].x +
+                 g_back_wall_coords[depth][position][BOTTOM_RIGHT].x) / 2;
   if (depth == 0)
   {
     if (position < STRAIGHT_AHEAD)      // Just to the left of the player.
     {
-      x_midpoint2 = -0.5 * GRAPHICS_FRAME_WIDTH;
+      x_midpoint2 = GRAPHICS_FRAME_WIDTH / -2;
     }
     else if (position > STRAIGHT_AHEAD) // Just to the right of the player.
     {
-      x_midpoint2 = 1.5 * GRAPHICS_FRAME_WIDTH;
+      x_midpoint2 = GRAPHICS_FRAME_WIDTH + GRAPHICS_FRAME_WIDTH / 2;
     }
     else                                // Directly under the player.
     {
@@ -380,13 +380,13 @@ GPoint get_floor_center_point(const int8_t depth, const int8_t position)
   }
   else
   {
-    x_midpoint2 = 0.5 *
-      (g_back_wall_coords[depth - 1][position][TOP_LEFT].x +
-       g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].x);
-    y = 0.5 * (g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
-               g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y);
+    x_midpoint2 = (g_back_wall_coords[depth - 1][position][TOP_LEFT].x +
+                   g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].x) /
+                     2;
+    y = (g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
+         g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y) / 2;
   }
-  x = 0.5 * (x_midpoint1 + x_midpoint2);
+  x = (x_midpoint1 + x_midpoint2) / 2;
 
   return GPoint(x, y);
 }
@@ -457,7 +457,7 @@ int8_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee)
   }
 
   // Check for alignment along the y-axis:
-  if (diff_y == 0)
+  else if (diff_y == 0)
   {
     if (diff_x == 1 /* The two are already touching. */ ||
         occupiable(get_cell_farther_away(pursuer,
@@ -882,10 +882,10 @@ void show_narration(const int8_t narration)
   g_current_narration = narration;
   switch (narration)
   {
-    case INTRO_NARRATION_1: // Total chars: 95
+    case INTRO_NARRATION_1: // Total chars: 101
       strcpy(narration_str,
-             "The Elderstone was destroyed by evil wizards, split into 100 "
-               "Pebbles of Power they now control.");
+             "The Elderstone was destroyed by evil wizards, split into "
+               "countless Pebbles of Power they now control.");
       break;
     case INTRO_NARRATION_2: // Total chars: 94
       strcpy(narration_str,
