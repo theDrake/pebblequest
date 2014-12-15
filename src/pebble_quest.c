@@ -123,9 +123,9 @@ Description: Damages the player according to a given damage value (which will
 
      Inputs: damage - Potential amount of damage.
 
-    Outputs: None.
+    Outputs: The amount of damage actually dealt.
 ******************************************************************************/
-void damage_player(int16_t damage)
+int16_t damage_player(int16_t damage)
 {
   if (damage <= g_player->stats[HEALTH_REGEN])
   {
@@ -133,6 +133,8 @@ void damage_player(int16_t damage)
   }
   vibes_short_pulse();
   adjust_player_current_health(damage * -1);
+
+  return damage;
 }
 
 /******************************************************************************
@@ -144,10 +146,9 @@ Description: Damages a given NPC according to a given damage value (or
              player gains experience points, and a "level up" check is made.
 
      Inputs: npc    - Pointer to the NPC to be damaged.
-             damage - Amount of damage.
+             damage - Potential amount of damage.
 
-    Outputs: The amount of damage actually dealt (as a positive value), which
-             will be at least MIN_DAMAGE_VS_NPC.
+    Outputs: The amount of damage actually dealt.
 ******************************************************************************/
 int16_t damage_npc(npc_t *const npc, int16_t damage)
 {
@@ -174,7 +175,7 @@ int16_t damage_npc(npc_t *const npc, int16_t damage)
       }
     }
 
-    // Loot (extra checks here are to avoid overwriting Pebbles):
+    // Drop loot, if any (extra checks here are to avoid overwriting Pebbles):
     if (npc->type == MAGE ||
         (npc->item > NONE && get_cell_type(npc->position) < 0))
     {
@@ -195,17 +196,17 @@ Description: Applies the effects of a given spell, with a given potency, to a
              magic_type - Integer representing the spell's magic type.
              potency    - Amount of magical power being brought to bear.
 
-    Outputs: None.
+    Outputs: The amount of damage caused by the spell.
 ******************************************************************************/
-void cast_spell_on_npc(npc_t *const npc,
-                       const int8_t magic_type,
-                       int16_t potency)
+int16_t cast_spell_on_npc(npc_t *const npc,
+                          const int8_t magic_type,
+                          const int16_t potency)
 {
-  int16_t damage;
+  int16_t damage = 0;
 
   if (npc)
   {
-    // First, apply a status effect (if applicable):
+    // First, attempt to apply a status effect:
     if (potency > 0 &&
         (magic_type < PEBBLE_OF_DEATH ||
          (rand() % potency > rand() % npc->magical_defense)))
@@ -220,6 +221,8 @@ void cast_spell_on_npc(npc_t *const npc,
       adjust_player_current_health(damage);
     }
   }
+
+  return damage;
 }
 
 /******************************************************************************
@@ -232,9 +235,9 @@ Description: Adjusts the player's current health by a given amount, which may
 
      Inputs: amount - Adjustment amount (which may be positive or negative).
 
-    Outputs: None.
+    Outputs: The adjustment amount passed in as input.
 ******************************************************************************/
-void adjust_player_current_health(const int16_t amount)
+int16_t adjust_player_current_health(const int16_t amount)
 {
   g_player->health += amount;
   if (g_player->health > g_player->max_health)
@@ -246,6 +249,8 @@ void adjust_player_current_health(const int16_t amount)
     show_window(MAIN_MENU, NOT_ANIMATED);
     show_narration(DEATH_NARRATION);
   }
+
+  return amount;
 }
 
 /******************************************************************************
@@ -257,15 +262,17 @@ Description: Adjusts the player's current energy by a given amount, which may
 
      Inputs: amount - Adjustment amount (which may be positive or negative).
 
-    Outputs: None.
+    Outputs: The adjustment amount passed in as input.
 ******************************************************************************/
-void adjust_player_current_energy(const int16_t amount)
+int16_t adjust_player_current_energy(const int16_t amount)
 {
   g_player->energy += amount;
   if (g_player->energy > g_player->max_energy)
   {
     g_player->energy = g_player->max_energy;
   }
+
+  return amount;
 }
 
 /******************************************************************************
@@ -871,10 +878,10 @@ void show_narration(const int8_t narration)
   g_current_narration = narration;
   switch (narration)
   {
-    case INTRO_NARRATION_1: // Total chars: 100
+    case INTRO_NARRATION_1: // Total chars: 95
       strcpy(narration_str,
-             "The Elderstone was destroyed by evil wizards, split into "
-               "Pebbles of Power they now use to vile ends.");
+             "The Elderstone was destroyed by evil wizards, split into 100 "
+               "Pebbles of Power they now control.");
       break;
     case INTRO_NARRATION_2: // Total chars: 94
       strcpy(narration_str,
@@ -2877,7 +2884,10 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         // Reduce all status effects:
         for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
         {
-          npc->status_effects[j] /= 2;
+          if (npc->status_effects[j] > 0)
+          {
+            npc->status_effects[j]--;
+          }
         }
       }
     }
