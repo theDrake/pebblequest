@@ -57,7 +57,7 @@ Description: Attempts to move the player one cell forward (or backward) in a
 
      Inputs: direction - Desired direction of movement.
 
-    Outputs: True if the move is successful.
+    Outputs: "True" if the move is successful.
 ******************************************************************************/
 bool move_player(const int8_t direction)
 {
@@ -278,31 +278,35 @@ int16_t adjust_player_current_energy(const int16_t amount)
 /******************************************************************************
    Function: add_new_npc
 
-Description: Initializes an NPC according to a given type and position (unless
+Description: Initializes a new NPC of a given type at a given position (unless
              the position isn't occupiable or the the max. number of NPCs has
              already been reached).
 
      Inputs: npc_type - Desired type for the new NPC.
              position - Desired spawn point for the new NPC.
 
-    Outputs: None.
+    Outputs: "True" if a new NPC is successfully added.
 ******************************************************************************/
-void add_new_npc(const int8_t npc_type, const GPoint position)
+bool add_new_npc(const int8_t npc_type, const GPoint position)
 {
   int8_t i;
+  npc_t *npc;
 
   if (occupiable(position))
   {
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
-      if (g_location->npcs[i].type == NONE)
+      npc = &g_location->npcs[i];
+      if (npc->type == NONE)
       {
-        init_npc(&g_location->npcs[i], npc_type, position);
+        init_npc(npc, npc_type, position);
 
-        return;
+        return true;
       }
     }
   }
+
+  return false;
 }
 
 /******************************************************************************
@@ -325,7 +329,7 @@ GPoint get_npc_spawn_point(void)
   for (i = 0; i < NUM_DIRECTIONS; ++i)
   {
     spawn_point = get_cell_farther_away(g_player->position,
-                                        i,
+                                        direction,
                                         MAX_VISIBILITY_DEPTH - 1);
     if (occupiable(spawn_point))
     {
