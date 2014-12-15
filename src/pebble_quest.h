@@ -334,7 +334,6 @@ heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target);
 int8_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int8_t type);
 npc_t *get_npc_at(const GPoint cell);
-bool out_of_bounds(const GPoint cell);
 bool occupiable(const GPoint cell);
 bool touching(const GPoint cell, const GPoint cell_2);
 bool player_is_visible_from(GPoint cell);

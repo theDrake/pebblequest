@@ -608,13 +608,14 @@ Description: Given an equip target (RIGHT_HAND, LEFT_HAND, or BODY), returns
 heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target)
 {
   int8_t i;
+  heavy_item_t *heavy_item;
 
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
-    if (g_player->heavy_items[i].equipped &&
-        g_player->heavy_items[i].equip_target == equip_target)
+    heavy_item = &g_player->heavy_items[i];
+    if (heavy_item->equipped && heavy_item->equip_target == equip_target)
     {
-      return &g_player->heavy_items[i];
+      return heavy_item;
     }
   }
 
@@ -632,7 +633,10 @@ Description: Returns the type of cell at a given set of coordinates.
 ******************************************************************************/
 int8_t get_cell_type(const GPoint cell)
 {
-  if (out_of_bounds(cell))
+  if (cell.x < 0          ||
+      cell.x >= MAP_WIDTH ||
+      cell.y < 0          ||
+      cell.y >= MAP_HEIGHT)
   {
     return SOLID;
   }
@@ -669,35 +673,18 @@ Description: Returns a pointer to the NPC occupying a given cell.
 npc_t *get_npc_at(const GPoint cell)
 {
   int8_t i;
+  npc_t *npc;
 
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
-    if (g_location->npcs[i].type > NONE &&
-        gpoint_equal(&(g_location->npcs[i].position), &cell))
+    npc = &g_location->npcs[i];
+    if (npc->type > NONE && gpoint_equal(&npc->position, &cell))
     {
-      return &g_location->npcs[i];
+      return npc;
     }
   }
 
   return NULL;
-}
-
-/******************************************************************************
-   Function: out_of_bounds
-
-Description: Determines whether a given set of cell coordinates lies outside
-             the current map boundaries.
-
-     Inputs: cell - Coordinates of the cell of interest.
-
-    Outputs: "True" if the cell is out of bounds.
-******************************************************************************/
-bool out_of_bounds(const GPoint cell)
-{
-  return cell.x < 0          ||
-         cell.x >= MAP_WIDTH ||
-         cell.y < 0          ||
-         cell.y >= MAP_HEIGHT;
 }
 
 /******************************************************************************
@@ -1564,10 +1551,10 @@ void draw_scene(Layer *layer, GContext *ctx)
     cell = get_cell_farther_away(g_player->position,
                                  g_player->direction,
                                  depth);
-    if (out_of_bounds(cell))
+    /*if (out_of_bounds(cell))
     {
       continue;
-    }
+    }*/
     if (get_cell_type(cell) >= EMPTY)
     {
       draw_cell_walls(ctx, cell, depth, STRAIGHT_AHEAD);
