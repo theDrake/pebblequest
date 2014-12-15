@@ -161,6 +161,13 @@ int16_t damage_npc(npc_t *const npc, int16_t damage)
   // Check for NPC death:
   if (npc->health <= 0 || npc->status_effects[DISINTEGRATION])
   {
+    // Check for "game completion" (death of the final mage):
+    if (g_player->depth == MAX_DEPTH && npc->type == MAGE)
+    {
+      show_narration(ENDING_NARRATION);
+    }
+
+    // Remove the NPC by merely changing its type:
     npc->type = NONE;
 
     // Add experience points and check for a "level up":
@@ -712,13 +719,12 @@ Description: Displays desired narration text via the narration window.
 
      Inputs: narration - Integer indicating desired narration text.
 
-    Outputs: None.
+    Outputs: Integer representing the narration text shown.
 ******************************************************************************/
-void show_narration(const int8_t narration)
+int8_t show_narration(const int8_t narration)
 {
   static char narration_str[NARRATION_STR_LEN + 1];
 
-  g_current_narration = narration;
   switch (narration)
   {
     case INTRO_NARRATION_1: // Total chars: 101
@@ -806,6 +812,8 @@ void show_narration(const int8_t narration)
   }
   text_layer_set_text(g_narration_text_layer, narration_str);
   show_window(NARRATION_WINDOW, NOT_ANIMATED);
+
+  return g_current_narration = narration;
 }
 
 /******************************************************************************
@@ -816,9 +824,9 @@ Description: Prepares and displays a given window.
      Inputs: window   - Integer representing the desired window.
              animated - If "true", the window will slide into view.
 
-    Outputs: None.
+    Outputs: Integer representing the newly-displayed window.
 ******************************************************************************/
-void show_window(const int8_t window, const bool animated)
+int8_t show_window(const int8_t window, const bool animated)
 {
   // If it's a menu, reload menu data and set to the appropriate index:
   if (window < NUM_MENUS)
@@ -849,7 +857,8 @@ void show_window(const int8_t window, const bool animated)
       window_stack_pop(animated);
     }
   }
-  g_current_window = window;
+
+  return g_current_window = window;
 }
 
 /******************************************************************************
@@ -927,9 +936,9 @@ Description: Instructions for drawing the loot menu's header.
     Outputs: None.
 ******************************************************************************/
 static void loot_menu_draw_header_callback(GContext *ctx,
-                                      const Layer *cell_layer,
-                                      uint16_t section_index,
-                                      void *data)
+                                           const Layer *cell_layer,
+                                           uint16_t section_index,
+                                           void *data)
 {
   menu_cell_basic_header_draw(ctx, cell_layer, "Loot!");
 }
@@ -1283,12 +1292,6 @@ void menu_select_callback(MenuLayer *menu_layer,
       g_player->pebbles[g_current_selection]++;
       g_current_selection = get_inventory_row_for_pebble(g_current_selection);
       show_window(INVENTORY_MENU, NOT_ANIMATED);
-
-      // Check for game completion (collection of the 100th Pebble):
-      if (g_player->depth == MAX_DEPTH)
-      {
-        show_narration(ENDING_NARRATION);
-      }
     }
 
     // If it's a heavy item, attempt to add it to the player's inventory:

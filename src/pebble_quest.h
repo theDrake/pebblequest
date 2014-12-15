@@ -335,8 +335,8 @@ int8_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int8_t type);
 npc_t *get_npc_at(const GPoint cell);
 bool occupiable(const GPoint cell);
-void show_narration(const int8_t narration);
-void show_window(const int8_t window, const bool animated);
+int8_t show_narration(const int8_t narration);
+int8_t show_window(const int8_t window, const bool animated);
 static void main_menu_draw_header_callback(GContext *ctx,
                                            const Layer *cell_layer,
                                            uint16_t section_index,
@@ -350,9 +350,9 @@ static void level_up_menu_draw_header_callback(GContext *ctx,
                                                uint16_t section_index,
                                                void *data);
 static void loot_menu_draw_header_callback(GContext *ctx,
-                                      const Layer *cell_layer,
-                                      uint16_t section_index,
-                                      void *data);
+                                           const Layer *cell_layer,
+                                           uint16_t section_index,
+                                           void *data);
 static void pebble_options_menu_draw_header_callback(GContext *ctx,
                                                      const Layer *cell_layer,
                                                      uint16_t section_index,
