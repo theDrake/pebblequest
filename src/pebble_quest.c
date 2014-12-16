@@ -984,7 +984,6 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
            HEAVY_ITEMS_MENU_HEADER_STR_LEN + 1,
            "%s AN ITEM?",
            g_current_selection < FIRST_HEAVY_ITEM ? "INFUSE" : "REPLACE");
-
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
@@ -1053,10 +1052,7 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
   // Pebbles:
   if (item_type < FIRST_HEAVY_ITEM)
   {
-    snprintf(subtitle_str,
-             MENU_SUBTITLE_STR_LEN - 8,
-             "(%d)",
-             g_player->pebbles[item_type]);
+    snprintf(subtitle_str, 5, "(%d)", g_player->pebbles[item_type]);
     if (g_player->equipped_pebble == item_type)
     {
       strcat(subtitle_str, " Equipped");
@@ -1099,17 +1095,17 @@ static void level_up_menu_draw_row_callback(GContext *ctx,
 {
   char title_str[MENU_TITLE_STR_LEN + 1];
 
-  switch(cell_index->row)
+  if (cell_index->row == AGILITY)
   {
-    case AGILITY:
-      strcpy(title_str, "Agility");
-      break;
-    case STRENGTH:
-      strcpy(title_str, "Strength");
-      break;
-    default: // case INTELLECT:
-      strcpy(title_str, "Intellect");
-      break;
+    strcpy(title_str, "Agility");
+  }
+  else if (cell_index->row == STRENGTH)
+  {
+    strcpy(title_str, "Strength");
+  }
+  else // if (cell_index->row == INTELLECT)
+  {
+    strcpy(title_str, "Intellect");
   }
   snprintf(title_str + strlen(title_str),
            MAX_SMALL_INT_DIGITS + 3,
@@ -1159,16 +1155,15 @@ static void pebble_options_menu_draw_row_callback(GContext *ctx,
                                                   MenuIndex *cell_index,
                                                   void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1] = "";
+  char title_str[MENU_TITLE_STR_LEN + 1];
 
-  switch (cell_index->row)
+  if (cell_index->row == 0)
   {
-    case 0:
-      strcat(title_str, "Equip");
-      break;
-    default:
-      strcat(title_str, "Infuse into Item");
-      break;
+    strcpy(title_str, "Equip");
+  }
+  else
+  {
+    strcpy(title_str, "Infuse into Item");
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
 }
@@ -1193,18 +1188,17 @@ static void heavy_items_menu_draw_row_callback(GContext *ctx,
 {
   char title_str[MENU_TITLE_STR_LEN + 1]       = "",
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
+  heavy_item_t *heavy_item = &g_player->heavy_items[cell_index->row];
 
-  strcat_item_name(title_str, g_player->heavy_items[cell_index->row].type);
-  if (g_player->heavy_items[cell_index->row].infused_pebble > NONE)
+  strcat_item_name(title_str, heavy_item->type);
+  if (heavy_item->infused_pebble > NONE)
   {
-    strcat_magic_type(title_str,
-                      g_player->heavy_items[cell_index->row].infused_pebble);
+    strcat_magic_type(title_str, heavy_item->infused_pebble);
   }
-  if (g_player->heavy_items[cell_index->row].equipped)
+  if (heavy_item->equipped)
   {
-    strcat(subtitle_str, "Equipped");
+    strcpy(subtitle_str, "Equipped");
   }
-
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
 }
 
@@ -1225,26 +1219,27 @@ void menu_select_callback(MenuLayer *menu_layer,
 {
   int8_t i, old_item_equip_target;
   bool item_was_equipped = false;
+  heavy_item_t *heavy_item;
 
   if (menu_layer == g_menu_layers[MAIN_MENU])
   {
-    switch (cell_index->row)
+    if (cell_index->row == 0) // Play
     {
-      case 0: // Play
-        show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
-        if (g_player->depth == 0)
-        {
-          show_narration(INTRO_NARRATION_1);
-          init_location();
-        }
-        break;
-      case 1: // Inventory
-        g_current_selection = 0; // To scroll menu to the top.
-        show_window(INVENTORY_MENU, ANIMATED);
-        break;
-      default: // Character Stats
-        show_narration(STATS_NARRATION_1);
-        break;
+      show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
+      if (g_player->depth == 0)
+      {
+        show_narration(INTRO_NARRATION_1);
+        init_location();
+      }
+    }
+    else if (cell_index->row == 1) // Inventory
+    {
+      g_current_selection = 0; // To scroll menu to the top.
+      show_window(INVENTORY_MENU, ANIMATED);
+    }
+    else // Character Stats
+    {
+      show_narration(STATS_NARRATION_1);
     }
   }
   else if (menu_layer == g_menu_layers[LEVEL_UP_MENU])
@@ -1290,9 +1285,10 @@ void menu_select_callback(MenuLayer *menu_layer,
     {
       for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
       {
-        if (g_player->heavy_items[i].type == NONE)
+        heavy_item = &g_player->heavy_items[i];
+        if (heavy_item->type == NONE)
         {
-          init_heavy_item(&g_player->heavy_items[i], g_current_selection);
+          init_heavy_item(heavy_item, g_current_selection);
           g_current_selection = i + get_num_pebble_types_owned();
           show_window(INVENTORY_MENU, NOT_ANIMATED);
 
@@ -1322,23 +1318,24 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else // if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
+    heavy_item = &g_player->heavy_items[cell_index->row];
+
     // "Infuse item" mode:
     if (g_current_selection < FIRST_HEAVY_ITEM)
     {
       // Ensure the item isn't already infused:
-      if (g_player->heavy_items[cell_index->row].infused_pebble == NONE)
+      if (heavy_item->infused_pebble == NONE)
       {
         // Infuse the item:
-        if (g_player->heavy_items[cell_index->row].equipped)
+        if (heavy_item->equipped)
         {
-          unequip_heavy_item(&g_player->heavy_items[cell_index->row]);
+          unequip_heavy_item(heavy_item);
           item_was_equipped = true;
         }
-        g_player->heavy_items[cell_index->row].infused_pebble =
-          g_current_selection;
+        heavy_item->infused_pebble = g_current_selection;
         if (item_was_equipped)
         {
-          equip_heavy_item(&g_player->heavy_items[cell_index->row]);
+          equip_heavy_item(heavy_item);
         }
 
         // Remove the Pebble from the pool of equippable/infusable Pebbles:
@@ -1359,24 +1356,21 @@ void menu_select_callback(MenuLayer *menu_layer,
     else
     {
       // If the item to be replaced is equipped, unequip it:
-      old_item_equip_target =
-        g_player->heavy_items[cell_index->row].equip_target;
-      if (g_player->heavy_items[cell_index->row].equipped)
+      old_item_equip_target = heavy_item->equip_target;
+      if (heavy_item->equipped)
       {
-        unequip_heavy_item(&g_player->heavy_items[cell_index->row]);
+        unequip_heavy_item(heavy_item);
         item_was_equipped = true;
       }
 
       // Reinitialize the heavy item struct:
-      init_heavy_item(&g_player->heavy_items[cell_index->row],
-                      g_current_selection);
+      init_heavy_item(heavy_item, g_current_selection);
 
       // If old item was equipped, equip new one if equip target is the same:
       if (item_was_equipped &&
-          g_player->heavy_items[cell_index->row].equip_target ==
-            old_item_equip_target)
+          heavy_item->equip_target == old_item_equip_target)
       {
-        equip_heavy_item(&g_player->heavy_items[cell_index->row]);
+        equip_heavy_item(heavy_item);
       }
 
       // Show inventory menu to provide an opportunity to adjust equipment:
