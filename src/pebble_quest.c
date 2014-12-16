@@ -862,58 +862,136 @@ int8_t show_window(const int8_t window, const bool animated)
 }
 
 /******************************************************************************
-   Function: menu_draw_header_callback
+   Function: main_menu_draw_header_callback
 
-Description: Instructions for drawing menu headers.
+Description: Instructions for drawing the main menu's header.
 
      Inputs: ctx           - Pointer to the associated context.
              cell_layer    - Pointer to the cell layer.
              section_index - Section number of the header to be drawn.
-             data          - Pointer to additional data.
+             data          - Pointer to additional data (not used).
 
     Outputs: None.
 ******************************************************************************/
-static void menu_draw_header_callback(GContext *ctx,
-                                      const Layer *cell_layer,
-                                      uint16_t section_index,
-                                      void *data)
+static void main_menu_draw_header_callback(GContext *ctx,
+                                           const Layer *cell_layer,
+                                           uint16_t section_index,
+                                           void *data)
 {
-  Window *window                           = (Window *) data;
+  menu_cell_basic_header_draw(ctx, cell_layer, "Main Menu");
+}
+
+/******************************************************************************
+   Function: level_up_menu_draw_header_callback
+
+Description: Instructions for drawing the level-up menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void level_up_menu_draw_header_callback(GContext *ctx,
+                                               const Layer *cell_layer,
+                                               uint16_t section_index,
+                                               void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "Increase an Attribute");
+}
+
+/******************************************************************************
+   Function: inventory_menu_draw_header_callback
+
+Description: Instructions for drawing the inventory menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void inventory_menu_draw_header_callback(GContext *ctx,
+                                                const Layer *cell_layer,
+                                                uint16_t section_index,
+                                                void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "Inventory");
+}
+
+/******************************************************************************
+   Function: loot_menu_draw_header_callback
+
+Description: Instructions for drawing the loot menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void loot_menu_draw_header_callback(GContext *ctx,
+                                           const Layer *cell_layer,
+                                           uint16_t section_index,
+                                           void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "Loot");
+}
+
+/******************************************************************************
+   Function: pebble_options_menu_draw_header_callback
+
+Description: Instructions for drawing the Pebble options menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void pebble_options_menu_draw_header_callback(GContext *ctx,
+                                                     const Layer *cell_layer,
+                                                     uint16_t section_index,
+                                                     void *data)
+{
   char header_str[MENU_HEADER_STR_LEN + 1] = "";
 
-  if (window == g_windows[MAIN_MENU])
-  {
-    strcat(header_str, "Main Menu");
-  }
-  else if (window == g_windows[LEVEL_UP_MENU])
-  {
-    strcat(header_str, "Increase an Attribute");
-  }
-  else if (window == g_windows[INVENTORY_MENU])
-  {
-    strcat(header_str, "Inventory");
-  }
-  else if (window == g_windows[LOOT_MENU])
-  {
-    strcat(header_str, "Loot");
-  }
-  else if (window == g_windows[PEBBLE_OPTIONS_MENU])
-  {
-    strcat_item_name(header_str, g_current_selection);
-  }
-  else // if (window == g_windows[HEAVY_ITEMS_MENU])
-  {
-    if (g_current_selection < FIRST_HEAVY_ITEM)
-    {
-      strcat(header_str, "Infuse");
-    }
-    else
-    {
-      strcat(header_str, "Replace");
-    }
-    strcat(header_str, " an item?");
-  }
+  strcat_item_name(header_str, g_current_selection);
+  menu_cell_basic_header_draw(ctx, cell_layer, header_str);
+}
 
+/******************************************************************************
+   Function: heavy_items_menu_draw_header_callback
+
+Description: Instructions for drawing the heavy items menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void heavy_items_menu_draw_header_callback(GContext *ctx,
+                                                  const Layer *cell_layer,
+                                                  uint16_t section_index,
+                                                  void *data)
+{
+  char header_str[MENU_HEADER_STR_LEN + 1] = "";
+
+  if (g_current_selection < FIRST_HEAVY_ITEM)
+  {
+    strcat(header_str, "Infuse");
+  }
+  else
+  {
+    strcat(header_str, "Replace");
+  }
+  strcat(header_str, " an item?");
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
@@ -3370,7 +3448,7 @@ void init_window(const int8_t window_index)
                                (MenuLayerCallbacks)
       {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = menu_draw_header_callback,
+        .draw_header       = main_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = main_menu_draw_row_callback,
         .select_click      = menu_select_callback,
@@ -3385,7 +3463,7 @@ void init_window(const int8_t window_index)
                                (MenuLayerCallbacks)
       {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = menu_draw_header_callback,
+        .draw_header       = inventory_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = inventory_menu_draw_row_callback,
         .select_click      = menu_select_callback,
@@ -3400,7 +3478,7 @@ void init_window(const int8_t window_index)
                                (MenuLayerCallbacks)
       {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = menu_draw_header_callback,
+        .draw_header       = level_up_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = level_up_menu_draw_row_callback,
         .select_click      = menu_select_callback,
@@ -3415,7 +3493,7 @@ void init_window(const int8_t window_index)
                                (MenuLayerCallbacks)
       {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = menu_draw_header_callback,
+        .draw_header       = loot_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = loot_menu_draw_row_callback,
         .select_click      = menu_select_callback,
@@ -3430,7 +3508,7 @@ void init_window(const int8_t window_index)
                                (MenuLayerCallbacks)
       {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = menu_draw_header_callback,
+        .draw_header       = pebble_options_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = pebble_options_menu_draw_row_callback,
         .select_click      = menu_select_callback,
@@ -3445,7 +3523,7 @@ void init_window(const int8_t window_index)
                                (MenuLayerCallbacks)
       {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = menu_draw_header_callback,
+        .draw_header       = heavy_items_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = heavy_items_menu_draw_row_callback,
         .select_click      = menu_select_callback,

@@ -337,10 +337,30 @@ npc_t *get_npc_at(const GPoint cell);
 bool occupiable(const GPoint cell);
 int8_t show_narration(const int8_t narration);
 int8_t show_window(const int8_t window, const bool animated);
-static void menu_draw_header_callback(GContext *ctx,
-                                      const Layer *cell_layer,
-                                      uint16_t section_index,
-                                      void *data);
+static void main_menu_draw_header_callback(GContext *ctx,
+                                           const Layer *cell_layer,
+                                           uint16_t section_index,
+                                           void *data);
+static void inventory_menu_draw_header_callback(GContext *ctx,
+                                                const Layer *cell_layer,
+                                                uint16_t section_index,
+                                                void *data);
+static void level_up_menu_draw_header_callback(GContext *ctx,
+                                               const Layer *cell_layer,
+                                               uint16_t section_index,
+                                               void *data);
+static void loot_menu_draw_header_callback(GContext *ctx,
+                                           const Layer *cell_layer,
+                                           uint16_t section_index,
+                                           void *data);
+static void pebble_options_menu_draw_header_callback(GContext *ctx,
+                                                     const Layer *cell_layer,
+                                                     uint16_t section_index,
+                                                     void *data);
+static void heavy_items_menu_draw_header_callback(GContext *ctx,
+                                                  const Layer *cell_layer,
+                                                  uint16_t section_index,
+                                                  void *data);
 static void main_menu_draw_row_callback(GContext *ctx,
                                         const Layer *cell_layer,
                                         MenuIndex *cell_index,
