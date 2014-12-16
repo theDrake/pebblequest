@@ -256,12 +256,12 @@ typedef struct PlayerCharacter {
 typedef struct NonPlayerCharacter {
   GPoint position;
   int8_t type,
-         item;
-  int16_t health,
-          power,
-          physical_defense,
-          magical_defense,
-          status_effects[NUM_STATUS_EFFECTS];
+         item,
+         health,
+         power,
+         physical_defense,
+         magical_defense;
+  int16_t status_effects[NUM_STATUS_EFFECTS];
 } __attribute__((__packed__)) npc_t;
 
 typedef struct Location {

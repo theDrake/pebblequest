@@ -898,7 +898,7 @@ static void level_up_menu_draw_header_callback(GContext *ctx,
                                                uint16_t section_index,
                                                void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "INCREASE AN ATTRIBUTE");
+  menu_cell_basic_header_draw(ctx, cell_layer, "BOOST AN ATTRIBUTE");
 }
 
 /******************************************************************************
@@ -3143,8 +3143,8 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   }
 
   // Set stats according to current dungeon depth:
-  npc->power  = npc->physical_defense = npc->magical_defense = g_player->depth;
-  npc->health = g_player->depth * 2;
+  npc->health = npc->power = npc->physical_defense = npc->magical_defense =
+    g_player->depth;
 
   // Check for increased power:
   if (type <= WHITE_BEAST_MEDIUM ||
@@ -3152,25 +3152,25 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
       type == WARRIOR_LARGE      ||
       (type >= DARK_OGRE && type <= PALE_TROLL))
   {
-    npc->power += 1 + g_player->depth / 10;
+    npc->power++;
   }
   if (type <= WHITE_BEAST_LARGE ||
       type == WARRIOR_LARGE     ||
       type == DARK_OGRE         ||
       type == PALE_OGRE)
   {
-    npc->power += 1 + g_player->depth / 10;
+    npc->power++;
   }
 
   // Check for increased/decreased defenses:
   if (type == MAGE || (type < WARRIOR_LARGE && type % 2))
   {
-    npc->magical_defense  += 1 + g_player->depth / 10;
-    npc->physical_defense -= 1 + g_player->depth / 10;
+    npc->magical_defense++;
+    npc->physical_defense--;
   }
   else if (type >= WARRIOR_LARGE)
   {
-    npc->physical_defense += 1 + g_player->depth / 10;
+    npc->physical_defense++;
   }
 
   // Some NPCs may carry a random item:
