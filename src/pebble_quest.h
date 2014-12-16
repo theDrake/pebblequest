@@ -200,9 +200,9 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
   Menu-related Constants
 ******************************************************************************/
 
-#define MENU_HEADER_STR_LEN   21
-#define MENU_TITLE_STR_LEN    25
-#define MENU_SUBTITLE_STR_LEN 20
+#define HEAVY_ITEMS_MENU_HEADER_STR_LEN 16
+#define MENU_TITLE_STR_LEN              25
+#define MENU_SUBTITLE_STR_LEN           20
 
 /******************************************************************************
   Button-related Constants

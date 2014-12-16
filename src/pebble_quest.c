@@ -878,7 +878,7 @@ static void main_menu_draw_header_callback(GContext *ctx,
                                            uint16_t section_index,
                                            void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Main Menu");
+  menu_cell_basic_header_draw(ctx, cell_layer, "MAIN MENU");
 }
 
 /******************************************************************************
@@ -898,7 +898,7 @@ static void level_up_menu_draw_header_callback(GContext *ctx,
                                                uint16_t section_index,
                                                void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Increase an Attribute");
+  menu_cell_basic_header_draw(ctx, cell_layer, "INCREASE AN ATTRIBUTE");
 }
 
 /******************************************************************************
@@ -918,7 +918,7 @@ static void inventory_menu_draw_header_callback(GContext *ctx,
                                                 uint16_t section_index,
                                                 void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Inventory");
+  menu_cell_basic_header_draw(ctx, cell_layer, "INVENTORY");
 }
 
 /******************************************************************************
@@ -938,7 +938,7 @@ static void loot_menu_draw_header_callback(GContext *ctx,
                                            uint16_t section_index,
                                            void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "Loot");
+  menu_cell_basic_header_draw(ctx, cell_layer, "LOOT");
 }
 
 /******************************************************************************
@@ -958,10 +958,7 @@ static void pebble_options_menu_draw_header_callback(GContext *ctx,
                                                      uint16_t section_index,
                                                      void *data)
 {
-  char header_str[MENU_HEADER_STR_LEN + 1] = "";
-
-  strcat_item_name(header_str, g_current_selection);
-  menu_cell_basic_header_draw(ctx, cell_layer, header_str);
+  menu_cell_basic_header_draw(ctx, cell_layer, "OPTIONS");
 }
 
 /******************************************************************************
@@ -981,17 +978,13 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
                                                   uint16_t section_index,
                                                   void *data)
 {
-  char header_str[MENU_HEADER_STR_LEN + 1] = "";
+  char header_str[HEAVY_ITEMS_MENU_HEADER_STR_LEN + 1];
 
-  if (g_current_selection < FIRST_HEAVY_ITEM)
-  {
-    strcat(header_str, "Infuse");
-  }
-  else
-  {
-    strcat(header_str, "Replace");
-  }
-  strcat(header_str, " an item?");
+  snprintf(header_str,
+           HEAVY_ITEMS_MENU_HEADER_STR_LEN + 1,
+           "%s AN ITEM?",
+           g_current_selection < FIRST_HEAVY_ITEM ? "INFUSE" : "REPLACE");
+
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
@@ -1012,23 +1005,23 @@ static void main_menu_draw_row_callback(GContext *ctx,
                                         MenuIndex *cell_index,
                                         void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1]       = "",
-       subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
+  char title_str[MENU_TITLE_STR_LEN + 1],
+       subtitle_str[MENU_SUBTITLE_STR_LEN + 1];
 
-  switch (cell_index->row)
+  if (cell_index->row == 0)
   {
-    case 0:
-      strcat(title_str, "Play");
-      strcat(subtitle_str, "Dungeon-crawl, baby!");
-      break;
-    case 1:
-      strcat(title_str, "Inventory");
-      strcat(subtitle_str, "Equip/infuse items.");
-      break;
-    default:
-      strcat(title_str, "Character Stats");
-      strcat(subtitle_str, "Agility, Strength...");
-      break;
+    snprintf(title_str, 5, "Play");
+    snprintf(subtitle_str, 21, "Dungeon-crawl, baby!");
+  }
+  else if (cell_index->row == 1)
+  {
+    snprintf(title_str, 10, "Inventory");
+    snprintf(subtitle_str, 20, "Equip/infuse items.");
+  }
+  else
+  {
+    snprintf(title_str, 16, "Character Stats");
+    snprintf(subtitle_str, 21, "Agility, Strength...");
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
 }
