@@ -174,7 +174,6 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define SCREEN_CENTER_POINT   GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
 #define STATUS_BAR_HEIGHT     16 // Applies to top and bottom status bars.
 #define FULL_SCREEN_FRAME     GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
-#define STATUS_BAR_FRAME      GRect(0, GRAPHICS_FRAME_HEIGHT, GRAPHICS_FRAME_WIDTH, STATUS_BAR_HEIGHT)
 #define STATUS_BAR_FONT       fonts_get_system_font(FONT_KEY_GOTHIC_14)
 #define STATUS_METER_PADDING  4
 #define STATUS_METER_WIDTH    (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
@@ -194,7 +193,6 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NINETY_DEGREES        (TRIG_MAX_ANGLE / 4)
 #define DEFAULT_ROTATION_RATE (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event.
 #define ELLIPSE_RADIUS_RATIO  0.4
-#define ATTACK_SLASH_WIDTH    5
 
 /******************************************************************************
   Menu-related Constants

@@ -1302,18 +1302,17 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU])
   {
-    switch (cell_index->row)
+    if (cell_index->row == 0) // Equip
     {
-      case 0: // Equip
-        unequip_item_at(RIGHT_HAND);
-        g_player->equipped_pebble = g_current_selection;
-        g_current_selection       =
-          get_inventory_row_for_pebble(g_current_selection);
-        show_window(INVENTORY_MENU, NOT_ANIMATED);
-        break;
-      default: // Infuse into Item
-        show_window(HEAVY_ITEMS_MENU, ANIMATED);
-        break;
+      unequip_item_at(RIGHT_HAND);
+      g_player->equipped_pebble = g_current_selection;
+      g_current_selection       =
+        get_inventory_row_for_pebble(g_current_selection);
+      show_window(INVENTORY_MENU, NOT_ANIMATED);
+    }
+    else // Infuse into Item
+    {
+      show_window(HEAVY_ITEMS_MENU, ANIMATED);
     }
   }
   else // if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
@@ -1470,7 +1469,7 @@ void draw_scene(Layer *layer, GContext *ctx)
   // First, draw the background, floor, and ceiling:
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx,
-                     layer_get_bounds(layer),
+                     FULL_SCREEN_FRAME,
                      NO_CORNER_RADIUS,
                      GCornerNone);
   draw_floor_and_ceiling(ctx);
@@ -1514,10 +1513,7 @@ void draw_scene(Layer *layer, GContext *ctx)
   if (g_player_is_attacking)
   {
     graphics_context_set_stroke_color(ctx, GColorWhite);
-    graphics_draw_line(ctx,
-                       GPoint(g_attack_slash_x1, g_attack_slash_y1),
-                       GPoint(g_attack_slash_x2, g_attack_slash_y2));
-    for (i = 0; i < ATTACK_SLASH_WIDTH / 2; ++i)
+    for (i = 0; i < 2; ++i)
     {
       graphics_draw_line(ctx,
                          GPoint(g_attack_slash_x1 + i, g_attack_slash_y1),
