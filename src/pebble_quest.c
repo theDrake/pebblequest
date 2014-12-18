@@ -117,8 +117,9 @@ void move_npc(npc_t *const npc, const int8_t direction)
 /******************************************************************************
    Function: damage_player
 
-Description: Damages the player according to a given damage value (or
-             MIN_DAMAGE if the value's too low) and vibrates the watch.
+Description: Damages the player according to a given damage value (or one more
+             than the player's health recovery rate if the value's too low) and
+             vibrates the watch.
 
      Inputs: damage - Potential amount of damage.
 
@@ -126,9 +127,9 @@ Description: Damages the player according to a given damage value (or
 ******************************************************************************/
 int8_t damage_player(int8_t damage)
 {
-  if (damage < MIN_DAMAGE)
+  if (damage <= g_player->stats[HEALTH_REGEN])
   {
-    damage = MIN_DAMAGE;
+    damage = g_player->stats[HEALTH_REGEN] + 1;
   }
   vibes_short_pulse();
   adjust_player_current_health(damage * -1);
@@ -140,9 +141,9 @@ int8_t damage_player(int8_t damage)
    Function: damage_npc
 
 Description: Damages a given NPC according to a given damage value (or
-             MIN_DAMAGE if the value's too low). If this reduces the NPC's
-             health to zero or below, the NPC's death is handled, the player
-             gains experience points, and a "level up" check is made.
+             MIN_DAMAGE_TO_NPC if the value's too low). If this reduces the
+             NPC's health to zero or below, the NPC's death is handled, the
+             player gains experience points, and a "level up" check is made.
 
      Inputs: npc    - Pointer to the NPC to be damaged.
              damage - Potential amount of damage.
@@ -151,9 +152,9 @@ Description: Damages a given NPC according to a given damage value (or
 ******************************************************************************/
 int8_t damage_npc(npc_t *const npc, int8_t damage)
 {
-  if (damage < MIN_DAMAGE)
+  if (damage < MIN_DAMAGE_TO_NPC)
   {
-    damage = MIN_DAMAGE;
+    damage = MIN_DAMAGE_TO_NPC;
   }
   npc->health -= damage;
 
@@ -1952,7 +1953,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Goblins, trolls, and ogres:
-  else //if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
+  else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2022,7 +2023,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Warriors:
-  /*else
+  else
   {
     // Legs:
     draw_shaded_quad(ctx,
@@ -2136,7 +2137,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
-  }*/
+  }
 }
 
 /******************************************************************************
