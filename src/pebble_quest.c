@@ -127,9 +127,11 @@ Description: Damages the player according to a given damage value (or one more
 ******************************************************************************/
 int8_t damage_player(int8_t damage)
 {
-  if (damage <= g_player->stats[HEALTH_REGEN])
+  int8_t min_damage = g_player->stats[HEALTH_REGEN] + 1;
+
+  if (damage < min_damage)
   {
-    damage = g_player->stats[HEALTH_REGEN] + 1;
+    damage = min_damage;
   }
   vibes_short_pulse();
   adjust_player_current_health(damage * -1);
@@ -2533,7 +2535,9 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       flash_screen();
       cast_spell_on_npc(npc,
                         g_player->equipped_pebble,
-                        rand() % g_player->stats[MAGICAL_POWER]);
+                        g_player->stats[MAGICAL_POWER] > 0        ?
+                          rand() % g_player->stats[MAGICAL_POWER] :
+                          0);
     }
 
     // Otherwise, the player is attacking with a physical weapon:
@@ -2563,7 +2567,9 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
           flash_screen();
           cast_spell_on_npc(npc,
                             weapon->infused_pebble,
-                            rand() % (g_player->stats[MAGICAL_POWER] / 2));
+                            g_player->stats[MAGICAL_POWER] / 2 > 0          ?
+                              rand() % (g_player->stats[MAGICAL_POWER] / 2) :
+                              0);
         }
       }
 
@@ -3149,7 +3155,7 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
 
   // Set stats according to current dungeon depth:
   npc->health = npc->power = npc->physical_defense = npc->magical_defense =
-    g_player->depth + 1;
+    1 + g_player->depth - g_player->depth / 2;
 
   // Check for increased power:
   if (type <= WHITE_BEAST_MEDIUM ||
@@ -3346,7 +3352,7 @@ void init_location(void)
   while (get_cell_type(builder_position) != EXIT)
   {
     // Add random loot or simply make the cell EMPTY:
-    if (rand() % 30 == 0)
+    if (rand() % 20 == 0)
     {
       set_cell_type(builder_position, RANDOM_ITEM); // Excludes Pebbles.
     }
