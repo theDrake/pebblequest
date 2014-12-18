@@ -117,19 +117,18 @@ void move_npc(npc_t *const npc, const int8_t direction)
 /******************************************************************************
    Function: damage_player
 
-Description: Damages the player according to a given damage value (which will
-             be adjusted, if necessary, to be at least one more than the
-             player's current health recovery rate) and vibrates the watch.
+Description: Damages the player according to a given damage value (or
+             MIN_DAMAGE if the value's too low) and vibrates the watch.
 
      Inputs: damage - Potential amount of damage.
 
     Outputs: The amount of damage actually dealt.
 ******************************************************************************/
-int16_t damage_player(int16_t damage)
+int8_t damage_player(int8_t damage)
 {
-  if (damage <= g_player->stats[HEALTH_REGEN])
+  if (damage < MIN_DAMAGE)
   {
-    damage = g_player->stats[HEALTH_REGEN] + 1;
+    damage = MIN_DAMAGE;
   }
   vibes_short_pulse();
   adjust_player_current_health(damage * -1);
@@ -141,20 +140,20 @@ int16_t damage_player(int16_t damage)
    Function: damage_npc
 
 Description: Damages a given NPC according to a given damage value (or
-             MIN_DAMAGE_VS_NPC if the value's too low). If this reduces the
-             NPC's health to zero or below, the NPC's death is handled, the
-             player gains experience points, and a "level up" check is made.
+             MIN_DAMAGE if the value's too low). If this reduces the NPC's
+             health to zero or below, the NPC's death is handled, the player
+             gains experience points, and a "level up" check is made.
 
      Inputs: npc    - Pointer to the NPC to be damaged.
              damage - Potential amount of damage.
 
     Outputs: The amount of damage actually dealt.
 ******************************************************************************/
-int16_t damage_npc(npc_t *const npc, int16_t damage)
+int8_t damage_npc(npc_t *const npc, int8_t damage)
 {
-  if (damage < MIN_DAMAGE_VS_NPC)
+  if (damage < MIN_DAMAGE)
   {
-    damage = MIN_DAMAGE_VS_NPC;
+    damage = MIN_DAMAGE;
   }
   npc->health -= damage;
 
@@ -205,24 +204,23 @@ Description: Applies the effects of a given spell, with a given potency, to a
 
     Outputs: The amount of damage caused by the spell.
 ******************************************************************************/
-int16_t cast_spell_on_npc(npc_t *const npc,
-                          const int8_t magic_type,
-                          const int16_t potency)
+int8_t cast_spell_on_npc(npc_t *const npc,
+                         const int8_t magic_type,
+                         const int8_t potency)
 {
-  int16_t damage = 0;
+  int8_t damage           = 0,
+         spell_resistance = rand() % npc->magical_defense;
 
   if (npc)
   {
     // First, attempt to apply a status effect:
-    if (potency > 0 &&
-        (magic_type < PEBBLE_OF_DEATH ||
-         (rand() % potency > rand() % npc->magical_defense)))
+    if (magic_type < PEBBLE_OF_DEATH || potency > spell_resistance)
     {
       npc->status_effects[magic_type] += potency;
     }
 
     // Next, apply damage and check for health absorption:
-    damage = damage_npc(npc, potency - npc->magical_defense);
+    damage = damage_npc(npc, potency - spell_resistance);
     if (magic_type == PEBBLE_OF_LIFE)
     {
       adjust_player_current_health(damage);
@@ -244,7 +242,7 @@ Description: Adjusts the player's current health by a given amount, which may
 
     Outputs: The adjustment amount passed in as input.
 ******************************************************************************/
-int16_t adjust_player_current_health(const int16_t amount)
+int8_t adjust_player_current_health(const int8_t amount)
 {
   g_player->health += amount;
   if (g_player->health > g_player->max_health)
@@ -271,7 +269,7 @@ Description: Adjusts the player's current energy by a given amount, which may
 
     Outputs: The adjustment amount passed in as input.
 ******************************************************************************/
-int16_t adjust_player_current_energy(const int16_t amount)
+int8_t adjust_player_current_energy(const int8_t amount)
 {
   g_player->energy += amount;
   if (g_player->energy > g_player->max_energy)
@@ -2503,8 +2501,9 @@ Description: The graphics window's single repeating click handler for the
 void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                                             void *context)
 {
+  int8_t damage;
   GPoint cell;
-  npc_t *npc;
+  npc_t *npc           = NULL;
   heavy_item_t *weapon = get_heavy_item_equipped_at(RIGHT_HAND);
   //Window *window = (Window *) context;
 
@@ -2533,7 +2532,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       flash_screen();
       cast_spell_on_npc(npc,
                         g_player->equipped_pebble,
-                        g_player->stats[MAGICAL_POWER]);
+                        rand() % g_player->stats[MAGICAL_POWER]);
     }
 
     // Otherwise, the player is attacking with a physical weapon:
@@ -2541,17 +2540,20 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     {
       if (npc)
       {
-        damage_npc(npc, g_player->stats[PHYSICAL_POWER]);
+        damage = damage_npc(npc,
+                            rand() % g_player->stats[PHYSICAL_POWER] -
+                              rand() % npc->physical_defense);
       }
 
       if (weapon)
       {
         // Check for wound/stun effect from sharp/blunt weapons:
-        if (npc && rand() % g_player->stats[PHYSICAL_POWER] >
-                     rand() % npc->physical_defense)
+        if (npc &&
+            rand() % g_player->stats[PHYSICAL_POWER] >
+              rand() % npc->physical_defense)
         {
           npc->status_effects[weapon->type % 2 ? DAMAGE_OVER_TIME : STUN] +=
-            g_player->stats[PHYSICAL_POWER] / 2;
+            damage;
         }
 
         // Check for an infused Pebble:
@@ -2560,7 +2562,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
           flash_screen();
           cast_spell_on_npc(npc,
                             weapon->infused_pebble,
-                            g_player->stats[MAGICAL_POWER] / 2);
+                            rand() % (g_player->stats[MAGICAL_POWER] / 2));
         }
       }
 
@@ -2704,7 +2706,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         if (npc->status_effects[STUN]     == 0 &&
             npc->status_effects[SLOW] % 2 == 0)
         {
-          damage = npc->power - npc->status_effects[WEAKNESS] / 2;
+          damage = rand() % npc->power - npc->status_effects[WEAKNESS] / 2;
           diff_x = npc->position.x - g_player->position.x;
           diff_y = npc->position.y - g_player->position.y;
 
@@ -2740,24 +2742,26 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
           {
             flash_screen();
             if (g_player->stats[SPELL_ABSORPTION] &&
-                damage > 0                        &&
-                rand() % g_player->stats[INTELLECT] +
-                  g_player->stats[SPELL_ABSORPTION] > rand() % damage)
+                (rand() % g_player->stats[INTELLECT] +
+                   g_player->stats[SPELL_ABSORPTION] > damage))
             {
               adjust_player_current_energy(damage);
             }
             else
             {
-              damage_player(damage - g_player->stats[MAGICAL_DEFENSE]);
+              damage_player(damage -
+                              rand() % g_player->stats[MAGICAL_DEFENSE]);
             }
           }
           else if ((diff_x == 0 && abs(diff_y) == 1) ||
                    (diff_y == 0 && abs(diff_x) == 1))
           {
-            damage_player(damage - g_player->stats[PHYSICAL_DEFENSE]);
+            damage_player(damage - rand() % g_player->stats[PHYSICAL_DEFENSE]);
             if (g_player->stats[BACKLASH_DAMAGE])
             {
-              damage_npc(npc, damage / 4 + g_player->stats[BACKLASH_DAMAGE]);
+              damage_npc(npc,
+                         damage / (rand() % npc->magical_defense + 1) +
+                           g_player->stats[BACKLASH_DAMAGE]);
             }
           }
           else
@@ -3121,8 +3125,8 @@ void init_player(void)
 /******************************************************************************
    Function: init_npc
 
-Description: Initializes a non-player character (NPC) struct according to a
-             given NPC type.
+Description: Initializes a given non-player character (NPC) struct according to
+             a given NPC type and starting position.
 
      Inputs: npc      - Pointer to the NPC struct to be initialized.
              type     - Integer indicating the desired NPC type.
@@ -3144,7 +3148,7 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
 
   // Set stats according to current dungeon depth:
   npc->health = npc->power = npc->physical_defense = npc->magical_defense =
-    g_player->depth;
+    g_player->depth + 1;
 
   // Check for increased power:
   if (type <= WHITE_BEAST_MEDIUM ||

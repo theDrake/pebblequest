@@ -33,7 +33,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 #define DEFAULT_MAJOR_STAT_VALUE   1 // AGILITY, STRENGTH, and INTELLECT.
-#define MIN_DAMAGE_VS_NPC          1
+#define MIN_DAMAGE                 1
 #define MIN_ENERGY_LOSS_PER_ACTION 3
 #define MAX_NPCS_AT_ONE_TIME       2
 
@@ -216,14 +216,14 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
   General Constants
 ******************************************************************************/
 
-#define DEFAULT_TIMER_DURATION 20 // milliseconds
-#define MAX_LARGE_INT_DIGITS   5
-#define MAX_SMALL_INT_DIGITS   3
-#define MAX_DEPTH              100
-#define MAX_LEVEL              100
-#define STORAGE_KEY            841
-#define ANIMATED               true
-#define NOT_ANIMATED           false
+#define DEFAULT_TIMER_DURATION      20 // milliseconds
+#define DEFAULT_MAX_SMALL_INT_VALUE 100
+#define MAX_SMALL_INT_DIGITS        3
+#define MAX_DEPTH                   DEFAULT_MAX_SMALL_INT_VALUE
+#define MAX_LEVEL                   DEFAULT_MAX_SMALL_INT_VALUE
+#define STORAGE_KEY                 841
+#define ANIMATED                    true
+#define NOT_ANIMATED                false
 
 /******************************************************************************
   Structures
@@ -261,7 +261,7 @@ typedef struct NonPlayerCharacter {
          power,
          physical_defense,
          magical_defense;
-  int16_t status_effects[NUM_STATUS_EFFECTS];
+  uint8_t status_effects[NUM_STATUS_EFFECTS];
 } __attribute__((__packed__)) npc_t;
 
 typedef struct Location {
@@ -310,13 +310,13 @@ static const GPathInfo COMPASS_PATH_INFO = {
 int8_t set_player_direction(const int8_t new_direction);
 bool move_player(const int8_t direction);
 void move_npc(npc_t *const npc, const int8_t direction);
-int16_t damage_player(int16_t damage);
-int16_t damage_npc(npc_t *const npc, int16_t damage);
-int16_t cast_spell_on_npc(npc_t *const npc,
-                          const int8_t magic_type,
-                          const int16_t potency);
-int16_t adjust_player_current_health(const int16_t amount);
-int16_t adjust_player_current_energy(const int16_t amount);
+int8_t damage_player(int8_t damage);
+int8_t damage_npc(npc_t *const npc, int8_t damage);
+int8_t cast_spell_on_npc(npc_t *const npc,
+                         const int8_t magic_type,
+                         const int8_t potency);
+int8_t adjust_player_current_health(const int8_t amount);
+int8_t adjust_player_current_energy(const int8_t amount);
 bool add_new_npc(const int8_t npc_type, const GPoint position);
 GPoint get_cell_farther_away(const GPoint reference_point,
                              const int8_t direction,
