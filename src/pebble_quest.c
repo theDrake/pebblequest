@@ -214,23 +214,26 @@ int8_t cast_spell_on_npc(npc_t *const npc,
                          const int8_t magic_type,
                          const int8_t max_potency)
 {
-  int8_t potency          = 0,
-         damage           = 0,
-         spell_resistance = rand() % npc->magical_defense;
+  int8_t potency = 0,
+         damage  = 0,
+         spell_resistance;
 
-  if (max_potency > 0)
-  {
-    potency = rand() % max_potency;
-  }
   if (npc)
   {
-    // First, attempt to apply a status effect:
+    // Determine actual spell potency along with the NPC's resistance:
+    if (max_potency > 0)
+    {
+      potency = rand() % max_potency;
+    }
+    spell_resistance = rand() % npc->magical_defense;
+
+    // Next, attempt to apply a status effect:
     if (magic_type < PEBBLE_OF_DEATH || potency > spell_resistance)
     {
       npc->status_effects[magic_type] += potency;
     }
 
-    // Next, apply damage and check for health absorption:
+    // Finally, apply damage and check for health absorption:
     damage = damage_npc(npc, potency - spell_resistance);
     if (magic_type == PEBBLE_OF_LIFE)
     {
