@@ -23,10 +23,11 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define LOOT_MENU           3
 #define PEBBLE_OPTIONS_MENU 4
 #define HEAVY_ITEMS_MENU    5
-#define NARRATION_WINDOW    6
-#define GRAPHICS_WINDOW     7
-#define NUM_WINDOWS         8
-#define NUM_MENUS           6
+#define STATS_MENU          6
+#define NARRATION_WINDOW    7
+#define GRAPHICS_WINDOW     8
+#define NUM_WINDOWS         9
+#define NUM_MENUS           7
 
 /******************************************************************************
   Player- and NPC-related Constants
@@ -105,14 +106,9 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define INTRO_NARRATION_3   2
 #define INTRO_NARRATION_4   3
 #define DEATH_NARRATION     4
-#define STATS_NARRATION_1   5
-#define STATS_NARRATION_2   6
-#define STATS_NARRATION_3   7
-#define STATS_NARRATION_4   8
-#define STATS_NARRATION_5   9
-#define LEVEL_UP_NARRATION  10
-#define ENDING_NARRATION    11
-#define NUM_NARRATION_TYPES 12
+#define LEVEL_UP_NARRATION  5
+#define ENDING_NARRATION    6
+#define NUM_NARRATION_TYPES 7
 
 /******************************************************************************
   Pebble- and Item-related Constants
@@ -359,6 +355,10 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
                                                   const Layer *cell_layer,
                                                   uint16_t section_index,
                                                   void *data);
+static void stats_menu_draw_header_callback(GContext *ctx,
+                                            const Layer *cell_layer,
+                                            uint16_t section_index,
+                                            void *data);
 static void main_menu_draw_row_callback(GContext *ctx,
                                         const Layer *cell_layer,
                                         MenuIndex *cell_index,
@@ -383,6 +383,10 @@ static void heavy_items_menu_draw_row_callback(GContext *ctx,
                                                const Layer *cell_layer,
                                                MenuIndex *cell_index,
                                                void *data);
+static void stats_menu_draw_row_callback(GContext *ctx,
+                                         const Layer *cell_layer,
+                                         MenuIndex *cell_index,
+                                         void *data);
 void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data);

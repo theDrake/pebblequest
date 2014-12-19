@@ -764,7 +764,7 @@ int8_t show_narration(const int8_t narration)
              "Alas, another hero has perished in the dank, dark depths. A new "
                "champion must arise to save humanity!");
       break;
-    case STATS_NARRATION_1: // Max. total chars: ~45
+    /*case STATS_NARRATION_1: // Max. total chars: ~45
       snprintf(narration_str,
                NARRATION_STR_LEN + 1,
                "Level:\n  %d\nExperience:\n  %u\nDepth:\n  %d",
@@ -811,7 +811,7 @@ int8_t show_narration(const int8_t narration)
       {
         init_player();
       }
-      break;
+      break;*/
     case LEVEL_UP_NARRATION: // Total chars: 55
       strcpy(narration_str,
              "\n  You have gained\n        a level of\n      experience!");
@@ -997,6 +997,26 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
            "%s AN ITEM?",
            g_current_selection < FIRST_HEAVY_ITEM ? "INFUSE" : "REPLACE");
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
+}
+
+/******************************************************************************
+   Function: stats_menu_draw_header_callback
+
+Description: Instructions for drawing the stats menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void stats_menu_draw_header_callback(GContext *ctx,
+                                            const Layer *cell_layer,
+                                            uint16_t section_index,
+                                            void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "CHARACTER STATS");
 }
 
 /******************************************************************************
@@ -1215,6 +1235,45 @@ static void heavy_items_menu_draw_row_callback(GContext *ctx,
 }
 
 /******************************************************************************
+   Function: stats_menu_draw_row_callback
+
+Description: Instructions for drawing the rows (cells) of each "heavy items"
+             menu: the "replace item" menu and the infusion menu.
+
+     Inputs: ctx        - Pointer to the associated context.
+             cell_layer - Pointer to the layer of the cell to be drawn.
+             cell_index - Pointer to the index struct of the cell to be drawn.
+             data       - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void stats_menu_draw_row_callback(GContext *ctx,
+                                         const Layer *cell_layer,
+                                         MenuIndex *cell_index,
+                                         void *data)
+{
+  char title_str[MENU_TITLE_STR_LEN + 1];
+
+  if (cell_index->row == AGILITY)
+  {
+    strcpy(title_str, "Agility");
+  }
+  else if (cell_index->row == STRENGTH)
+  {
+    strcpy(title_str, "Strength");
+  }
+  else // if (cell_index->row == INTELLECT)
+  {
+    strcpy(title_str, "Intellect");
+  }
+  snprintf(title_str + strlen(title_str),
+           MAX_SMALL_INT_DIGITS + 3,
+           ": %d",
+           g_player->stats[cell_index->row]);
+  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
+}
+
+/******************************************************************************
    Function: menu_select_callback
 
 Description: Called when a menu cell is selected.
@@ -1251,7 +1310,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     }
     else // Character Stats
     {
-      show_narration(STATS_NARRATION_1);
+      show_window(STATS_MENU, ANIMATED);
     }
   }
   else if (menu_layer == g_menu_layers[LEVEL_UP_MENU])
@@ -1261,7 +1320,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     g_player->health = g_player->max_health;
     g_player->energy = g_player->max_energy;
     window_stack_pop(NOT_ANIMATED);
-    show_narration(STATS_NARRATION_1);
+    show_window(STATS_MENU, ANIMATED);
   }
   else if (menu_layer == g_menu_layers[INVENTORY_MENU])
   {
@@ -1327,7 +1386,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       show_window(HEAVY_ITEMS_MENU, ANIMATED);
     }
   }
-  else // if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
+  else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
     heavy_item = &g_player->heavy_items[cell_index->row];
 
@@ -1447,6 +1506,10 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
   {
     return num_heavy_items;
+  }
+  else if (menu_layer == g_menu_layers[STATS_MENU])
+  {
+    return NUM_CHARACTER_STATS;
   }
   else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
@@ -2654,9 +2717,7 @@ void narration_single_click(ClickRecognizerRef recognizer, void *context)
 {
   //Window *window = (Window *) context;
 
-  if (g_current_narration < INTRO_NARRATION_4 ||
-      (g_current_narration > INTRO_NARRATION_4 &&
-       g_current_narration < STATS_NARRATION_5))
+  if (g_current_narration < INTRO_NARRATION_4)
   {
     show_narration(++g_current_narration);
   }
@@ -3516,7 +3577,7 @@ void init_window(const int8_t window_index)
     }
 
     // Heavy items menu:
-    else // if (window_index == HEAVY_ITEMS_MENU)
+    else if (window_index == HEAVY_ITEMS_MENU)
     {
       menu_layer_set_callbacks(g_menu_layers[window_index],
                                NULL,
@@ -3526,6 +3587,21 @@ void init_window(const int8_t window_index)
         .draw_header       = heavy_items_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = heavy_items_menu_draw_row_callback,
+        .select_click      = menu_select_callback,
+      });
+    }
+
+    // Character stats menu:
+    else // if (window_index == STATS_MENU)
+    {
+      menu_layer_set_callbacks(g_menu_layers[window_index],
+                               NULL,
+                               (MenuLayerCallbacks)
+      {
+        .get_header_height = menu_get_header_height_callback,
+        .draw_header       = stats_menu_draw_header_callback,
+        .get_num_rows      = menu_get_num_rows_callback,
+        .draw_row          = stats_menu_draw_row_callback,
         .select_click      = menu_select_callback,
       });
     }
