@@ -198,22 +198,30 @@ int8_t damage_npc(npc_t *const npc, int8_t damage)
 /******************************************************************************
    Function: cast_spell_on_npc
 
-Description: Applies the effects of a given spell, with a given potency, to a
-             given NPC.
+Description: Applies the effects of a given spell type, according a given max.
+             potency, to a given NPC. (Unlike "damage_npc", etc., randomization
+             and the pointer check are both performed here, rather than in the
+             areas where this function gets called, for memory-saving reasons.)
 
-     Inputs: npc        - Pointer to the targeted NPC.
-             magic_type - Integer representing the spell's magic type.
-             potency    - Amount of magical power being brought to bear.
+     Inputs: npc            - Pointer to the targeted NPC.
+             magic_type     - Integer representing the spell's magic type.
+             max_potency    - Maximum amount of magical power that may be
+                              brought to bear.
 
     Outputs: The amount of damage caused by the spell.
 ******************************************************************************/
 int8_t cast_spell_on_npc(npc_t *const npc,
                          const int8_t magic_type,
-                         const int8_t potency)
+                         const int8_t max_potency)
 {
-  int8_t damage           = 0,
+  int8_t potency          = 0,
+         damage           = 0,
          spell_resistance = rand() % npc->magical_defense;
 
+  if (max_potency > 0)
+  {
+    potency = rand() % max_potency;
+  }
   if (npc)
   {
     // First, attempt to apply a status effect:
@@ -776,8 +784,8 @@ int8_t show_narration(const int8_t narration)
                  "Magical Defense:\n  %d",
                g_player->health,
                g_player->max_health,
-               g_player->stats[PHYSICAL_DEFENSE],
-               g_player->stats[MAGICAL_DEFENSE]);
+               g_player->physical_defense,
+               g_player->magical_defense);
       break;
     case STATS_NARRATION_4: // Max. total chars: ~62
       snprintf(narration_str,
@@ -785,8 +793,8 @@ int8_t show_narration(const int8_t narration)
                "Energy:\n  %d/%d\nPhysical Power:\n  %d\nMagical Power:\n  %d",
                g_player->energy,
                g_player->max_energy,
-               g_player->stats[PHYSICAL_POWER],
-               g_player->stats[MAGICAL_POWER]);
+               g_player->physical_power,
+               g_player->magical_power);
       break;
     case STATS_NARRATION_5: // Max. total chars: ~70
       snprintf(narration_str,
@@ -2535,9 +2543,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       flash_screen();
       cast_spell_on_npc(npc,
                         g_player->equipped_pebble,
-                        g_player->stats[MAGICAL_POWER] > 0        ?
-                          rand() % g_player->stats[MAGICAL_POWER] :
-                          0);
+                        g_player->magical_power);
     }
 
     // Otherwise, the player is attacking with a physical weapon:
@@ -2546,7 +2552,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       if (npc)
       {
         damage = damage_npc(npc,
-                            rand() % g_player->stats[PHYSICAL_POWER] -
+                            rand() % g_player->physical_power -
                               rand() % npc->physical_defense);
       }
 
@@ -2554,8 +2560,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       {
         // Check for wound/stun effect from sharp/blunt weapons:
         if (npc &&
-            rand() % g_player->stats[PHYSICAL_POWER] >
-              rand() % npc->physical_defense)
+            rand() % g_player->physical_power > rand() % npc->physical_defense)
         {
           npc->status_effects[weapon->type % 2 ? DAMAGE_OVER_TIME : STUN] +=
             damage;
@@ -2567,9 +2572,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
           flash_screen();
           cast_spell_on_npc(npc,
                             weapon->infused_pebble,
-                            g_player->stats[MAGICAL_POWER] / 2 > 0          ?
-                              rand() % (g_player->stats[MAGICAL_POWER] / 2) :
-                              0);
+                            g_player->magical_power / 2);
         }
       }
 
@@ -2757,13 +2760,13 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
             else
             {
               damage_player(damage -
-                              rand() % g_player->stats[MAGICAL_DEFENSE]);
+                              rand() % g_player->magical_defense);
             }
           }
           else if ((diff_x == 0 && abs(diff_y) == 1) ||
                    (diff_y == 0 && abs(diff_x) == 1))
           {
-            damage_player(damage - rand() % g_player->stats[PHYSICAL_DEFENSE]);
+            damage_player(damage - rand() % g_player->physical_defense);
             if (g_player->stats[BACKLASH_DAMAGE])
             {
               damage_npc(npc,
@@ -3036,18 +3039,18 @@ void set_player_minor_stats(void)
 {
   int8_t i;
 
-  g_player->stats[PHYSICAL_POWER]   = g_player->stats[STRENGTH] +
-                                        g_player->stats[AGILITY] / 2;
-  g_player->stats[PHYSICAL_DEFENSE] = g_player->stats[AGILITY] +
-                                        g_player->stats[STRENGTH] / 2;
-  g_player->stats[MAGICAL_POWER]    = g_player->stats[INTELLECT] +
-                                        g_player->stats[AGILITY] / 2;
-  g_player->stats[MAGICAL_DEFENSE]  = g_player->stats[AGILITY] +
-                                        g_player->stats[INTELLECT] / 2;
-  g_player->max_health              = g_player->stats[STRENGTH] * 10;
-  g_player->max_energy              = g_player->stats[INTELLECT]  * 4 +
-                                        g_player->stats[STRENGTH] * 3 +
-                                        g_player->stats[AGILITY]  * 3;
+  g_player->physical_power   = g_player->stats[STRENGTH] +
+                                 g_player->stats[AGILITY] / 2;
+  g_player->physical_defense = g_player->stats[AGILITY] +
+                                 g_player->stats[STRENGTH] / 2;
+  g_player->magical_power    = g_player->stats[INTELLECT] +
+                                 g_player->stats[AGILITY] / 2;
+  g_player->magical_defense  = g_player->stats[AGILITY] +
+                                 g_player->stats[INTELLECT] / 2;
+  g_player->max_health       = g_player->stats[STRENGTH] * 10;
+  g_player->max_energy       = g_player->stats[INTELLECT]  * 4 +
+                                 g_player->stats[STRENGTH] * 3 +
+                                 g_player->stats[AGILITY]  * 3;
   g_player->energy_loss_per_action  = MIN_ENERGY_LOSS_PER_ACTION;
 
   // Weapon:
@@ -3055,7 +3058,7 @@ void set_player_minor_stats(void)
   {
     for (i = DAGGER; i <= get_heavy_item_equipped_at(RIGHT_HAND)->type; i += 2)
     {
-      g_player->stats[PHYSICAL_POWER]++;
+      g_player->physical_power++;
       g_player->energy_loss_per_action++;
     }
     if (get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
@@ -3069,8 +3072,8 @@ void set_player_minor_stats(void)
   {
     for (i = LIGHT_ARMOR; i <= get_heavy_item_equipped_at(BODY)->type; ++i)
     {
-      g_player->stats[PHYSICAL_DEFENSE]++;
-      g_player->stats[MAGICAL_POWER]--;
+      g_player->physical_defense++;
+      g_player->magical_power--;
       g_player->energy_loss_per_action++;
     }
   }
@@ -3078,8 +3081,8 @@ void set_player_minor_stats(void)
   // Shield:
   if (get_heavy_item_equipped_at(LEFT_HAND))
   {
-    g_player->stats[PHYSICAL_DEFENSE]++;
-    g_player->stats[MAGICAL_POWER]--;
+    g_player->physical_defense++;
+    g_player->magical_power--;
     g_player->energy_loss_per_action++;
   }
 }

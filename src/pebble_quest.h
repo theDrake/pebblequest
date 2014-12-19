@@ -64,11 +64,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define BACKLASH_DAMAGE     4
 #define ENERGY_REGEN        5
 #define SPELL_ABSORPTION    6
-#define PHYSICAL_POWER      7
-#define MAGICAL_POWER       8
-#define PHYSICAL_DEFENSE    9
-#define MAGICAL_DEFENSE     10
-#define NUM_CHARACTER_STATS 11
+#define NUM_CHARACTER_STATS 7
 #define NUM_MAJOR_STATS     3 // AGILITY, STRENGTH, and INTELLECT.
 
 /******************************************************************************
@@ -240,6 +236,10 @@ typedef struct PlayerCharacter {
   GPoint position;
   int8_t direction,
          stats[NUM_CHARACTER_STATS],
+         physical_power,
+         physical_defense,
+         magical_power,
+         magical_defense,
          pebbles[NUM_PEBBLE_TYPES],
          equipped_pebble,
          energy_loss_per_action,
@@ -314,7 +314,7 @@ int8_t damage_player(int8_t damage);
 int8_t damage_npc(npc_t *const npc, int8_t damage);
 int8_t cast_spell_on_npc(npc_t *const npc,
                          const int8_t magic_type,
-                         const int8_t potency);
+                         const int8_t max_potency);
 int8_t adjust_player_current_health(const int8_t amount);
 int8_t adjust_player_current_energy(const int8_t amount);
 bool add_new_npc(const int8_t npc_type, const GPoint position);
