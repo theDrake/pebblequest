@@ -250,8 +250,7 @@ int8_t cast_spell_on_npc(npc_t *const npc,
 
 Description: Adjusts the player's current health by a given amount, which may
              be positive or negative. Health may not be increased above the
-             player's max. health nor reduced below zero. If reduced to zero,
-             the player character's death is handled.
+             player's max. health.
 
      Inputs: amount - Adjustment amount (which may be positive or negative).
 
@@ -265,11 +264,6 @@ int8_t adjust_player_current_health(const int8_t amount)
   {
     g_player->int16_stats[CURRENT_HEALTH] = g_player->int16_stats[MAX_HEALTH];
   }
-  else if (g_player->int16_stats[CURRENT_HEALTH] <= 0)
-  {
-    show_window(STATS_MENU, NOT_ANIMATED);
-    show_narration(DEATH_NARRATION);
-  }
 
   return amount;
 }
@@ -279,7 +273,7 @@ int8_t adjust_player_current_health(const int8_t amount)
 
 Description: Adjusts the player's current energy by a given amount, which may
              be positive or negative. Energy may not be increased above the
-             player's max. energy value nor reduced below zero.
+             player's max. energy value.
 
      Inputs: amount - Adjustment amount (which may be positive or negative).
 
@@ -865,7 +859,7 @@ static void level_up_menu_draw_header_callback(GContext *ctx,
                                                uint16_t section_index,
                                                void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "BOOST an ATTRIBUTE");
+  menu_cell_basic_header_draw(ctx, cell_layer, "BOOST an ATTRIBUTE!");
 }
 
 /******************************************************************************
@@ -970,7 +964,7 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
   snprintf(header_str,
            HEAVY_ITEMS_MENU_HEADER_STR_LEN + 1,
            "%s an ITEM?",
-           g_current_selection < FIRST_HEAVY_ITEM ? "INFUSE" : "REPLACE");
+           g_current_selection < FIRST_HEAVY_ITEM ? "ENCHANT" : "REPLACE");
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
@@ -1107,7 +1101,8 @@ static void stats_menu_draw_row_callback(GContext *ctx,
 {
   menu_cell_basic_draw(ctx,
                        cell_layer,
-                       get_stat_str(cell_index->row - 1),
+                       get_stat_str(cell_index->row -
+                                      NUM_NEGATIVE_STAT_CONSTANTS),
                        NULL,
                        NULL);
 }
@@ -1153,17 +1148,20 @@ static void pebble_options_menu_draw_row_callback(GContext *ctx,
                                                   MenuIndex *cell_index,
                                                   void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1];
+  char title_str[MENU_TITLE_STR_LEN + 1],
+       subtitle_str[MENU_SUBTITLE_STR_LEN + 1];
 
   if (cell_index->row == 0)
   {
     strcpy(title_str, "Equip");
+    strcpy(subtitle_str, "Cast ranged spells.");
   }
   else
   {
     strcpy(title_str, "Infuse into Item");
+    strcpy(subtitle_str, "Enchant a weapon, etc.");
   }
-  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
+  menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
 }
 
 /******************************************************************************
@@ -1224,8 +1222,10 @@ void menu_select_callback(MenuLayer *menu_layer,
     if (cell_index->row == 0) // Play
     {
       show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
-      if (g_player->int8_stats[DEPTH] == 0)
+      if (g_player->int8_stats[DEPTH] == 0 ||
+          g_player->int16_stats[CURRENT_HEALTH] <= 0)
       {
+        init_player();
         show_narration(INTRO_NARRATION_1);
         init_location();
       }
@@ -1247,7 +1247,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     g_player->int16_stats[CURRENT_HEALTH] = g_player->int16_stats[MAX_HEALTH];
     g_player->int16_stats[CURRENT_ENERGY] = g_player->int16_stats[MAX_ENERGY];
     window_stack_pop(NOT_ANIMATED);
-    show_window(STATS_MENU, ANIMATED);
+    show_window(STATS_MENU, NOT_ANIMATED);
   }
   else if (menu_layer == g_menu_layers[INVENTORY_MENU])
   {
@@ -2387,17 +2387,9 @@ Description: Called when the graphics window appears.
 ******************************************************************************/
 static void graphics_window_appear(Window *window)
 {
-  if (g_player->int16_stats[CURRENT_HEALTH] <= 0)
-  {
-    show_window(MAIN_MENU, NOT_ANIMATED);
-    init_player();
-  }
-  else
-  {
-    layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
-    g_player_is_attacking = false;
-    g_current_window      = GRAPHICS_WINDOW;
-  }
+  layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
+  g_player_is_attacking = false;
+  g_current_window      = GRAPHICS_WINDOW;
 }
 
 /******************************************************************************
@@ -2790,6 +2782,9 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         // Check for player death:
         if (g_player->int16_stats[CURRENT_HEALTH] <= 0)
         {
+          show_window(MAIN_MENU, NOT_ANIMATED);
+          show_window(STATS_MENU, NOT_ANIMATED);
+          show_narration(DEATH_NARRATION);
           return;
         }
 
@@ -2872,9 +2867,17 @@ char *get_stat_str(const int8_t stat_index)
 {
   static char stat_str[STAT_STR_LEN + 1];
 
-  if (stat_index == EXPERIENCE_POINTS)
+  if (stat_index == HEALTH)
   {
-    strcpy(stat_str, "XP");
+    strcpy(stat_str, "Health");
+  }
+  else if (stat_index == ENERGY)
+  {
+    strcpy(stat_str, "Energy");
+  }
+  else if (stat_index == EXPERIENCE_POINTS)
+  {
+    strcpy(stat_str, "Exp.");
   }
   else if (stat_index == LEVEL)
   {
@@ -2906,7 +2909,7 @@ char *get_stat_str(const int8_t stat_index)
   }
   else if (stat_index == SPELL_ABSORPTION)
   {
-    strcpy(stat_str, "Spell Abs.");
+    strcpy(stat_str, "Spell Absorption");
   }
   else if (stat_index == BACKLASH_DAMAGE)
   {
@@ -2928,17 +2931,9 @@ char *get_stat_str(const int8_t stat_index)
   {
     strcpy(stat_str, "Mag. Defense");
   }
-  else if (stat_index == ENERGY_LOSS_PER_ATTACK)
+  else // if (stat_index == ENERGY_LOSS_PER_ATTACK)
   {
     strcpy(stat_str, "Fatigue Rate");
-  }
-  else if (stat_index == NUM_INT8_STATS)
-  {
-    strcpy(stat_str, "Health");
-  }
-  else // if (stat_index == NUM_INT8_STATS + 1)
-  {
-    strcpy(stat_str, "Energy");
   }
 
   // Add the stat's current value:
@@ -2950,13 +2945,14 @@ char *get_stat_str(const int8_t stat_index)
              "%u",
              g_player->exp_points);
   }
-  else if (stat_index >= NUM_INT8_STATS)
+  else if (stat_index < 0)
   {
     snprintf(stat_str + strlen(stat_str),
              MAX_SMALL_INT_DIGITS * 2 + 2,
              "%d/%d",
-             g_player->int16_stats[stat_index - NUM_INT8_STATS],
-             g_player->int16_stats[stat_index - NUM_INT8_STATS + 2]);
+             g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS],
+             g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS +
+                                     2]);
   }
   else
   {
@@ -3165,7 +3161,7 @@ void set_player_minor_stats(void)
     g_player->int8_stats[AGILITY] + g_player->int8_stats[INTELLECT] / 2;
   g_player->int16_stats[MAX_HEALTH]            =
     g_player->int8_stats[STRENGTH] * 10;
-  g_player->int16_stats[MAX_HEALTH]            =
+  g_player->int16_stats[MAX_ENERGY]            =
     g_player->int8_stats[INTELLECT]  * 4 + g_player->int8_stats[STRENGTH] * 3 +
     g_player->int8_stats[AGILITY]  * 3;
   g_player->int8_stats[ENERGY_LOSS_PER_ATTACK] = MIN_ENERGY_LOSS_PER_ATTACK;
@@ -3474,7 +3470,8 @@ void init_location(void)
   while (get_cell_type(builder_position) != EXIT)
   {
     // Add random loot or simply make the cell EMPTY:
-    if (rand() % 20 == 0)
+    if (rand() % 25 == 0 &&
+        !gpoint_equal(&builder_position, &g_location->entrance))
     {
       set_cell_type(builder_position, RANDOM_ITEM); // Excludes Pebbles.
     }

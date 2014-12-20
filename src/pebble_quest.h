@@ -58,31 +58,34 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NUM_NPC_TYPES      16
 
 // Character stats (2-8 correspond to Pebble effects in robes/armor/shields):
-#define EXPERIENCE_POINTS      -1
-#define LEVEL                  0
-#define DEPTH                  1
-#define AGILITY                2
-#define STRENGTH               3
-#define INTELLECT              4
-#define ENERGY_REGEN           5
-#define HEALTH_REGEN           6
-#define SPELL_ABSORPTION       7
-#define BACKLASH_DAMAGE        8
-#define PHYSICAL_POWER         9
-#define MAGICAL_POWER          10
-#define PHYSICAL_DEFENSE       11
-#define MAGICAL_DEFENSE        12
-#define ENERGY_LOSS_PER_ATTACK 13
-#define NUM_INT8_STATS         14
-#define NUM_MAJOR_STATS        3 // AGILITY, STRENGTH, and INTELLECT.
-#define FIRST_MAJOR_STAT       AGILITY
-#define CURRENT_HEALTH         0
-#define CURRENT_ENERGY         1
-#define MAX_HEALTH             2
-#define MAX_ENERGY             3
-#define NUM_INT16_STATS        4
-#define STATS_MENU_NUM_ROWS    (NUM_INT8_STATS + 3)
-#define STAT_STR_LEN           18
+#define HEALTH                      -3
+#define ENERGY                      -2
+#define EXPERIENCE_POINTS           -1
+#define LEVEL                       0
+#define DEPTH                       1
+#define AGILITY                     2
+#define STRENGTH                    3
+#define INTELLECT                   4
+#define HEALTH_REGEN                6
+#define ENERGY_REGEN                5
+#define SPELL_ABSORPTION            7
+#define BACKLASH_DAMAGE             8
+#define PHYSICAL_POWER              9
+#define MAGICAL_POWER               10
+#define PHYSICAL_DEFENSE            11
+#define MAGICAL_DEFENSE             12
+#define ENERGY_LOSS_PER_ATTACK      13
+#define NUM_INT8_STATS              14
+#define NUM_MAJOR_STATS             3 // AGILITY, STRENGTH, and INTELLECT.
+#define FIRST_MAJOR_STAT            AGILITY
+#define NUM_NEGATIVE_STAT_CONSTANTS 3
+#define STATS_MENU_NUM_ROWS         (NUM_INT8_STATS + NUM_NEGATIVE_STAT_CONSTANTS)
+#define STAT_STR_LEN                19
+#define CURRENT_HEALTH              0
+#define CURRENT_ENERGY              1
+#define MAX_HEALTH                  2
+#define MAX_ENERGY                  3
+#define NUM_INT16_STATS             4
 
 /******************************************************************************
   Location-related Constants
@@ -134,8 +137,8 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define PEBBLE_OF_THUNDER    0
 #define PEBBLE_OF_FIRE       1
 #define PEBBLE_OF_ICE        2
-#define PEBBLE_OF_LIGHT      3
-#define PEBBLE_OF_LIFE       4
+#define PEBBLE_OF_LIFE       3
+#define PEBBLE_OF_LIGHT      4
 #define PEBBLE_OF_SHADOW     5
 #define PEBBLE_OF_DEATH      6
 #define DAGGER               7
