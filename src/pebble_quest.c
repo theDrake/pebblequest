@@ -127,7 +127,7 @@ Description: Damages the player according to a given damage value (or one more
 ******************************************************************************/
 int8_t damage_player(int8_t damage)
 {
-  int8_t min_damage = g_player->stats[HEALTH_REGEN] + 1;
+  int8_t min_damage = g_player->int8_stats[HEALTH_REGEN] + 1;
 
   if (damage < min_damage)
   {
@@ -164,7 +164,7 @@ int8_t damage_npc(npc_t *const npc, int8_t damage)
   if (npc->health <= 0 || npc->status_effects[DISINTEGRATION])
   {
     // Check for "game completion" (death of the final mage):
-    if (g_player->depth == MAX_DEPTH && npc->type == MAGE)
+    if (g_player->int8_stats[DEPTH] == MAX_DEPTH && npc->type == MAGE)
     {
       show_narration(ENDING_NARRATION);
     }
@@ -173,12 +173,13 @@ int8_t damage_npc(npc_t *const npc, int8_t damage)
     npc->type = NONE;
 
     // Add experience points and check for a "level up":
-    if (g_player->level < MAX_LEVEL)
+    if (g_player->int8_stats[LEVEL] < MAX_LEVEL)
     {
       g_player->exp_points += npc->power;
-      if (g_player->exp_points / (6 * g_player->level) >= g_player->level)
+      if (g_player->exp_points / (6 * g_player->int8_stats[LEVEL]) >=
+            g_player->int8_stats[LEVEL])
       {
-        g_player->level++;
+        g_player->int8_stats[LEVEL]++;
         show_window(LEVEL_UP_MENU, NOT_ANIMATED);
         show_narration(LEVEL_UP_NARRATION);
       }
@@ -258,12 +259,13 @@ Description: Adjusts the player's current health by a given amount, which may
 ******************************************************************************/
 int8_t adjust_player_current_health(const int8_t amount)
 {
-  g_player->health += amount;
-  if (g_player->health > g_player->max_health)
+  g_player->int16_stats[CURRENT_HEALTH] += amount;
+  if (g_player->int16_stats[CURRENT_HEALTH] >
+        g_player->int16_stats[MAX_HEALTH])
   {
-    g_player->health = g_player->max_health;
+    g_player->int16_stats[CURRENT_HEALTH] = g_player->int16_stats[MAX_HEALTH];
   }
-  else if (g_player->health <= 0)
+  else if (g_player->int16_stats[CURRENT_HEALTH] <= 0)
   {
     show_window(MAIN_MENU, NOT_ANIMATED);
     show_narration(DEATH_NARRATION);
@@ -285,10 +287,11 @@ Description: Adjusts the player's current energy by a given amount, which may
 ******************************************************************************/
 int8_t adjust_player_current_energy(const int8_t amount)
 {
-  g_player->energy += amount;
-  if (g_player->energy > g_player->max_energy)
+  g_player->int16_stats[CURRENT_ENERGY] += amount;
+  if (g_player->int16_stats[CURRENT_ENERGY] >
+        g_player->int16_stats[MAX_ENERGY])
   {
-    g_player->energy = g_player->max_energy;
+    g_player->int16_stats[CURRENT_ENERGY] = g_player->int16_stats[MAX_ENERGY];
   }
 
   return amount;
@@ -764,54 +767,6 @@ int8_t show_narration(const int8_t narration)
              "Alas, another hero has perished in the dank, dark depths. A new "
                "champion must arise to save humanity!");
       break;
-    /*case STATS_NARRATION_1: // Max. total chars: ~45
-      snprintf(narration_str,
-               NARRATION_STR_LEN + 1,
-               "Level:\n  %d\nExperience:\n  %u\nDepth:\n  %d",
-               g_player->level,
-               g_player->exp_points,
-               g_player->depth);
-      break;
-    case STATS_NARRATION_2: // Max. total chars: ~45
-      snprintf(narration_str,
-               NARRATION_STR_LEN + 1,
-               "Agility:\n  %d\nStrength:\n  %d\nIntellect:\n  %d",
-               g_player->stats[AGILITY],
-               g_player->stats[STRENGTH],
-               g_player->stats[INTELLECT]);
-      break;
-    case STATS_NARRATION_3: // Max. total chars: ~66
-      snprintf(narration_str,
-               NARRATION_STR_LEN + 1,
-               "Health:\n  %d/%d\nPhysical Defense:\n  %d\n"
-                 "Magical Defense:\n  %d",
-               g_player->health,
-               g_player->max_health,
-               g_player->physical_defense,
-               g_player->magical_defense);
-      break;
-    case STATS_NARRATION_4: // Max. total chars: ~62
-      snprintf(narration_str,
-               NARRATION_STR_LEN + 1,
-               "Energy:\n  %d/%d\nPhysical Power:\n  %d\nMagical Power:\n  %d",
-               g_player->energy,
-               g_player->max_energy,
-               g_player->physical_power,
-               g_player->magical_power);
-      break;
-    case STATS_NARRATION_5: // Max. total chars: ~70
-      snprintf(narration_str,
-               NARRATION_STR_LEN + 1,
-               "Energy Loss:\n  %d/attack\nEnergy Recovery:\n  %d/s\n"
-                 "Health Recovery:\n  %d/s",
-               g_player->energy_loss_per_action,
-               g_player->stats[ENERGY_REGEN],
-               g_player->stats[HEALTH_REGEN]);
-      if (g_player->health <= 0)
-      {
-        init_player();
-      }
-      break;*/
     case LEVEL_UP_NARRATION: // Total chars: 55
       strcpy(narration_str,
              "\n  You have gained\n        a level of\n      experience!");
@@ -910,7 +865,27 @@ static void level_up_menu_draw_header_callback(GContext *ctx,
                                                uint16_t section_index,
                                                void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "BOOST AN ATTRIBUTE");
+  menu_cell_basic_header_draw(ctx, cell_layer, "BOOST an ATTRIBUTE");
+}
+
+/******************************************************************************
+   Function: stats_menu_draw_header_callback
+
+Description: Instructions for drawing the stats menu's header.
+
+     Inputs: ctx           - Pointer to the associated context.
+             cell_layer    - Pointer to the cell layer.
+             section_index - Section number of the header to be drawn.
+             data          - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void stats_menu_draw_header_callback(GContext *ctx,
+                                            const Layer *cell_layer,
+                                            uint16_t section_index,
+                                            void *data)
+{
+  menu_cell_basic_header_draw(ctx, cell_layer, "CHARACTER STATS");
 }
 
 /******************************************************************************
@@ -994,29 +969,9 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
 
   snprintf(header_str,
            HEAVY_ITEMS_MENU_HEADER_STR_LEN + 1,
-           "%s AN ITEM?",
+           "%s an ITEM?",
            g_current_selection < FIRST_HEAVY_ITEM ? "INFUSE" : "REPLACE");
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
-}
-
-/******************************************************************************
-   Function: stats_menu_draw_header_callback
-
-Description: Instructions for drawing the stats menu's header.
-
-     Inputs: ctx           - Pointer to the associated context.
-             cell_layer    - Pointer to the cell layer.
-             section_index - Section number of the header to be drawn.
-             data          - Pointer to additional data (not used).
-
-    Outputs: None.
-******************************************************************************/
-static void stats_menu_draw_header_callback(GContext *ctx,
-                                            const Layer *cell_layer,
-                                            uint16_t section_index,
-                                            void *data)
-{
-  menu_cell_basic_header_draw(ctx, cell_layer, "CHARACTER STATS");
 }
 
 /******************************************************************************
@@ -1125,25 +1080,36 @@ static void level_up_menu_draw_row_callback(GContext *ctx,
                                             MenuIndex *cell_index,
                                             void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1];
+  menu_cell_basic_draw(ctx,
+                       cell_layer,
+                       get_stat_str(cell_index->row + FIRST_MAJOR_STAT),
+                       NULL,
+                       NULL);
+}
 
-  if (cell_index->row == AGILITY)
-  {
-    strcpy(title_str, "Agility");
-  }
-  else if (cell_index->row == STRENGTH)
-  {
-    strcpy(title_str, "Strength");
-  }
-  else // if (cell_index->row == INTELLECT)
-  {
-    strcpy(title_str, "Intellect");
-  }
-  snprintf(title_str + strlen(title_str),
-           MAX_SMALL_INT_DIGITS + 3,
-           ": %d",
-           g_player->stats[cell_index->row]);
-  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
+/******************************************************************************
+   Function: stats_menu_draw_row_callback
+
+Description: Instructions for drawing the rows (cells) of each "heavy items"
+             menu: the "replace item" menu and the infusion menu.
+
+     Inputs: ctx        - Pointer to the associated context.
+             cell_layer - Pointer to the layer of the cell to be drawn.
+             cell_index - Pointer to the index struct of the cell to be drawn.
+             data       - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void stats_menu_draw_row_callback(GContext *ctx,
+                                         const Layer *cell_layer,
+                                         MenuIndex *cell_index,
+                                         void *data)
+{
+  menu_cell_basic_draw(ctx,
+                       cell_layer,
+                       get_stat_str(cell_index->row - 1),
+                       NULL,
+                       NULL);
 }
 
 /******************************************************************************
@@ -1235,45 +1201,6 @@ static void heavy_items_menu_draw_row_callback(GContext *ctx,
 }
 
 /******************************************************************************
-   Function: stats_menu_draw_row_callback
-
-Description: Instructions for drawing the rows (cells) of each "heavy items"
-             menu: the "replace item" menu and the infusion menu.
-
-     Inputs: ctx        - Pointer to the associated context.
-             cell_layer - Pointer to the layer of the cell to be drawn.
-             cell_index - Pointer to the index struct of the cell to be drawn.
-             data       - Pointer to additional data (not used).
-
-    Outputs: None.
-******************************************************************************/
-static void stats_menu_draw_row_callback(GContext *ctx,
-                                         const Layer *cell_layer,
-                                         MenuIndex *cell_index,
-                                         void *data)
-{
-  char title_str[MENU_TITLE_STR_LEN + 1];
-
-  if (cell_index->row == AGILITY)
-  {
-    strcpy(title_str, "Agility");
-  }
-  else if (cell_index->row == STRENGTH)
-  {
-    strcpy(title_str, "Strength");
-  }
-  else // if (cell_index->row == INTELLECT)
-  {
-    strcpy(title_str, "Intellect");
-  }
-  snprintf(title_str + strlen(title_str),
-           MAX_SMALL_INT_DIGITS + 3,
-           ": %d",
-           g_player->stats[cell_index->row]);
-  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
-}
-
-/******************************************************************************
    Function: menu_select_callback
 
 Description: Called when a menu cell is selected.
@@ -1297,7 +1224,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     if (cell_index->row == 0) // Play
     {
       show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
-      if (g_player->depth == 0)
+      if (g_player->int8_stats[DEPTH] == 0)
       {
         show_narration(INTRO_NARRATION_1);
         init_location();
@@ -1315,10 +1242,10 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
   else if (menu_layer == g_menu_layers[LEVEL_UP_MENU])
   {
-    g_player->stats[cell_index->row]++;
+    g_player->int8_stats[cell_index->row + FIRST_MAJOR_STAT]++;
     set_player_minor_stats();
-    g_player->health = g_player->max_health;
-    g_player->energy = g_player->max_energy;
+    g_player->int16_stats[CURRENT_HEALTH] = g_player->int16_stats[MAX_HEALTH];
+    g_player->int16_stats[CURRENT_ENERGY] = g_player->int16_stats[MAX_ENERGY];
     window_stack_pop(NOT_ANIMATED);
     show_window(STATS_MENU, ANIMATED);
   }
@@ -1509,7 +1436,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   }
   else if (menu_layer == g_menu_layers[STATS_MENU])
   {
-    return NUM_CHARACTER_STATS;
+    return STATS_MENU_NUM_ROWS;
   }
   else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
@@ -2029,7 +1956,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Goblins, trolls, and ogres:
-  else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
+  else // if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2099,7 +2026,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Warriors:
-  else
+  /*else
   {
     // Legs:
     draw_shaded_quad(ctx,
@@ -2213,7 +2140,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
-  }
+  }*/
 }
 
 /******************************************************************************
@@ -2298,14 +2225,16 @@ void draw_status_bar(GContext *ctx)
   draw_status_meter(ctx,
                     GPoint (STATUS_METER_PADDING,
                             GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-                    (float) g_player->health / g_player->max_health);
+                    (float) g_player->int16_stats[CURRENT_HEALTH] /
+                      g_player->int16_stats[MAX_HEALTH]);
 
   // Energy meter:
   draw_status_meter(ctx,
                     GPoint (SCREEN_CENTER_POINT_X + STATUS_METER_PADDING +
                               COMPASS_RADIUS + 1,
                             GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-                    (float) g_player->energy / g_player->max_energy);
+                    (float) g_player->int16_stats[CURRENT_ENERGY] /
+                      g_player->int16_stats[MAX_HEALTH]);
 
   // Compass:
   graphics_fill_circle(ctx,
@@ -2585,9 +2514,11 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
   //Window *window = (Window *) context;
 
   if (g_current_window == GRAPHICS_WINDOW &&
-      g_player->energy >= g_player->energy_loss_per_action)
+      g_player->int16_stats[CURRENT_ENERGY] >=
+        g_player->int8_stats[ENERGY_LOSS_PER_ATTACK])
   {
-    adjust_player_current_energy(g_player->energy_loss_per_action * -1);
+    adjust_player_current_energy(g_player->int8_stats[ENERGY_LOSS_PER_ATTACK] *
+                                   -1);
 
     // Check for a targeted NPC:
     cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
@@ -2609,7 +2540,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       flash_screen();
       cast_spell_on_npc(npc,
                         g_player->equipped_pebble,
-                        g_player->magical_power);
+                        g_player->int8_stats[MAGICAL_POWER]);
     }
 
     // Otherwise, the player is attacking with a physical weapon:
@@ -2618,7 +2549,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       if (npc)
       {
         damage = damage_npc(npc,
-                            rand() % g_player->physical_power -
+                            rand() % g_player->int8_stats[PHYSICAL_POWER] -
                               rand() % npc->physical_defense);
       }
 
@@ -2626,7 +2557,8 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       {
         // Check for wound/stun effect from sharp/blunt weapons:
         if (npc &&
-            rand() % g_player->physical_power > rand() % npc->physical_defense)
+            rand() % g_player->int8_stats[PHYSICAL_POWER] >
+              rand() % npc->physical_defense)
         {
           npc->status_effects[weapon->type % 2 ? DAMAGE_OVER_TIME : STUN] +=
             damage;
@@ -2638,7 +2570,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
           flash_screen();
           cast_spell_on_npc(npc,
                             weapon->infused_pebble,
-                            g_player->magical_power / 2);
+                            g_player->int8_stats[MAGICAL_POWER] / 2);
         }
       }
 
@@ -2815,27 +2747,28 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
           else if (npc->type == MAGE && player_is_visible_to_npc)
           {
             flash_screen();
-            if (g_player->stats[SPELL_ABSORPTION] &&
-                (rand() % g_player->stats[INTELLECT] +
-                   g_player->stats[SPELL_ABSORPTION] > damage))
+            if (g_player->int8_stats[SPELL_ABSORPTION] &&
+                (rand() % g_player->int8_stats[INTELLECT] +
+                   g_player->int8_stats[SPELL_ABSORPTION] > damage))
             {
               adjust_player_current_energy(damage);
             }
             else
             {
               damage_player(damage -
-                              rand() % g_player->magical_defense);
+                              rand() % g_player->int8_stats[MAGICAL_DEFENSE]);
             }
           }
           else if ((diff_x == 0 && abs(diff_y) == 1) ||
                    (diff_y == 0 && abs(diff_x) == 1))
           {
-            damage_player(damage - rand() % g_player->physical_defense);
-            if (g_player->stats[BACKLASH_DAMAGE])
+            damage_player(damage -
+                            rand() % g_player->int8_stats[PHYSICAL_DEFENSE]);
+            if (g_player->int8_stats[BACKLASH_DAMAGE])
             {
               damage_npc(npc,
                          damage / (rand() % npc->magical_defense + 1) +
-                           g_player->stats[BACKLASH_DAMAGE]);
+                           g_player->int8_stats[BACKLASH_DAMAGE]);
             }
           }
           else
@@ -2846,7 +2779,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         }
 
         // Check for player death:
-        if (g_player->health <= 0)
+        if (g_player->int16_stats[CURRENT_HEALTH] <= 0)
         {
           return;
         }
@@ -2892,8 +2825,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Handle player stat recovery:
-    adjust_player_current_health(g_player->stats[HEALTH_REGEN]);
-    adjust_player_current_energy(g_player->stats[ENERGY_REGEN]);
+    adjust_player_current_health(g_player->int8_stats[HEALTH_REGEN]);
+    adjust_player_current_energy(g_player->int8_stats[ENERGY_REGEN]);
 
     layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
   }
@@ -2915,6 +2848,116 @@ void app_focus_handler(const bool in_focus)
   {
     show_window(MAIN_MENU, NOT_ANIMATED);
   }
+}
+
+/******************************************************************************
+   Function: get_stat_str
+
+Description: Returns a string representation of a given character stat.
+
+     Inputs: stat_index - Integer representing the character stat of interest.
+
+    Outputs: None.
+******************************************************************************/
+char *get_stat_str(const int8_t stat_index)
+{
+  static char stat_str[STAT_STR_LEN + 1];
+
+  if (stat_index == EXPERIENCE_POINTS)
+  {
+    strcpy(stat_str, "XP");
+  }
+  else if (stat_index == LEVEL)
+  {
+    strcpy(stat_str, "Level");
+  }
+  else if (stat_index == DEPTH)
+  {
+    strcpy(stat_str, "Depth");
+  }
+  else if (stat_index == AGILITY)
+  {
+    strcpy(stat_str, "Agility");
+  }
+  else if (stat_index == STRENGTH)
+  {
+    strcpy(stat_str, "Strength");
+  }
+  else if (stat_index == INTELLECT)
+  {
+    strcpy(stat_str, "Intellect");
+  }
+  else if (stat_index == ENERGY_REGEN)
+  {
+    strcpy(stat_str, "Energy Regen.");
+  }
+  else if (stat_index == HEALTH_REGEN)
+  {
+    strcpy(stat_str, "Health Regen.");
+  }
+  else if (stat_index == SPELL_ABSORPTION)
+  {
+    strcpy(stat_str, "Spell Abs.");
+  }
+  else if (stat_index == BACKLASH_DAMAGE)
+  {
+    strcpy(stat_str, "Backlash Dmg.");
+  }
+  else if (stat_index == PHYSICAL_POWER)
+  {
+    strcpy(stat_str, "Phys. Power");
+  }
+  else if (stat_index == MAGICAL_POWER)
+  {
+    strcpy(stat_str, "Mag. Power");
+  }
+  else if (stat_index == PHYSICAL_DEFENSE)
+  {
+    strcpy(stat_str, "Phys. Defense");
+  }
+  else if (stat_index == MAGICAL_DEFENSE)
+  {
+    strcpy(stat_str, "Mag. Defense");
+  }
+  else if (stat_index == ENERGY_LOSS_PER_ATTACK)
+  {
+    strcpy(stat_str, "Energy Loss");
+  }
+  else if (stat_index == NUM_INT8_STATS)
+  {
+    strcpy(stat_str, "Health");
+  }
+  else // if (stat_index == NUM_INT8_STATS + 1)
+  {
+    strcpy(stat_str, "Energy");
+  }
+
+  // Add the stat's current value:
+  strcat(stat_str, ": ");
+  if (stat_index == EXPERIENCE_POINTS)
+  {
+    snprintf(stat_str + strlen(stat_str),
+             MAX_LARGE_INT_DIGITS + 1,
+             "%u",
+             g_player->exp_points);
+  }
+  if (stat_index >= NUM_INT8_STATS)
+  {
+    snprintf(stat_str + strlen(stat_str),
+             MAX_SMALL_INT_DIGITS * 2 + 2,
+             "%d/%d",
+             g_player->int16_stats[stat_index - NUM_INT8_STATS],
+             g_player->int16_stats[stat_index - NUM_INT8_STATS + 2]);
+  }
+  else
+  {
+    snprintf(stat_str + strlen(stat_str),
+             MAX_SMALL_INT_DIGITS + 1,
+             "%d",
+             g_player->int8_stats[stat_index]);
+  }
+
+  return stat_str;
 }
 
 /******************************************************************************
@@ -3036,7 +3079,7 @@ void equip_heavy_item(heavy_item_t *const heavy_item)
     if (heavy_item->equip_target < RIGHT_HAND &&
         heavy_item->infused_pebble > NONE)
     {
-      g_player->stats[heavy_item->infused_pebble]++;
+      g_player->int8_stats[heavy_item->infused_pebble + FIRST_MAJOR_STAT]++;
     }
     set_player_minor_stats();
   }
@@ -3058,7 +3101,7 @@ void unequip_heavy_item(heavy_item_t *const heavy_item)
   if (heavy_item->equip_target < RIGHT_HAND &&
       heavy_item->infused_pebble > NONE)
   {
-    g_player->stats[heavy_item->infused_pebble]--;
+    g_player->int8_stats[heavy_item->infused_pebble + FIRST_MAJOR_STAT]--;
   }
   set_player_minor_stats();
 }
@@ -3103,31 +3146,32 @@ void set_player_minor_stats(void)
 {
   int8_t i;
 
-  g_player->physical_power   = g_player->stats[STRENGTH] +
-                                 g_player->stats[AGILITY] / 2;
-  g_player->physical_defense = g_player->stats[AGILITY] +
-                                 g_player->stats[STRENGTH] / 2;
-  g_player->magical_power    = g_player->stats[INTELLECT] +
-                                 g_player->stats[AGILITY] / 2;
-  g_player->magical_defense  = g_player->stats[AGILITY] +
-                                 g_player->stats[INTELLECT] / 2;
-  g_player->max_health       = g_player->stats[STRENGTH] * 10;
-  g_player->max_energy       = g_player->stats[INTELLECT]  * 4 +
-                                 g_player->stats[STRENGTH] * 3 +
-                                 g_player->stats[AGILITY]  * 3;
-  g_player->energy_loss_per_action  = MIN_ENERGY_LOSS_PER_ACTION;
+  g_player->int8_stats[PHYSICAL_POWER]         =
+    g_player->int8_stats[STRENGTH] + g_player->int8_stats[AGILITY] / 2;
+  g_player->int8_stats[PHYSICAL_DEFENSE]       =
+    g_player->int8_stats[AGILITY] + g_player->int8_stats[STRENGTH] / 2;
+  g_player->int8_stats[MAGICAL_POWER]          =
+    g_player->int8_stats[INTELLECT] + g_player->int8_stats[AGILITY] / 2;
+  g_player->int8_stats[MAGICAL_DEFENSE]        =
+    g_player->int8_stats[AGILITY] + g_player->int8_stats[INTELLECT] / 2;
+  g_player->int16_stats[MAX_HEALTH]            =
+    g_player->int8_stats[STRENGTH] * 10;
+  g_player->int16_stats[MAX_HEALTH]            =
+    g_player->int8_stats[INTELLECT]  * 4 + g_player->int8_stats[STRENGTH] * 3 +
+    g_player->int8_stats[AGILITY]  * 3;
+  g_player->int8_stats[ENERGY_LOSS_PER_ATTACK] = MIN_ENERGY_LOSS_PER_ATTACK;
 
   // Weapon:
   if (get_heavy_item_equipped_at(RIGHT_HAND))
   {
     for (i = DAGGER; i <= get_heavy_item_equipped_at(RIGHT_HAND)->type; i += 2)
     {
-      g_player->physical_power++;
-      g_player->energy_loss_per_action++;
+      g_player->int8_stats[PHYSICAL_POWER]++;
+      g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
     }
     if (get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
     {
-      g_player->energy_loss_per_action++;
+      g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
     }
   }
 
@@ -3136,18 +3180,18 @@ void set_player_minor_stats(void)
   {
     for (i = LIGHT_ARMOR; i <= get_heavy_item_equipped_at(BODY)->type; ++i)
     {
-      g_player->physical_defense++;
-      g_player->magical_power--;
-      g_player->energy_loss_per_action++;
+      g_player->int8_stats[PHYSICAL_DEFENSE]++;
+      g_player->int8_stats[MAGICAL_POWER]--;
+      g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
     }
   }
 
   // Shield:
   if (get_heavy_item_equipped_at(LEFT_HAND))
   {
-    g_player->physical_defense++;
-    g_player->magical_power--;
-    g_player->energy_loss_per_action++;
+    g_player->int8_stats[PHYSICAL_DEFENSE]++;
+    g_player->int8_stats[MAGICAL_POWER]--;
+    g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
   }
 }
 
@@ -3166,15 +3210,17 @@ void init_player(void)
   int8_t i;
 
   // Set major stats:
-  g_player->level      = 1;
-  g_player->exp_points = 0;
-  g_player->depth      = 0;
-  for (i = 0; i < NUM_MAJOR_STATS; ++i)
+  g_player->exp_points        = 0; // 58806 to reach max. level!
+  g_player->int8_stats[LEVEL] = 1;
+  g_player->int8_stats[DEPTH] = 0;
+  for (i = FIRST_MAJOR_STAT; i < NUM_MAJOR_STATS; ++i)
   {
-    g_player->stats[i] = DEFAULT_MAJOR_STAT_VALUE;
+    g_player->int8_stats[i] = DEFAULT_MAJOR_STAT_VALUE;
   }
-  g_player->stats[HEALTH_REGEN]    = g_player->stats[ENERGY_REGEN]     = 1;
-  g_player->stats[BACKLASH_DAMAGE] = g_player->stats[SPELL_ABSORPTION] = 0;
+  g_player->int8_stats[HEALTH_REGEN]       =
+    g_player->int8_stats[ENERGY_REGEN]     = 1;
+  g_player->int8_stats[BACKLASH_DAMAGE]    =
+    g_player->int8_stats[SPELL_ABSORPTION] = 0;
 
   // Assign starting inventory:
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
@@ -3192,8 +3238,8 @@ void init_player(void)
   equip_heavy_item(&g_player->heavy_items[0]);
 
   // Finally, ensure health and energy are at 100%:
-  g_player->health = g_player->max_health;
-  g_player->energy = g_player->max_energy;
+  g_player->int16_stats[CURRENT_HEALTH] = g_player->int16_stats[MAX_HEALTH];
+  g_player->int16_stats[CURRENT_ENERGY] = g_player->int16_stats[MAX_ENERGY];
 }
 
 /******************************************************************************
@@ -3222,7 +3268,7 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
 
   // Set stats according to current dungeon depth:
   npc->health = npc->power = npc->physical_defense = npc->magical_defense =
-    1 + g_player->depth - g_player->depth / 2;
+    1 + g_player->int8_stats[DEPTH] - g_player->int8_stats[DEPTH] / 2;
 
   // Check for increased power:
   if (type <= WHITE_BEAST_MEDIUM ||
@@ -3464,9 +3510,9 @@ void init_location(void)
     }
   }
 
-  // Increment the player's depth, then remove the exit if we're at max. depth:
-  g_player->depth++;
-  if (g_player->depth == MAX_DEPTH)
+  // Increment the player's depth, then remove the exit if at maximum depth:
+  g_player->int8_stats[DEPTH]++;
+  if (g_player->int8_stats[DEPTH] == MAX_DEPTH)
   {
     set_cell_type(builder_position, EMPTY);
   }

@@ -35,7 +35,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 
 #define DEFAULT_MAJOR_STAT_VALUE   1 // AGILITY, STRENGTH, and INTELLECT.
 #define MIN_DAMAGE_TO_NPC          1
-#define MIN_ENERGY_LOSS_PER_ACTION 3
+#define MIN_ENERGY_LOSS_PER_ATTACK 3
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
@@ -57,16 +57,32 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define MAGE               15
 #define NUM_NPC_TYPES      16
 
-// Character stats (the first seven correspond to Pebble effects):
-#define AGILITY             0
-#define STRENGTH            1
-#define INTELLECT           2
-#define HEALTH_REGEN        3
-#define BACKLASH_DAMAGE     4
-#define ENERGY_REGEN        5
-#define SPELL_ABSORPTION    6
-#define NUM_CHARACTER_STATS 7
-#define NUM_MAJOR_STATS     3 // AGILITY, STRENGTH, and INTELLECT.
+// Character stats (2-8 correspond to Pebble effects in robes/armor/shields):
+#define EXPERIENCE_POINTS      -1
+#define LEVEL                  0
+#define DEPTH                  1
+#define AGILITY                2
+#define STRENGTH               3
+#define INTELLECT              4
+#define ENERGY_REGEN           5
+#define HEALTH_REGEN           6
+#define SPELL_ABSORPTION       7
+#define BACKLASH_DAMAGE        8
+#define PHYSICAL_POWER         9
+#define MAGICAL_POWER          10
+#define PHYSICAL_DEFENSE       11
+#define MAGICAL_DEFENSE        12
+#define ENERGY_LOSS_PER_ATTACK 13
+#define NUM_INT8_STATS         14
+#define NUM_MAJOR_STATS        3 // AGILITY, STRENGTH, and INTELLECT.
+#define FIRST_MAJOR_STAT       AGILITY
+#define CURRENT_HEALTH         0
+#define CURRENT_ENERGY         1
+#define MAX_HEALTH             2
+#define MAX_ENERGY             3
+#define NUM_INT16_STATS        4
+#define STATS_MENU_NUM_ROWS    (NUM_INT8_STATS + 3)
+#define STAT_STR_LEN           22
 
 /******************************************************************************
   Location-related Constants
@@ -118,10 +134,10 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define PEBBLE_OF_THUNDER    0
 #define PEBBLE_OF_FIRE       1
 #define PEBBLE_OF_ICE        2
-#define PEBBLE_OF_LIFE       3
-#define PEBBLE_OF_DEATH      4
-#define PEBBLE_OF_LIGHT      5
-#define PEBBLE_OF_SHADOW     6
+#define PEBBLE_OF_LIGHT      3
+#define PEBBLE_OF_LIFE       4
+#define PEBBLE_OF_SHADOW     5
+#define PEBBLE_OF_DEATH      6
 #define DAGGER               7
 #define STAFF                8
 #define SWORD                9
@@ -211,6 +227,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define DEFAULT_TIMER_DURATION      20 // milliseconds
 #define DEFAULT_MAX_SMALL_INT_VALUE 100
 #define MAX_SMALL_INT_DIGITS        3
+#define MAX_LARGE_INT_DIGITS        5
 #define MAX_DEPTH                   DEFAULT_MAX_SMALL_INT_VALUE
 #define MAX_LEVEL                   DEFAULT_MAX_SMALL_INT_VALUE
 #define STORAGE_KEY                 841
@@ -231,20 +248,10 @@ typedef struct HeavyItem {
 typedef struct PlayerCharacter {
   GPoint position;
   int8_t direction,
-         stats[NUM_CHARACTER_STATS],
-         physical_power,
-         physical_defense,
-         magical_power,
-         magical_defense,
+         int8_stats[NUM_INT8_STATS],
          pebbles[NUM_PEBBLE_TYPES],
-         equipped_pebble,
-         energy_loss_per_action,
-         level,
-         depth;
-  int16_t health,
-          energy,
-          max_health,
-          max_energy;
+         equipped_pebble;
+  int16_t int16_stats[NUM_INT16_STATS];
   uint16_t exp_points;
   heavy_item_t heavy_items[MAX_HEAVY_ITEMS]; // Clothing, armor, and weapons.
 } __attribute__((__packed__)) player_t;
@@ -437,6 +444,7 @@ void graphics_click_config_provider(void *context);
 void narration_single_click(ClickRecognizerRef recognizer, void *context);
 void narration_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
+char *get_stat_str(const int8_t stat_index);
 void strcat_item_name(char *const dest_str, const int8_t item_type);
 void strcat_magic_type(char *const dest_str, const int8_t magic_type);
 void equip_heavy_item(heavy_item_t *const item);
