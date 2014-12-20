@@ -1154,12 +1154,12 @@ static void pebble_options_menu_draw_row_callback(GContext *ctx,
   if (cell_index->row == 0)
   {
     strcpy(title_str, "Equip");
-    strcpy(subtitle_str, "Cast ranged spells.");
+    strcpy(subtitle_str, "To cast ranged spells.");
   }
   else
   {
     strcpy(title_str, "Infuse into Item");
-    strcpy(subtitle_str, "Enchant a weapon, etc.");
+    strcpy(subtitle_str, "To enchant armor, etc.");
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
 }
@@ -2867,74 +2867,10 @@ char *get_stat_str(const int8_t stat_index)
 {
   static char stat_str[STAT_STR_LEN + 1];
 
-  if (stat_index == HEALTH)
-  {
-    strcpy(stat_str, "Health");
-  }
-  else if (stat_index == ENERGY)
-  {
-    strcpy(stat_str, "Energy");
-  }
-  else if (stat_index == EXPERIENCE_POINTS)
-  {
-    strcpy(stat_str, "Exp.");
-  }
-  else if (stat_index == LEVEL)
-  {
-    strcpy(stat_str, "Level");
-  }
-  else if (stat_index == DEPTH)
-  {
-    strcpy(stat_str, "Depth");
-  }
-  else if (stat_index == AGILITY)
-  {
-    strcpy(stat_str, "Agility");
-  }
-  else if (stat_index == STRENGTH)
-  {
-    strcpy(stat_str, "Strength");
-  }
-  else if (stat_index == INTELLECT)
-  {
-    strcpy(stat_str, "Intellect");
-  }
-  else if (stat_index == ENERGY_REGEN)
-  {
-    strcpy(stat_str, "Energy Regen.");
-  }
-  else if (stat_index == HEALTH_REGEN)
-  {
-    strcpy(stat_str, "Health Regen.");
-  }
-  else if (stat_index == SPELL_ABSORPTION)
-  {
-    strcpy(stat_str, "Spell Absorption");
-  }
-  else if (stat_index == BACKLASH_DAMAGE)
-  {
-    strcpy(stat_str, "Backlash Dmg.");
-  }
-  else if (stat_index == PHYSICAL_POWER)
-  {
-    strcpy(stat_str, "Phys. Power");
-  }
-  else if (stat_index == MAGICAL_POWER)
-  {
-    strcpy(stat_str, "Mag. Power");
-  }
-  else if (stat_index == PHYSICAL_DEFENSE)
-  {
-    strcpy(stat_str, "Phys. Defense");
-  }
-  else if (stat_index == MAGICAL_DEFENSE)
-  {
-    strcpy(stat_str, "Mag. Defense");
-  }
-  else // if (stat_index == ENERGY_LOSS_PER_ATTACK)
-  {
-    strcpy(stat_str, "Fatigue Rate");
-  }
+  snprintf(stat_str,
+           STAT_STR_LEN + 1,
+           "%s",
+           g_stat_names[stat_index + NUM_NEGATIVE_STAT_CONSTANTS]);
 
   // Add the stat's current value:
   strcat(stat_str, ": ");

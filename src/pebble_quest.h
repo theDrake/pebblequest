@@ -66,8 +66,8 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define AGILITY                     2
 #define STRENGTH                    3
 #define INTELLECT                   4
-#define HEALTH_REGEN                6
-#define ENERGY_REGEN                5
+#define HEALTH_REGEN                5
+#define ENERGY_REGEN                6
 #define SPELL_ABSORPTION            7
 #define BACKLASH_DAMAGE             8
 #define PHYSICAL_POWER              9
@@ -211,7 +211,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 
 #define HEAVY_ITEMS_MENU_HEADER_STR_LEN 16
 #define MENU_TITLE_STR_LEN              25
-#define MENU_SUBTITLE_STR_LEN           20
+#define MENU_SUBTITLE_STR_LEN           22
 
 /******************************************************************************
   Button-related Constants
@@ -238,7 +238,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NOT_ANIMATED                false
 
 /******************************************************************************
-  Structures
+  Structure Definitions
 ******************************************************************************/
 
 typedef struct HeavyItem {
@@ -300,6 +300,26 @@ bool g_player_is_attacking;
 GPath *g_compass_path;
 player_t *g_player;
 location_t *g_location;
+
+static const char *const g_stat_names[] = {
+  "Health",
+  "Energy",
+  "Exp.",
+  "Level"
+  "Depth",
+  "Agility",
+  "Strength",
+  "Intellect",
+  "Energy Regen.",
+  "Health Regen.",
+  "Spell Absorption",
+  "Backlash Dmg.",
+  "Phys. Power",
+  "Mag. Power",
+  "Phys. Defense",
+  "Mag. Defense",
+  "Fatigue Rate",
+};
 
 static const GPathInfo COMPASS_PATH_INFO = {
   .num_points = 4,
