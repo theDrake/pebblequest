@@ -2941,7 +2941,7 @@ char *get_stat_str(const int8_t stat_index)
              "%u",
              g_player->exp_points);
   }
-  if (stat_index >= NUM_INT8_STATS)
+  else if (stat_index >= NUM_INT8_STATS)
   {
     snprintf(stat_str + strlen(stat_str),
              MAX_SMALL_INT_DIGITS * 2 + 2,
