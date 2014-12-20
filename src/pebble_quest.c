@@ -267,7 +267,7 @@ int8_t adjust_player_current_health(const int8_t amount)
   }
   else if (g_player->int16_stats[CURRENT_HEALTH] <= 0)
   {
-    show_window(MAIN_MENU, NOT_ANIMATED);
+    show_window(STATS_MENU, NOT_ANIMATED);
     show_narration(DEATH_NARRATION);
   }
 
@@ -2387,9 +2387,17 @@ Description: Called when the graphics window appears.
 ******************************************************************************/
 static void graphics_window_appear(Window *window)
 {
-  layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
-  g_player_is_attacking = false;
-  g_current_window      = GRAPHICS_WINDOW;
+  if (g_player->int16_stats[CURRENT_HEALTH] <= 0)
+  {
+    show_window(MAIN_MENU, NOT_ANIMATED);
+    init_player();
+  }
+  else
+  {
+    layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
+    g_player_is_attacking = false;
+    g_current_window      = GRAPHICS_WINDOW;
+  }
 }
 
 /******************************************************************************
@@ -2656,6 +2664,7 @@ void narration_single_click(ClickRecognizerRef recognizer, void *context)
   else
   {
     window_stack_pop(NOT_ANIMATED);
+
   }
 }
 
