@@ -82,7 +82,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define MAX_ENERGY             3
 #define NUM_INT16_STATS        4
 #define STATS_MENU_NUM_ROWS    (NUM_INT8_STATS + 3)
-#define STAT_STR_LEN           22
+#define STAT_STR_LEN           18
 
 /******************************************************************************
   Location-related Constants

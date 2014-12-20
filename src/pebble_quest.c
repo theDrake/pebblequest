@@ -2921,7 +2921,7 @@ char *get_stat_str(const int8_t stat_index)
   }
   else if (stat_index == ENERGY_LOSS_PER_ATTACK)
   {
-    strcpy(stat_str, "Energy Loss");
+    strcpy(stat_str, "Fatigue Rate");
   }
   else if (stat_index == NUM_INT8_STATS)
   {
@@ -3213,7 +3213,7 @@ void init_player(void)
   g_player->exp_points        = 0; // 58806 to reach max. level!
   g_player->int8_stats[LEVEL] = 1;
   g_player->int8_stats[DEPTH] = 0;
-  for (i = FIRST_MAJOR_STAT; i < NUM_MAJOR_STATS; ++i)
+  for (i = FIRST_MAJOR_STAT; i < NUM_MAJOR_STATS + FIRST_MAJOR_STAT; ++i)
   {
     g_player->int8_stats[i] = DEFAULT_MAJOR_STAT_VALUE;
   }
