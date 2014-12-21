@@ -1023,12 +1023,12 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
                                              MenuIndex *cell_index,
                                              void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1]       = "",
+  char title_str[MENU_TITLE_STR_LEN + 1],
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
-  heavy_item_t *item;
+  heavy_item_t *heavy_item;
   int8_t item_type = get_nth_item_type(cell_index->row);
 
-  strcat_item_name(title_str, item_type);
+  strcpy(title_str, g_item_names[item_type]);
 
   // Pebbles:
   if (item_type < FIRST_HEAVY_ITEM)
@@ -1043,13 +1043,10 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
   // Heavy items:
   else
   {
-    item = &g_player->heavy_items[cell_index->row -
-                                    get_num_pebble_types_owned()];
-    if (item->infused_pebble > NONE)
-    {
-      strcat_magic_type(title_str, item->infused_pebble);
-    }
-    if (item->equipped)
+    heavy_item = &g_player->heavy_items[cell_index->row -
+                                          get_num_pebble_types_owned()];
+    strcat(title_str, g_magic_type_names[heavy_item->infused_pebble + 1]);
+    if (heavy_item->equipped)
     {
       strcat(subtitle_str, "Equipped");
     }
@@ -1124,10 +1121,11 @@ static void loot_menu_draw_row_callback(GContext *ctx,
                                         MenuIndex *cell_index,
                                         void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1] = "";
-
-  strcat_item_name(title_str, g_current_selection);
-  menu_cell_basic_draw(ctx, cell_layer, title_str, NULL, NULL);
+  menu_cell_basic_draw(ctx,
+                       cell_layer,
+                       g_item_names(g_current_selection),
+                       NULL,
+                       NULL);
 }
 
 /******************************************************************************
@@ -1182,15 +1180,12 @@ static void heavy_items_menu_draw_row_callback(GContext *ctx,
                                                MenuIndex *cell_index,
                                                void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1]       = "",
+  char title_str[MENU_TITLE_STR_LEN + 1],
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
   heavy_item_t *heavy_item = &g_player->heavy_items[cell_index->row];
 
-  strcat_item_name(title_str, heavy_item->type);
-  if (heavy_item->infused_pebble > NONE)
-  {
-    strcat_magic_type(title_str, heavy_item->infused_pebble);
-  }
+  strcpy(title_str, g_item_names(heavy_item->type));
+  strcat(title_str, g_magic_type_names[heavy_item->infused_pebble + 1]);
   if (heavy_item->equipped)
   {
     strcpy(subtitle_str, "Equipped");
@@ -2857,34 +2852,36 @@ void app_focus_handler(const bool in_focus)
 /******************************************************************************
    Function: get_stat_str
 
-Description: Returns a string representation of a given character stat.
+Description: Returns a string representation of a given character stat,
+             including both the stat's name and its current value.
 
      Inputs: stat_index - Integer representing the character stat of interest.
 
-    Outputs: None.
+    Outputs: String containing the stat name and its current value.
 ******************************************************************************/
 char *get_stat_str(const int8_t stat_index)
 {
   static char stat_str[STAT_STR_LEN + 1];
+  int8_t remaining_str_len;
 
   snprintf(stat_str,
            STAT_STR_LEN + 1,
-           "%s",
+           "%s: ",
            g_stat_names[stat_index + NUM_NEGATIVE_STAT_CONSTANTS]);
 
   // Add the stat's current value:
-  strcat(stat_str, ": ");
+  remaining_str_len = STAT_STR_LEN - strlen(stat_str) + 1;
   if (stat_index == EXPERIENCE_POINTS)
   {
     snprintf(stat_str + strlen(stat_str),
-             MAX_LARGE_INT_DIGITS + 1,
+             remaining_str_len,
              "%u",
              g_player->exp_points);
   }
   else if (stat_index < 0)
   {
     snprintf(stat_str + strlen(stat_str),
-             MAX_SMALL_INT_DIGITS * 2 + 2,
+             remaining_str_len,
              "%d/%d",
              g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS],
              g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS +
@@ -2893,106 +2890,12 @@ char *get_stat_str(const int8_t stat_index)
   else
   {
     snprintf(stat_str + strlen(stat_str),
-             MAX_SMALL_INT_DIGITS + 1,
+             remaining_str_len,
              "%d",
              g_player->int8_stats[stat_index]);
   }
 
   return stat_str;
-}
-
-/******************************************************************************
-   Function: strcat_item_name
-
-Description: Concatenates the name of a given item onto a given string.
-
-     Inputs: dest_str  - Pointer to the destination string.
-             item_type - Integer representing the item of interest.
-
-    Outputs: None.
-******************************************************************************/
-void strcat_item_name(char *const dest_str, const int8_t item_type)
-{
-  if (item_type < FIRST_HEAVY_ITEM)
-  {
-    strcat(dest_str, "Pebble");
-    strcat_magic_type(dest_str, item_type);
-  }
-  else
-  {
-    switch(item_type)
-    {
-      case DAGGER:
-        strcat(dest_str, "Dagger");
-        break;
-      case STAFF:
-        strcat(dest_str, "Staff");
-        break;
-      case SWORD:
-        strcat(dest_str, "Sword");
-        break;
-      case MACE:
-        strcat(dest_str, "Mace");
-        break;
-      case AXE:
-        strcat(dest_str, "Axe");
-        break;
-      case FLAIL:
-        strcat(dest_str, "Flail");
-        break;
-      case SHIELD:
-        strcat(dest_str, "Shield");
-        break;
-      case ROBE:
-        strcat(dest_str, "Robe");
-        break;
-      case LIGHT_ARMOR:
-        strcat(dest_str, "L. Armor");
-        break;
-      case HEAVY_ARMOR:
-        strcat(dest_str, "H. Armor");
-        break;
-    }
-  }
-}
-
-/******************************************************************************
-   Function: strcat_magic_type
-
-Description: Concatenates the name of a given magic type onto a given string.
-
-     Inputs: dest_str   - Pointer to the destination string.
-             magic_type - Integer representing the desired magic type.
-
-    Outputs: None.
-******************************************************************************/
-void strcat_magic_type(char *const dest_str, const int8_t magic_type)
-{
-  strcat(dest_str, " of ");
-  switch(magic_type)
-  {
-    case PEBBLE_OF_THUNDER:
-      strcat(dest_str, "Thunder");
-      break;
-    case PEBBLE_OF_FIRE:
-      strcat(dest_str, "Fire");
-      break;
-    case PEBBLE_OF_ICE:
-      strcat(dest_str, "Ice");
-      break;
-    case PEBBLE_OF_LIFE:
-      strcat(dest_str, "Life");
-      break;
-    case PEBBLE_OF_DEATH:
-      strcat(dest_str, "Death");
-      break;
-    case PEBBLE_OF_LIGHT:
-      strcat(dest_str, "Light");
-      break;
-    default: // case PEBBLE_OF_SHADOW:
-      strcat(dest_str, "Shadow");
-      break;
-  }
 }
 
 /******************************************************************************

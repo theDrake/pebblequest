@@ -157,6 +157,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define FIRST_HEAVY_ITEM     DAGGER
 #define MAX_HEAVY_ITEMS      4
 #define RANDOM_ITEM          (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
+#define ITEM_STR_LEN         19
 
 // Equip targets (i.e., places where an item may be equipped):
 #define BODY              0
@@ -321,6 +322,37 @@ static const char *const g_stat_names[] = {
   "Fatigue Rate",
 };
 
+static const char *const g_item_names[] = {
+  "Pebble of Thunder",
+  "Pebble of Fire",
+  "Pebble of Ice",
+  "Pebble of Life",
+  "Pebble of Light"
+  "Pebble of Shadow",
+  "Pebble of Death",
+  "Dagger",
+  "Staff",
+  "Sword",
+  "Mace"
+  "Axe",
+  "Flail",
+  "Shield",
+  "Robe",
+  "L. Armor",
+  "H. Armor",
+};
+
+static const char *const g_magic_type_names[] = {
+  "",
+  " of Thunder",
+  " of Fire",
+  " of Ice",
+  " of Life",
+  " of Light"
+  " of Shadow",
+  " of Death",
+};
+
 static const GPathInfo COMPASS_PATH_INFO = {
   .num_points = 4,
   .points = (GPoint []) {{-3, -3},
@@ -468,8 +500,6 @@ void narration_single_click(ClickRecognizerRef recognizer, void *context);
 void narration_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
 char *get_stat_str(const int8_t stat_index);
-void strcat_item_name(char *const dest_str, const int8_t item_type);
-void strcat_magic_type(char *const dest_str, const int8_t magic_type);
 void equip_heavy_item(heavy_item_t *const item);
 void unequip_heavy_item(heavy_item_t *const heavy_item);
 void unequip_item_at(const int8_t equip_target);
