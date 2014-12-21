@@ -71,8 +71,8 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define SPELL_ABSORPTION            7
 #define BACKLASH_DAMAGE             8
 #define PHYSICAL_POWER              9
-#define MAGICAL_POWER               10
-#define PHYSICAL_DEFENSE            11
+#define PHYSICAL_DEFENSE            10
+#define MAGICAL_POWER               11
 #define MAGICAL_DEFENSE             12
 #define ENERGY_LOSS_PER_ATTACK      13
 #define NUM_INT8_STATS              14
@@ -115,7 +115,6 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
   Narration-related Constants
 ******************************************************************************/
 
-#define NARRATION_STR_LEN          103
 #define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 
@@ -302,6 +301,16 @@ GPath *g_compass_path;
 player_t *g_player;
 location_t *g_location;
 
+static const char *const g_narration_strings[] = {
+  "The Elderstone was destroyed by evil wizards, split into countless Pebbles of Power they now control.",
+  "You have entered the wizards' vast underground lair to recover the Pebbles and save the realm.",
+  "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
+  "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
+  "Alas, another hero has perished in the dank, dark depths. A new champion must arise to save humanity!",
+  "\n  You have gained\n        a level of\n      experience!",
+  "Congratulations, Hero of the Realm! You've slain all the evil mages and recovered every Pebble. Huzzah!",
+};
+
 static const char *const g_stat_names[] = {
   "Health",
   "Energy",
@@ -311,13 +320,13 @@ static const char *const g_stat_names[] = {
   "Agility",
   "Strength",
   "Intellect",
-  "Energy Regen.",
   "Health Regen.",
+  "Energy Regen.",
   "Spell Absorption",
   "Backlash Dmg.",
   "Phys. Power",
-  "Mag. Power",
   "Phys. Defense",
+  "Mag. Power",
   "Mag. Defense",
   "Fatigue Rate",
 };

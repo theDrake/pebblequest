@@ -732,46 +732,7 @@ Description: Displays desired narration text via the narration window.
 ******************************************************************************/
 int8_t show_narration(const int8_t narration)
 {
-  static char narration_str[NARRATION_STR_LEN + 1];
-
-  switch (narration)
-  {
-    case INTRO_NARRATION_1: // Total chars: 101
-      strcpy(narration_str,
-             "The Elderstone was destroyed by evil wizards, split into "
-               "countless Pebbles of Power they now control.");
-      break;
-    case INTRO_NARRATION_2: // Total chars: 94
-      strcpy(narration_str,
-             "You have entered the wizards' vast underground lair to recover "
-               "the Pebbles and save the realm.");
-      break;
-    case INTRO_NARRATION_3: // Total chars: 91
-      strcpy(narration_str,
-             "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\n"
-               "davidcdrake.com/\n            pebblequest");
-      break;
-    case INTRO_NARRATION_4: // Total chars: 93
-      strcpy(narration_str,
-             "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" "
-               "x 2\nRight: \"Down\" x 2\nAttack: \"Select\"");
-      break;
-    case DEATH_NARRATION: // Total chars: 101
-      strcpy(narration_str,
-             "Alas, another hero has perished in the dank, dark depths. A new "
-               "champion must arise to save humanity!");
-      break;
-    case LEVEL_UP_NARRATION: // Total chars: 55
-      strcpy(narration_str,
-             "\n  You have gained\n        a level of\n      experience!");
-      break;
-    default: // case ENDING_NARRATION: // Total chars: 103
-      strcpy(narration_str,
-             "Congratulations, Hero of the Realm! You've slain all the evil "
-               "mages and recovered every Pebble. Huzzah!");
-      break;
-  }
-  text_layer_set_text(g_narration_text_layer, narration_str);
+  text_layer_set_text(g_narration_text_layer, g_narration_strings[narration]);
   show_window(NARRATION_WINDOW, NOT_ANIMATED);
 
   return g_current_narration = narration;
@@ -859,7 +820,7 @@ static void level_up_menu_draw_header_callback(GContext *ctx,
                                                uint16_t section_index,
                                                void *data)
 {
-  menu_cell_basic_header_draw(ctx, cell_layer, "BOOST an ATTRIBUTE!");
+  menu_cell_basic_header_draw(ctx, cell_layer, "BOOST AN ATTRIBUTE");
 }
 
 /******************************************************************************
@@ -963,7 +924,7 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
 
   snprintf(header_str,
            HEAVY_ITEMS_MENU_HEADER_STR_LEN + 1,
-           "%s an ITEM?",
+           "%s AN ITEM?",
            g_current_selection < FIRST_HEAVY_ITEM ? "ENCHANT" : "REPLACE");
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
@@ -1152,12 +1113,12 @@ static void pebble_options_menu_draw_row_callback(GContext *ctx,
   if (cell_index->row == 0)
   {
     strcpy(title_str, "Equip");
-    strcpy(subtitle_str, "To cast ranged spells.");
+    strcpy(subtitle_str, "Cast ranged spells.");
   }
   else
   {
     strcpy(title_str, "Infuse into Item");
-    strcpy(subtitle_str, "To enchant armor, etc.");
+    strcpy(subtitle_str, "Enchant a weapon, etc.");
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
 }
@@ -1290,7 +1251,7 @@ void menu_select_callback(MenuLayer *menu_layer,
       }
 
       // If we reach this point, a heavy item must be dropped to add a new one:
-      show_window(HEAVY_ITEMS_MENU, ANIMATED);
+      show_window(HEAVY_ITEMS_MENU, NOT_ANIMATED);
     }
   }
   else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU])
@@ -1951,7 +1912,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Goblins, trolls, and ogres:
-  else // if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
+  else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2021,7 +1982,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Warriors:
-  /*else
+  else
   {
     // Legs:
     draw_shaded_quad(ctx,
@@ -2135,7 +2096,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
-  }*/
+  }
 }
 
 /******************************************************************************
@@ -2229,7 +2190,7 @@ void draw_status_bar(GContext *ctx)
                               COMPASS_RADIUS + 1,
                             GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
                     (float) g_player->int16_stats[CURRENT_ENERGY] /
-                      g_player->int16_stats[MAX_HEALTH]);
+                      g_player->int16_stats[MAX_ENERGY]);
 
   // Compass:
   graphics_fill_circle(ctx,
