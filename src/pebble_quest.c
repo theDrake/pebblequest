@@ -2971,7 +2971,7 @@ void set_player_minor_stats(void)
   {
     for (i = DAGGER; i <= get_heavy_item_equipped_at(RIGHT_HAND)->type; i += 2)
     {
-      g_player->int8_stats[PHYSICAL_POWER]++;
+      g_player->int8_stats[PHYSICAL_POWER] += 2;
       g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
     }
     if (get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
@@ -2985,7 +2985,7 @@ void set_player_minor_stats(void)
   {
     for (i = LIGHT_ARMOR; i <= get_heavy_item_equipped_at(BODY)->type; ++i)
     {
-      g_player->int8_stats[PHYSICAL_DEFENSE]++;
+      g_player->int8_stats[PHYSICAL_DEFENSE] += 2;
       g_player->int8_stats[MAGICAL_POWER]--;
       g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
     }
@@ -2994,7 +2994,7 @@ void set_player_minor_stats(void)
   // Shield:
   if (get_heavy_item_equipped_at(LEFT_HAND))
   {
-    g_player->int8_stats[PHYSICAL_DEFENSE]++;
+    g_player->int8_stats[PHYSICAL_DEFENSE] += 2;
     g_player->int8_stats[MAGICAL_POWER]--;
     g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
   }
@@ -3323,8 +3323,9 @@ void init_location(void)
     set_cell_type(builder_position, EMPTY);
   }
 
-  // Finally, add a mage at the exit point:
+  // Finally, add a mage at the exit point and save game data:
   add_new_npc(MAGE, builder_position);
+  save_game_data();
 }
 
 /******************************************************************************
@@ -3523,6 +3524,21 @@ void deinit_window(const int8_t window_index)
 }
 
 /******************************************************************************
+   Function: save_game_data
+
+Description: Saves player and location data to persistent storage.
+
+     Inputs: None.
+
+    Outputs: None.
+******************************************************************************/
+void save_game_data(void)
+{
+  persist_write_data(STORAGE_KEY, g_player, sizeof(player_t));
+  persist_write_data(STORAGE_KEY + 1, g_location, sizeof(location_t));
+}
+
+/******************************************************************************
    Function: init
 
 Description: Initializes the PebbleQuest app.
@@ -3567,9 +3583,10 @@ void init(void)
   }
   show_window(MAIN_MENU, ANIMATED);
 
-  // Subscribe to relevant services:
+  // Subscribe to relevant services and turn on backlight:
   app_focus_service_subscribe(app_focus_handler);
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+  light_enable(true);
 }
 
 /******************************************************************************
@@ -3585,10 +3602,10 @@ void deinit(void)
 {
   int8_t i;
 
+  save_game_data();
+  light_enable(false);
   tick_timer_service_unsubscribe();
   app_focus_service_unsubscribe();
-  persist_write_data(STORAGE_KEY, g_player, sizeof(player_t));
-  persist_write_data(STORAGE_KEY + 1, g_location, sizeof(location_t));
   free(g_player);
   free(g_location);
   for (i = 0; i < NUM_WINDOWS; ++i)

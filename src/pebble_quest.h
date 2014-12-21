@@ -302,8 +302,8 @@ player_t *g_player;
 location_t *g_location;
 
 static const char *const g_narration_strings[] = {
-  "The Elderstone was destroyed by evil wizards, split into countless Pebbles of Power they now control.",
-  "You have entered the wizards' vast underground lair to recover the Pebbles and save the realm.",
+  "Evil mages stole the Elderstone and sundered it, creating myriad Pebbles of Power.",
+  "You have entered the mages' vast underground lair to recover the Pebbles and save the realm.",
   "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
   "Alas, another hero has perished in the dank, dark depths. A new champion must arise to save humanity!",
@@ -520,6 +520,7 @@ void init_wall_coords(void);
 void init_location(void);
 void init_window(const int8_t window_index);
 void deinit_window(const int8_t window_index);
+void save_game_data(void);
 void init(void);
 void deinit(void);
 int main(void);
