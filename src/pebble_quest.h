@@ -306,7 +306,7 @@ static const char *const g_stat_names[] = {
   "Health",
   "Energy",
   "Exp.",
-  "Level"
+  "Level",
   "Depth",
   "Agility",
   "Strength",
@@ -327,13 +327,13 @@ static const char *const g_item_names[] = {
   "Pebble of Fire",
   "Pebble of Ice",
   "Pebble of Life",
-  "Pebble of Light"
+  "Pebble of Light",
   "Pebble of Shadow",
   "Pebble of Death",
   "Dagger",
   "Staff",
   "Sword",
-  "Mace"
+  "Mace",
   "Axe",
   "Flail",
   "Shield",
@@ -348,7 +348,7 @@ static const char *const g_magic_type_names[] = {
   " of Fire",
   " of Ice",
   " of Life",
-  " of Light"
+  " of Light",
   " of Shadow",
   " of Death",
 };
