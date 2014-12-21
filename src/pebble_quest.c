@@ -1123,7 +1123,7 @@ static void loot_menu_draw_row_callback(GContext *ctx,
 {
   menu_cell_basic_draw(ctx,
                        cell_layer,
-                       g_item_names(g_current_selection),
+                       g_item_names[g_current_selection],
                        NULL,
                        NULL);
 }
@@ -1184,7 +1184,7 @@ static void heavy_items_menu_draw_row_callback(GContext *ctx,
        subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
   heavy_item_t *heavy_item = &g_player->heavy_items[cell_index->row];
 
-  strcpy(title_str, g_item_names(heavy_item->type));
+  strcpy(title_str, g_item_names[heavy_item->type]);
   strcat(title_str, g_magic_type_names[heavy_item->infused_pebble + 1]);
   if (heavy_item->equipped)
   {
