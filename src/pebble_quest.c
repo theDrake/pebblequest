@@ -3310,7 +3310,7 @@ void init_location(void)
     }
 
     // Ensure a mage will be generated next to the exit:
-    init_npc(g_location->npcs[0], MAGE, builder_position);
+    init_npc(&g_location->npcs[0], MAGE, builder_position);
 
     // 25% chance of turning:
     if (rand() % NUM_DIRECTIONS == 0)
