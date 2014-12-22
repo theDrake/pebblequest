@@ -303,20 +303,20 @@ player_t *g_player;
 location_t *g_location;
 
 static const char *const g_narration_strings[] = {
-  "Evil mages stole the Elderstone and sundered it, creating myriad Pebbles of Power.",
+  "Evil mages stole the Elderstone and sundered it to create the Pebbles of Power they now control.",
   "You have entered the mages' vast underground lair to recover the Pebbles and save the realm.",
   "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
-  "You're already at your weight capacity! Drop an old item if you're sure you want this new one.",
+  "You're at max. weight capacity! Drop an old item if you're sure you want to keep this new one.",
   "Alas, another hero has perished in the dank, dark depths. A new champion must arise to save humanity!",
   "\n  You have gained\n        a level of\n      experience!",
-  "Congratulations, Hero of the Realm! You've slain all the evil mages and recovered every Pebble. Huzzah!",
+  "Congratulations, hero of the realm! You've slain all the evil mages and recovered every Pebble. Huzzah!",
 };
 
 static const char *const g_stat_names[] = {
   "Health",
   "Energy",
-  "Exp.",
+  "XP",
   "Level",
   "Depth",
   "Agility",

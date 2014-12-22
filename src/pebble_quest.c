@@ -187,7 +187,7 @@ int8_t damage_npc(npc_t *const npc, int8_t damage)
 
     // Drop loot, if any (extra checks here are to avoid overwriting Pebbles):
     if (npc->type == MAGE ||
-        (npc->item > NONE && get_cell_type(npc->position) < 0))
+        (npc->item > NONE && get_cell_type(npc->position) < EXIT))
     {
       set_cell_type(npc->position, npc->item);
     }
@@ -308,7 +308,7 @@ bool add_new_npc(const int8_t npc_type, const GPoint position)
   int8_t i;
   npc_t *npc;
 
-  if (occupiable(position))
+  if (occupiable(position) && get_cell_type(position) != EXIT)
   {
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
     {
@@ -925,7 +925,7 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
   snprintf(header_str,
            HEAVY_ITEMS_MENU_HEADER_STR_LEN + 1,
            "%s AN ITEM?",
-           g_current_selection < FIRST_HEAVY_ITEM ? "ENCHANT" : "REPLACE");
+           g_current_selection < FIRST_HEAVY_ITEM ? "ENCHANT" : "DROP");
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
@@ -3309,6 +3309,9 @@ void init_location(void)
         break;
     }
 
+    // Ensure a mage will be generated next to the exit:
+    init_npc(g_location->npcs[0], MAGE, builder_position);
+
     // 25% chance of turning:
     if (rand() % NUM_DIRECTIONS == 0)
     {
@@ -3323,8 +3326,7 @@ void init_location(void)
     set_cell_type(builder_position, EMPTY);
   }
 
-  // Finally, add a mage at the exit point and save game data:
-  add_new_npc(MAGE, builder_position);
+  // Finally, save game data (in case the game crashes, which is unlikely):
   save_game_data();
 }
 
