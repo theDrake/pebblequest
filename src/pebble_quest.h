@@ -79,7 +79,6 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NUM_MAJOR_STATS             3 // AGILITY, STRENGTH, and INTELLECT.
 #define FIRST_MAJOR_STAT            AGILITY
 #define NUM_NEGATIVE_STAT_CONSTANTS 3
-#define STAT_STR_LEN                19
 #define CURRENT_HEALTH              0
 #define CURRENT_ENERGY              1
 #define MAX_HEALTH                  2
@@ -156,7 +155,6 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define FIRST_HEAVY_ITEM     DAGGER
 #define MAX_HEAVY_ITEMS      4
 #define RANDOM_ITEM          (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
-#define ITEM_STR_LEN         19
 
 // Equip targets (i.e., places where an item may be equipped):
 #define BODY              0
@@ -210,8 +208,9 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 #define HEAVY_ITEMS_MENU_HEADER_STR_LEN 16
-#define MENU_TITLE_STR_LEN              25
-#define MENU_SUBTITLE_STR_LEN           22
+#define ITEM_TITLE_STR_LEN              19
+#define ITEM_SUBTITLE_STR_LEN           13
+#define STAT_TITLE_STR_LEN              19
 #define STATS_MENU_NUM_ROWS             (NUM_INT8_STATS + NUM_NEGATIVE_STAT_CONSTANTS)
 #define LEVEL_UP_MENU_NUM_ROWS          NUM_MAJOR_STATS // 3
 #define MAIN_MENU_NUM_ROWS              3
@@ -312,10 +311,10 @@ static const char *const g_narration_strings[] = {
   "You have entered the wizards' vast underground lair to recover the Pebbles and save the realm.",
   "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
-  "You're at maximum weight capacity! Drop an old item if you're sure you want to keep this new one.",
+  "You're at your maximum weight capacity! Drop an old item if you're sure you want to keep this new one.",
   "Alas, another hero has perished in the dank, dark depths. A new champion must arise to save humanity!",
   "\n  You have gained\n        a level of\n      experience!",
-  "Congratulations, hero of the realm! You've slain all the evil mages and recovered every Pebble. Huzzah!",
+  "Congratulations, hero of the realm! You've slain all the evil mages and restored peace and order. Huzzah!",
 };
 
 static const char *const g_main_menu_strings[] = {
@@ -323,7 +322,7 @@ static const char *const g_main_menu_strings[] = {
   "Inventory",
   "Character Stats",
   "Dungeon-crawl, baby!",
-  "Equip/enchant items.",
+  "Equip/infuse items.",
   "Health, Energy...",
 };
 
@@ -422,6 +421,7 @@ heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target);
 int8_t get_cell_type(const GPoint cell);
 void set_cell_type(GPoint cell, const int8_t type);
 npc_t *get_npc_at(const GPoint cell);
+char *get_stat_title_str(const int8_t stat_index);
 bool occupiable(const GPoint cell);
 int8_t show_narration(const int8_t narration);
 int8_t show_window(const int8_t window, const bool animated);
@@ -531,7 +531,6 @@ void graphics_click_config_provider(void *context);
 void narration_single_click(ClickRecognizerRef recognizer, void *context);
 void narration_click_config_provider(void *context);
 void app_focus_handler(const bool in_focus);
-char *get_stat_str(const int8_t stat_index);
 void equip_heavy_item(heavy_item_t *const item);
 void unequip_heavy_item(heavy_item_t *const heavy_item);
 void unequip_item_at(const int8_t equip_target);

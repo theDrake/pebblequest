@@ -704,6 +704,55 @@ npc_t *get_npc_at(const GPoint cell)
 }
 
 /******************************************************************************
+   Function: get_stat_title_str
+
+Description: Returns a "title" string for a given character stat, including
+             both the stat's name and its current value.
+
+     Inputs: stat_index - Integer representing the stat of interest.
+
+    Outputs: String containing the stat name and its current value.
+******************************************************************************/
+char *get_stat_title_str(const int8_t stat_index)
+{
+  static char stat_str[STAT_TITLE_STR_LEN + 1];
+  int8_t remaining_str_len;
+
+  snprintf(stat_str,
+           STAT_TITLE_STR_LEN + 1,
+           "%s: ",
+           g_stat_names[stat_index + NUM_NEGATIVE_STAT_CONSTANTS]);
+
+  // Add the stat's current value:
+  remaining_str_len = STAT_TITLE_STR_LEN - strlen(stat_str) + 1;
+  if (stat_index == EXPERIENCE_POINTS)
+  {
+    snprintf(stat_str + strlen(stat_str),
+             remaining_str_len,
+             "%u",
+             g_player->exp_points);
+  }
+  else if (stat_index < 0)
+  {
+    snprintf(stat_str + strlen(stat_str),
+             remaining_str_len,
+             "%d/%d",
+             g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS],
+             g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS +
+                                     2]);
+  }
+  else
+  {
+    snprintf(stat_str + strlen(stat_str),
+             remaining_str_len,
+             "%d",
+             g_player->int8_stats[stat_index]);
+  }
+
+  return stat_str;
+}
+
+/******************************************************************************
    Function: occupiable
 
 Description: Determines whether the cell at a given set of coordinates may be
@@ -971,8 +1020,8 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
                                              MenuIndex *cell_index,
                                              void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1],
-       subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
+  char title_str[ITEM_TITLE_STR_LEN + 1],
+       subtitle_str[ITEM_SUBTITLE_STR_LEN + 1] = "";
   heavy_item_t *heavy_item;
   int8_t item_type = get_nth_item_type(cell_index->row);
 
@@ -981,7 +1030,7 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
   // Pebbles:
   if (item_type < FIRST_HEAVY_ITEM)
   {
-    snprintf(subtitle_str, 5, "(%d) ", g_player->pebbles[item_type]);
+    snprintf(subtitle_str, 6, "(%d) ", g_player->pebbles[item_type]);
     if (g_player->equipped_pebble == item_type)
     {
       strcat(subtitle_str, EQUIPPED_STR);
@@ -1021,7 +1070,7 @@ static void level_up_menu_draw_row_callback(GContext *ctx,
 {
   menu_cell_basic_draw(ctx,
                        cell_layer,
-                       get_stat_str(cell_index->row + FIRST_MAJOR_STAT),
+                       get_stat_title_str(cell_index->row + FIRST_MAJOR_STAT),
                        NULL,
                        NULL);
 }
@@ -1046,8 +1095,8 @@ static void stats_menu_draw_row_callback(GContext *ctx,
 {
   menu_cell_basic_draw(ctx,
                        cell_layer,
-                       get_stat_str(cell_index->row -
-                                      NUM_NEGATIVE_STAT_CONSTANTS),
+                       get_stat_title_str(cell_index->row -
+                                            NUM_NEGATIVE_STAT_CONSTANTS),
                        NULL,
                        NULL);
 }
@@ -1120,8 +1169,8 @@ static void heavy_items_menu_draw_row_callback(GContext *ctx,
                                                MenuIndex *cell_index,
                                                void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1],
-       subtitle_str[MENU_SUBTITLE_STR_LEN + 1] = "";
+  char title_str[ITEM_TITLE_STR_LEN + 1],
+       subtitle_str[ITEM_SUBTITLE_STR_LEN + 1] = "";
   heavy_item_t *heavy_item = &g_player->heavy_items[cell_index->row];
 
   strcpy(title_str, g_item_names[heavy_item->type]);
@@ -2787,55 +2836,6 @@ void app_focus_handler(const bool in_focus)
   {
     show_window(MAIN_MENU, NOT_ANIMATED);
   }
-}
-
-/******************************************************************************
-   Function: get_stat_str
-
-Description: Returns a string representation of a given character stat,
-             including both the stat's name and its current value.
-
-     Inputs: stat_index - Integer representing the character stat of interest.
-
-    Outputs: String containing the stat name and its current value.
-******************************************************************************/
-char *get_stat_str(const int8_t stat_index)
-{
-  static char stat_str[STAT_STR_LEN + 1];
-  int8_t remaining_str_len;
-
-  snprintf(stat_str,
-           STAT_STR_LEN + 1,
-           "%s: ",
-           g_stat_names[stat_index + NUM_NEGATIVE_STAT_CONSTANTS]);
-
-  // Add the stat's current value:
-  remaining_str_len = STAT_STR_LEN - strlen(stat_str) + 1;
-  if (stat_index == EXPERIENCE_POINTS)
-  {
-    snprintf(stat_str + strlen(stat_str),
-             remaining_str_len,
-             "%u",
-             g_player->exp_points);
-  }
-  else if (stat_index < 0)
-  {
-    snprintf(stat_str + strlen(stat_str),
-             remaining_str_len,
-             "%d/%d",
-             g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS],
-             g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS +
-                                     2]);
-  }
-  else
-  {
-    snprintf(stat_str + strlen(stat_str),
-             remaining_str_len,
-             "%d",
-             g_player->int8_stats[stat_index]);
-  }
-
-  return stat_str;
 }
 
 /******************************************************************************
