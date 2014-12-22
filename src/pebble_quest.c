@@ -1252,6 +1252,7 @@ void menu_select_callback(MenuLayer *menu_layer,
 
       // If we reach this point, a heavy item must be dropped to add a new one:
       show_window(HEAVY_ITEMS_MENU, NOT_ANIMATED);
+      show_narration(ENCUMBRANCE_NARRATION);
     }
   }
   else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU])
@@ -2471,10 +2472,9 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 
   if (g_current_window == GRAPHICS_WINDOW &&
       g_player->int16_stats[CURRENT_ENERGY] >=
-        g_player->int8_stats[ENERGY_LOSS_PER_ATTACK])
+        g_player->int8_stats[FATIGUE_RATE])
   {
-    adjust_player_current_energy(g_player->int8_stats[ENERGY_LOSS_PER_ATTACK] *
-                                   -1);
+    adjust_player_current_energy(g_player->int8_stats[FATIGUE_RATE] * -1);
 
     // Check for a targeted NPC:
     cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
@@ -2964,7 +2964,7 @@ void set_player_minor_stats(void)
   g_player->int16_stats[MAX_ENERGY]            =
     g_player->int8_stats[INTELLECT]  * 4 + g_player->int8_stats[STRENGTH] * 3 +
     g_player->int8_stats[AGILITY]  * 3;
-  g_player->int8_stats[ENERGY_LOSS_PER_ATTACK] = MIN_ENERGY_LOSS_PER_ATTACK;
+  g_player->int8_stats[FATIGUE_RATE] = MIN_FATIGUE_RATE;
 
   // Weapon:
   if (get_heavy_item_equipped_at(RIGHT_HAND))
@@ -2972,11 +2972,11 @@ void set_player_minor_stats(void)
     for (i = DAGGER; i <= get_heavy_item_equipped_at(RIGHT_HAND)->type; i += 2)
     {
       g_player->int8_stats[PHYSICAL_POWER] += 2;
-      g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
+      g_player->int8_stats[FATIGUE_RATE]++;
     }
     if (get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
     {
-      g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
+      g_player->int8_stats[FATIGUE_RATE]++;
     }
   }
 
@@ -2987,7 +2987,7 @@ void set_player_minor_stats(void)
     {
       g_player->int8_stats[PHYSICAL_DEFENSE] += 2;
       g_player->int8_stats[MAGICAL_POWER]--;
-      g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
+      g_player->int8_stats[FATIGUE_RATE]++;
     }
   }
 
@@ -2996,7 +2996,7 @@ void set_player_minor_stats(void)
   {
     g_player->int8_stats[PHYSICAL_DEFENSE] += 2;
     g_player->int8_stats[MAGICAL_POWER]--;
-    g_player->int8_stats[ENERGY_LOSS_PER_ATTACK]++;
+    g_player->int8_stats[FATIGUE_RATE]++;
   }
 }
 
@@ -3583,10 +3583,9 @@ void init(void)
   }
   show_window(MAIN_MENU, ANIMATED);
 
-  // Subscribe to relevant services and turn on backlight:
+  // Subscribe to relevant services:
   app_focus_service_subscribe(app_focus_handler);
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
-  light_enable(true);
 }
 
 /******************************************************************************
@@ -3603,7 +3602,6 @@ void deinit(void)
   int8_t i;
 
   save_game_data();
-  light_enable(false);
   tick_timer_service_unsubscribe();
   app_focus_service_unsubscribe();
   free(g_player);

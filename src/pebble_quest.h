@@ -35,7 +35,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 
 #define DEFAULT_MAJOR_STAT_VALUE   1 // AGILITY, STRENGTH, and INTELLECT.
 #define MIN_DAMAGE_TO_NPC          1
-#define MIN_ENERGY_LOSS_PER_ATTACK 3
+#define MIN_FATIGUE_RATE           3
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
@@ -74,7 +74,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define PHYSICAL_DEFENSE            10
 #define MAGICAL_POWER               11
 #define MAGICAL_DEFENSE             12
-#define ENERGY_LOSS_PER_ATTACK      13
+#define FATIGUE_RATE                13
 #define NUM_INT8_STATS              14
 #define NUM_MAJOR_STATS             3 // AGILITY, STRENGTH, and INTELLECT.
 #define FIRST_MAJOR_STAT            AGILITY
@@ -119,14 +119,15 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 
 // Narration types (ordering matters for multi-page narrations):
-#define INTRO_NARRATION_1   0
-#define INTRO_NARRATION_2   1
-#define INTRO_NARRATION_3   2
-#define INTRO_NARRATION_4   3
-#define DEATH_NARRATION     4
-#define LEVEL_UP_NARRATION  5
-#define ENDING_NARRATION    6
-#define NUM_NARRATION_TYPES 7
+#define INTRO_NARRATION_1     0
+#define INTRO_NARRATION_2     1
+#define INTRO_NARRATION_3     2
+#define INTRO_NARRATION_4     3
+#define ENCUMBRANCE_NARRATION 4
+#define DEATH_NARRATION       5
+#define LEVEL_UP_NARRATION    6
+#define ENDING_NARRATION      7
+#define NUM_NARRATION_TYPES   8
 
 /******************************************************************************
   Pebble- and Item-related Constants
@@ -306,6 +307,7 @@ static const char *const g_narration_strings[] = {
   "You have entered the mages' vast underground lair to recover the Pebbles and save the realm.",
   "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
+  "You're already at your weight capacity! Drop an old item if you're sure you want this new one.",
   "Alas, another hero has perished in the dank, dark depths. A new champion must arise to save humanity!",
   "\n  You have gained\n        a level of\n      experience!",
   "Congratulations, Hero of the Realm! You've slain all the evil mages and recovered every Pebble. Huzzah!",
