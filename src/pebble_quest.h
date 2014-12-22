@@ -79,7 +79,6 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NUM_MAJOR_STATS             3 // AGILITY, STRENGTH, and INTELLECT.
 #define FIRST_MAJOR_STAT            AGILITY
 #define NUM_NEGATIVE_STAT_CONSTANTS 3
-#define STATS_MENU_NUM_ROWS         (NUM_INT8_STATS + NUM_NEGATIVE_STAT_CONSTANTS)
 #define STAT_STR_LEN                19
 #define CURRENT_HEALTH              0
 #define CURRENT_ENERGY              1
@@ -213,6 +212,12 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define HEAVY_ITEMS_MENU_HEADER_STR_LEN 16
 #define MENU_TITLE_STR_LEN              25
 #define MENU_SUBTITLE_STR_LEN           22
+#define STATS_MENU_NUM_ROWS             (NUM_INT8_STATS + NUM_NEGATIVE_STAT_CONSTANTS)
+#define LEVEL_UP_MENU_NUM_ROWS          NUM_MAJOR_STATS // 3
+#define MAIN_MENU_NUM_ROWS              3
+#define PEBBLE_OPTIONS_MENU_NUM_ROWS    2
+#define LOOT_MENU_NUM_ROWS              1
+#define EQUIPPED_STR                    "Equipped"
 
 /******************************************************************************
   Button-related Constants
@@ -303,14 +308,30 @@ player_t *g_player;
 location_t *g_location;
 
 static const char *const g_narration_strings[] = {
-  "Evil mages stole the Elderstone and sundered it to create the Pebbles of Power they now control.",
-  "You have entered the mages' vast underground lair to recover the Pebbles and save the realm.",
+  "Evil wizards stole the Elderstone and sundered it to create Pebbles of Power they now control.",
+  "You have entered the wizards' vast underground lair to recover the Pebbles and save the realm.",
   "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
-  "You're at max. weight capacity! Drop an old item if you're sure you want to keep this new one.",
+  "You're at maximum weight capacity! Drop an old item if you're sure you want to keep this new one.",
   "Alas, another hero has perished in the dank, dark depths. A new champion must arise to save humanity!",
   "\n  You have gained\n        a level of\n      experience!",
   "Congratulations, hero of the realm! You've slain all the evil mages and recovered every Pebble. Huzzah!",
+};
+
+static const char *const g_main_menu_strings[] = {
+  "Play",
+  "Inventory",
+  "Character Stats",
+  "Dungeon-crawl, baby!",
+  "Equip/enchant items.",
+  "Health, Energy...",
+};
+
+static const char *const g_pebble_options_menu_strings[] = {
+  "Equip",
+  "Infuse into Item",
+  "Cast ranged spells.",
+  "Enchant a weapon, etc.",
 };
 
 static const char *const g_stat_names[] = {

@@ -946,25 +946,12 @@ static void main_menu_draw_row_callback(GContext *ctx,
                                         MenuIndex *cell_index,
                                         void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1],
-       subtitle_str[MENU_SUBTITLE_STR_LEN + 1];
-
-  if (cell_index->row == 0)
-  {
-    snprintf(title_str, 5, "Play");
-    snprintf(subtitle_str, 21, "Dungeon-crawl, baby!");
-  }
-  else if (cell_index->row == 1)
-  {
-    snprintf(title_str, 10, "Inventory");
-    snprintf(subtitle_str, 20, "Equip/infuse items.");
-  }
-  else
-  {
-    snprintf(title_str, 16, "Character Stats");
-    snprintf(subtitle_str, 21, "Agility, Strength...");
-  }
-  menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
+  menu_cell_basic_draw(ctx,
+                       cell_layer,
+                       g_main_menu_strings[cell_index->row],
+                       g_main_menu_strings[cell_index->row +
+                                             MAIN_MENU_NUM_ROWS],
+                       NULL);
 }
 
 /******************************************************************************
@@ -994,10 +981,10 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
   // Pebbles:
   if (item_type < FIRST_HEAVY_ITEM)
   {
-    snprintf(subtitle_str, 5, "(%d)", g_player->pebbles[item_type]);
+    snprintf(subtitle_str, 5, "(%d) ", g_player->pebbles[item_type]);
     if (g_player->equipped_pebble == item_type)
     {
-      strcat(subtitle_str, " Equipped");
+      strcat(subtitle_str, EQUIPPED_STR);
     }
   }
 
@@ -1009,7 +996,7 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
     strcat(title_str, g_magic_type_names[heavy_item->infused_pebble + 1]);
     if (heavy_item->equipped)
     {
-      strcat(subtitle_str, "Equipped");
+      strcat(subtitle_str, EQUIPPED_STR);
     }
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
@@ -1107,20 +1094,12 @@ static void pebble_options_menu_draw_row_callback(GContext *ctx,
                                                   MenuIndex *cell_index,
                                                   void *data)
 {
-  char title_str[MENU_TITLE_STR_LEN + 1],
-       subtitle_str[MENU_SUBTITLE_STR_LEN + 1];
-
-  if (cell_index->row == 0)
-  {
-    strcpy(title_str, "Equip");
-    strcpy(subtitle_str, "Cast ranged spells.");
-  }
-  else
-  {
-    strcpy(title_str, "Infuse into Item");
-    strcpy(subtitle_str, "Enchant a weapon, etc.");
-  }
-  menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
+  menu_cell_basic_draw(ctx,
+                       cell_layer,
+                       g_pebble_options_menu_strings[cell_index->row],
+                       g_pebble_options_menu_strings[cell_index->row +
+                                                 PEBBLE_OPTIONS_MENU_NUM_ROWS],
+                       NULL);
 }
 
 /******************************************************************************
@@ -1149,7 +1128,7 @@ static void heavy_items_menu_draw_row_callback(GContext *ctx,
   strcat(title_str, g_magic_type_names[heavy_item->infused_pebble + 1]);
   if (heavy_item->equipped)
   {
-    strcpy(subtitle_str, "Equipped");
+    strcpy(subtitle_str, EQUIPPED_STR);
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
 }
@@ -1374,7 +1353,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
 {
   int8_t i, num_heavy_items = 0;
 
-  // Determine the number of heavy items owned:
+  // Get number of heavy items owned for inventory and heavy items menus:
   for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
   {
     if (g_player->heavy_items[i].type > NONE)
@@ -1397,15 +1376,15 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   }
   else if (menu_layer == g_menu_layers[LOOT_MENU])
   {
-    return 1;
+    return LOOT_MENU_NUM_ROWS;
   }
   else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU])
   {
-    return 2;
+    return PEBBLE_OPTIONS_MENU_NUM_ROWS;
   }
   else // MAIN_MENU or LEVEL_UP_MENU
   {
-    return 3;
+    return MAIN_MENU_NUM_ROWS;
   }
 }
 
