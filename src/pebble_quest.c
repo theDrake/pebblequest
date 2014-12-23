@@ -2942,7 +2942,8 @@ void set_player_minor_stats(void)
   g_player->int8_stats[MAGICAL_DEFENSE]  =
     g_player->int8_stats[AGILITY] + g_player->int8_stats[INTELLECT] / 2;
   g_player->int16_stats[MAX_HEALTH]      =
-    DEFAULT_MAX_HEALTH + g_player->int8_stats[STRENGTH] * 4 + g_player->level;
+    DEFAULT_MAX_HEALTH + g_player->int8_stats[STRENGTH] * 4 +
+    g_player->int8_stats[LEVEL];
   g_player->int16_stats[MAX_ENERGY]      =
     DEFAULT_MAX_ENERGY + g_player->int8_stats[INTELLECT] * 2 +
     g_player->int8_stats[AGILITY] * 2 + g_player->int8_stats[STRENGTH];
