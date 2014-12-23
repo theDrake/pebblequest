@@ -1514,8 +1514,11 @@ void draw_scene(Layer *layer, GContext *ctx)
     }
   }
 
-  // Finally, draw the lower status bar:
+  // Draw the lower status bar:
   draw_status_bar(ctx);
+
+  // Finally, ensure the backlight is on:
+  light_enable_interaction();
 }
 
 /******************************************************************************
