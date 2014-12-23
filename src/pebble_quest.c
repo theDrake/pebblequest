@@ -163,10 +163,20 @@ int8_t damage_npc(npc_t *const npc, int8_t damage)
   // Check for NPC death:
   if (npc->health <= 0 || npc->status_effects[DISINTEGRATION])
   {
+    // Drop loot, if any (extra checks prevent overwriting of Pebbles/exits):
+    if (npc->type == MAGE ||
+        (npc->item > NONE && get_cell_type(npc->position) < EXIT))
+    {
+      set_cell_type(npc->position, npc->item);
+    }
+
     // Check for "game completion" (death of the final mage):
     if (g_player->int8_stats[DEPTH] == MAX_DEPTH && npc->type == MAGE)
     {
       show_narration(ENDING_NARRATION);
+      npc->type = NONE;
+
+      return damage;
     }
 
     // Remove the NPC by merely changing its type:
@@ -183,13 +193,6 @@ int8_t damage_npc(npc_t *const npc, int8_t damage)
         show_window(LEVEL_UP_MENU, NOT_ANIMATED);
         show_narration(LEVEL_UP_NARRATION);
       }
-    }
-
-    // Drop loot, if any (extra checks here are to avoid overwriting Pebbles):
-    if (npc->type == MAGE ||
-        (npc->item > NONE && get_cell_type(npc->position) < EXIT))
-    {
-      set_cell_type(npc->position, npc->item);
     }
   }
 
@@ -2790,7 +2793,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Generate new NPCs periodically (does nothing if the NPC array is full):
-    if (rand() % 8 == 0)
+    if (rand() % 10 == 0)
     {
       // Attempt to find a viable spawn point:
       for (i = 0; i < NUM_DIRECTIONS; ++i)
@@ -2930,20 +2933,20 @@ void set_player_minor_stats(void)
 {
   int8_t i;
 
-  g_player->int8_stats[PHYSICAL_POWER]         =
+  g_player->int8_stats[PHYSICAL_POWER]   =
     g_player->int8_stats[STRENGTH] + g_player->int8_stats[AGILITY] / 2;
-  g_player->int8_stats[PHYSICAL_DEFENSE]       =
+  g_player->int8_stats[PHYSICAL_DEFENSE] =
     g_player->int8_stats[AGILITY] + g_player->int8_stats[STRENGTH] / 2;
-  g_player->int8_stats[MAGICAL_POWER]          =
+  g_player->int8_stats[MAGICAL_POWER]    =
     g_player->int8_stats[INTELLECT] + g_player->int8_stats[AGILITY] / 2;
-  g_player->int8_stats[MAGICAL_DEFENSE]        =
+  g_player->int8_stats[MAGICAL_DEFENSE]  =
     g_player->int8_stats[AGILITY] + g_player->int8_stats[INTELLECT] / 2;
-  g_player->int16_stats[MAX_HEALTH]            =
-    g_player->int8_stats[STRENGTH] * 10;
-  g_player->int16_stats[MAX_ENERGY]            =
-    g_player->int8_stats[INTELLECT]  * 4 + g_player->int8_stats[STRENGTH] * 3 +
-    g_player->int8_stats[AGILITY]  * 3;
-  g_player->int8_stats[FATIGUE_RATE] = MIN_FATIGUE_RATE;
+  g_player->int16_stats[MAX_HEALTH]      =
+    DEFAULT_MAX_HEALTH + g_player->int8_stats[STRENGTH] * 4 + g_player->level;
+  g_player->int16_stats[MAX_ENERGY]      =
+    DEFAULT_MAX_ENERGY + g_player->int8_stats[INTELLECT] * 2 +
+    g_player->int8_stats[AGILITY] * 2 + g_player->int8_stats[STRENGTH];
+  g_player->int8_stats[FATIGUE_RATE]     = MIN_FATIGUE_RATE;
 
   // Weapon:
   if (get_heavy_item_equipped_at(RIGHT_HAND))
@@ -2993,17 +2996,17 @@ void init_player(void)
 {
   int8_t i;
 
-  // Set major stats:
-  g_player->exp_points        = 0; // 58806 to reach max. level!
-  g_player->int8_stats[LEVEL] = 1;
-  g_player->int8_stats[DEPTH] = 0;
+  // Set major stats (attributes), etc.:
   for (i = FIRST_MAJOR_STAT; i < NUM_MAJOR_STATS + FIRST_MAJOR_STAT; ++i)
   {
     g_player->int8_stats[i] = DEFAULT_MAJOR_STAT_VALUE;
   }
-  g_player->int8_stats[HEALTH_REGEN]       =
+  g_player->int8_stats[LEVEL]              =
+    g_player->int8_stats[HEALTH_REGEN]     =
     g_player->int8_stats[ENERGY_REGEN]     = 1;
-  g_player->int8_stats[BACKLASH_DAMAGE]    =
+  g_player->exp_points                     = // 58806 to reach max. level!
+    g_player->int8_stats[DEPTH]            =
+    g_player->int8_stats[BACKLASH_DAMAGE]  =
     g_player->int8_stats[SPELL_ABSORPTION] = 0;
 
   // Assign starting inventory:

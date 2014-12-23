@@ -34,6 +34,8 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 ******************************************************************************/
 
 #define DEFAULT_MAJOR_STAT_VALUE   1 // AGILITY, STRENGTH, and INTELLECT.
+#define DEFAULT_MAX_HEALTH         10
+#define DEFAULT_MAX_ENERGY         10
 #define MIN_DAMAGE_TO_NPC          1
 #define MIN_FATIGUE_RATE           3
 #define MAX_NPCS_AT_ONE_TIME       2
@@ -167,9 +169,9 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define DAMAGE_OVER_TIME   1
 #define SLOW               2
 //                         3 Pebble of Life doesn't cause a "status effect".
-#define DISINTEGRATION     4
-#define INTIMIDATION       5
-#define STUN               6
+#define INTIMIDATION       4
+#define STUN               5
+#define DISINTEGRATION     6
 #define NUM_STATUS_EFFECTS 7
 
 /******************************************************************************
@@ -311,10 +313,10 @@ static const char *const g_narration_strings[] = {
   "You have entered the wizards' vast underground lair to recover the Pebbles and save the realm.",
   "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
-  "You're at your maximum weight capacity! Drop an old item if you're sure you want to keep this new one.",
+  "You're at your maximum weight capacity. Drop an old item if you're sure you want to keep this new one.",
   "Alas, another hero has perished in the dank, dark depths. A new champion must arise to save humanity!",
   "\n  You have gained\n        a level of\n      experience!",
-  "Congratulations, hero of the realm! You've slain all the evil mages and restored peace and order. Huzzah!",
+  "Congratulations, hero of the realm! You've vanquished the evil mages and restored peace and order. Huzzah!",
 };
 
 static const char *const g_main_menu_strings[] = {
@@ -347,9 +349,9 @@ static const char *const g_stat_names[] = {
   "Spell Absorption",
   "Backlash Dmg.",
   "Phys. Power",
-  "Phys. Defense",
+  "Phys. Def.",
   "Mag. Power",
-  "Mag. Defense",
+  "Mag. Def.",
   "Fatigue Rate",
 };
 
