@@ -1940,16 +1940,16 @@ void draw_cell_contents(GContext *ctx,
                        GRect(floor_center_point.x - drawing_unit -
                                drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 4,
-                             drawing_unit / 2,
-                             drawing_unit / 3),
+                             drawing_unit - drawing_unit / 4,
+                             drawing_unit / 2),
                        drawing_unit / 4,
                        GCornersAll);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit -
-                               drawing_unit / 4,
+                       GRect(floor_center_point.x + drawing_unit / 2 +
+                               drawing_unit % 2,
                              floor_center_point.y - drawing_unit * 4,
-                             drawing_unit / 2,
-                             drawing_unit / 3),
+                             drawing_unit - drawing_unit / 4,
+                             drawing_unit / 2),
                        drawing_unit / 4,
                        GCornersAll);
 
@@ -2330,7 +2330,7 @@ void fill_ellipse(GContext *ctx,
   uint8_t x_offset, y_offset;
 
   graphics_context_set_stroke_color(ctx, color);
-  for (theta = 0; theta <= NINETY_DEGREES; theta += DEFAULT_ROTATION_RATE)
+  for (theta = 0; theta < NINETY_DEGREES; theta += DEFAULT_ROTATION_RATE)
   {
     x_offset = cos_lookup(theta) * h_radius / TRIG_MAX_RATIO;
     y_offset = sin_lookup(theta) * v_radius / TRIG_MAX_RATIO;
