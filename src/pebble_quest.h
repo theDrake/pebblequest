@@ -309,8 +309,8 @@ player_t *g_player;
 location_t *g_location;
 
 static const char *const g_narration_strings[] = {
-  "Evil mages split the Elderstone, creating a hundred Pebbles of Power they use to spread fear and ruin.",
-  "You have entered the mages' vast underground lair to recover the Pebbles and save the realm.",
+  "Evil wizards stole the Elderstone and sundered it, creating a hundred Pebbles of Power.",
+  "You have entered the wizards' vast underground lair to recover the Pebbles and save the realm.",
   "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
   "You're at your maximum weight capacity. Drop an old item if you're sure you want to keep this new one.",
