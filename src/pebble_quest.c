@@ -1871,7 +1871,7 @@ void draw_cell_contents(GContext *ctx,
                                                                  GColorWhite);
 
   // Mages:
-  /*if (npc->type == MAGE)
+  if (npc->type == MAGE)
   {
     // Body:
     graphics_fill_rect(ctx,
@@ -1905,7 +1905,7 @@ void draw_cell_contents(GContext *ctx,
 
   // Floating monsters:
   else if (npc->type <= WHITE_MONSTER_SMALL)
-  {*/
+  {
     // Body/head:
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
@@ -1929,7 +1929,9 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 5);
 
     // Mouth:
-    for (i = floor_center_point.x - drawing_unit;
+    for (i = floor_center_point.x - drawing_unit +
+               ((npc->type == BLACK_MONSTER_MEDIUM ||
+                 npc->type == WHITE_MONSTER_MEDIUM) ? 1 : 0);
          i < floor_center_point.x + drawing_unit - drawing_unit / 4;
          i += drawing_unit / 2)
     {
@@ -1941,10 +1943,10 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 2,
                          GCornersAll);
     }
-  //}
+  }
 
   // Goblins, trolls, and ogres:
-  /*else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
+  else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2128,7 +2130,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
-  }*/
+  }
 }
 
 /******************************************************************************
@@ -2790,7 +2792,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Generate new NPCs periodically (does nothing if the NPC array is full):
-    if (rand() % 10 == 0)
+    if (rand() % 9 == 0)
     {
       // Attempt to find a viable spawn point:
       for (i = 0; i < NUM_DIRECTIONS; ++i)
