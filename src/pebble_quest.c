@@ -1918,7 +1918,7 @@ void draw_cell_contents(GContext *ctx,
                        GCornerNone);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit +
-                               drawing_unit / 4,
+                               drawing_unit / 4 + 1,
                              floor_center_point.y - drawing_unit * 3 -
                                drawing_unit / 2,
                              drawing_unit + drawing_unit / 4,
@@ -1938,17 +1938,18 @@ void draw_cell_contents(GContext *ctx,
                                                          GColorWhite);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit -
-                               drawing_unit / 3,
+                               drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 4,
-                             drawing_unit - drawing_unit / 3,
-                             drawing_unit / 2),
+                             drawing_unit / 2,
+                             drawing_unit / 3),
                        drawing_unit / 4,
                        GCornersAll);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 3,
+                       GRect(floor_center_point.x + drawing_unit -
+                               drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 4,
-                             drawing_unit - drawing_unit / 3,
-                             drawing_unit / 2),
+                             drawing_unit / 2,
+                             drawing_unit / 3),
                        drawing_unit / 4,
                        GCornersAll);
 

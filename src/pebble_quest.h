@@ -309,7 +309,7 @@ player_t *g_player;
 location_t *g_location;
 
 static const char *const g_narration_strings[] = {
-  "Evil wizards stole the Elderstone and sundered it to create Pebbles of Power they now control.",
+  "Evil wizards stole the Elderstone and sundered it, creating a hundred Pebbles of Power.",
   "You have entered the wizards' vast underground lair to recover the Pebbles and save the realm.",
   "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
