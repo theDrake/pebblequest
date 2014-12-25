@@ -1752,7 +1752,7 @@ void draw_cell_contents(GContext *ctx,
                         const int8_t position)
 {
   uint8_t drawing_unit; // Reference variable for drawing contents at depth.
-  int16_t x_midpoint1, x_midpoint2;
+  int16_t i, x_midpoint1, x_midpoint2;
   GPoint floor_center_point;
   npc_t *npc = get_npc_at(cell);
 
@@ -1851,16 +1851,16 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Prepare to draw the NPC:
-  if (npc->type <= WHITE_BEAST_MEDIUM ||
-      npc->type == WARRIOR_MEDIUM     ||
-      npc->type == WARRIOR_LARGE      ||
+  if (npc->type <= WHITE_MONSTER_MEDIUM ||
+      npc->type == WARRIOR_MEDIUM       ||
+      npc->type == WARRIOR_LARGE        ||
       (npc->type >= DARK_OGRE && npc->type <= PALE_TROLL))
   {
     drawing_unit++;
   }
-  if (npc->type <= WHITE_BEAST_LARGE ||
-      npc->type == WARRIOR_LARGE     ||
-      npc->type == DARK_OGRE         ||
+  if (npc->type <= WHITE_MONSTER_LARGE ||
+      npc->type == WARRIOR_LARGE       ||
+      npc->type == DARK_OGRE           ||
       npc->type == PALE_OGRE)
   {
     drawing_unit++;
@@ -1871,7 +1871,7 @@ void draw_cell_contents(GContext *ctx,
                                                                  GColorWhite);
 
   // Mages:
-  if (npc->type == MAGE)
+  /*if (npc->type == MAGE)
   {
     // Body:
     graphics_fill_rect(ctx,
@@ -1895,82 +1895,56 @@ void draw_cell_contents(GContext *ctx,
     graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 3,
-                                floor_center_point.y - (drawing_unit * 9)),
+                                floor_center_point.y - drawing_unit * 9),
                          drawing_unit / 5);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x + drawing_unit / 3,
-                                floor_center_point.y - (drawing_unit * 9)),
+                                floor_center_point.y - drawing_unit * 9),
                          drawing_unit / 5);
   }
 
-  // Beasts:
-  else if (npc->type <= WHITE_BEAST_SMALL)
-  {
-    // Legs:
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 2 -
-                               drawing_unit / 2,
-                             floor_center_point.y - drawing_unit * 3 -
-                               drawing_unit / 2,
-                             drawing_unit + drawing_unit / 4,
-                             drawing_unit * 3 + drawing_unit / 2),
-                       NO_CORNER_RADIUS,
-                       GCornerNone);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit +
-                               drawing_unit / 4 + 1,
-                             floor_center_point.y - drawing_unit * 3 -
-                               drawing_unit / 2,
-                             drawing_unit + drawing_unit / 4,
-                             drawing_unit * 3 + drawing_unit / 2),
-                       NO_CORNER_RADIUS,
-                       GCornerNone);
-
-    // Body and head:
+  // Floating monsters:
+  else if (npc->type <= WHITE_MONSTER_SMALL)
+  {*/
+    // Body/head:
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
-                                floor_center_point.y - drawing_unit * 3 -
-                                  drawing_unit / 2),
-                         drawing_unit * 2 + drawing_unit / 2);
+                                floor_center_point.y - drawing_unit * 4),
+                         drawing_unit * 3 - drawing_unit / 2);
 
-    // Eyes:
+    // Eye:
+    i = floor_center_point.y - drawing_unit * 5;
+    fill_ellipse(ctx,
+                 GPoint(floor_center_point.x, i),
+                 drawing_unit + 1,
+                 drawing_unit / 2 + 1,
+                 npc->type % 2 ? GColorBlack : GColorWhite);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x, i),
+                         drawing_unit / 2);
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
                                                          GColorWhite);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit -
-                               drawing_unit / 4,
-                             floor_center_point.y - drawing_unit * 4,
-                             drawing_unit - drawing_unit / 4,
-                             drawing_unit / 2),
-                       drawing_unit / 4,
-                       GCornersAll);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit / 2 +
-                               drawing_unit % 2,
-                             floor_center_point.y - drawing_unit * 4,
-                             drawing_unit - drawing_unit / 4,
-                             drawing_unit / 2),
-                       drawing_unit / 4,
-                       GCornersAll);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x, i),
+                         drawing_unit / 5);
 
     // Mouth:
-    /*for (x = floor_center_point.x - drawing_unit;
-         x < floor_center_point.x + drawing_unit;
-         x += drawing_unit / 2)
+    for (i = floor_center_point.x - drawing_unit;
+         i < floor_center_point.x + drawing_unit - drawing_unit / 4;
+         i += drawing_unit / 2)
     {
       graphics_fill_rect(ctx,
-                         GRect(x,
-                               floor_center_point.y - drawing_unit * 3 -
-                                 drawing_unit / 2,
+                         GRect(i,
+                               floor_center_point.y - drawing_unit * 4,
                                drawing_unit / 2,
-                               drawing_unit + drawing_unit / 3),
+                               drawing_unit * 2 - drawing_unit / 2),
                          drawing_unit / 2,
                          GCornersAll);
-    }*/
-  }
+    }
+  //}
 
   // Goblins, trolls, and ogres:
-  else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
+  /*else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
   {
     // Legs:
     graphics_fill_rect(ctx,
@@ -2154,7 +2128,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
-  }
+  }*/
 }
 
 /******************************************************************************
@@ -3082,16 +3056,16 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
     1 + g_player->int8_stats[DEPTH] - g_player->int8_stats[DEPTH] / 2;
 
   // Check for increased power:
-  if (type <= WHITE_BEAST_MEDIUM ||
-      type == WARRIOR_MEDIUM     ||
-      type == WARRIOR_LARGE      ||
+  if (type <= WHITE_MONSTER_MEDIUM ||
+      type == WARRIOR_MEDIUM       ||
+      type == WARRIOR_LARGE        ||
       (type >= DARK_OGRE && type <= PALE_TROLL))
   {
     npc->power++;
   }
-  if (type <= WHITE_BEAST_LARGE ||
-      type == WARRIOR_LARGE     ||
-      type == DARK_OGRE         ||
+  if (type <= WHITE_MONSTER_LARGE ||
+      type == WARRIOR_LARGE       ||
+      type == DARK_OGRE           ||
       type == PALE_OGRE)
   {
     npc->power++;
@@ -3109,7 +3083,7 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   }
 
   // Some NPCs may carry a random item:
-  if (type > WHITE_BEAST_SMALL)
+  if (type > WHITE_MONSTER_SMALL)
   {
     npc->item = rand() % 2 ? NONE : RANDOM_ITEM; // Excludes Pebbles.
   }
@@ -3331,9 +3305,6 @@ void init_location(void)
   {
     set_cell_type(builder_position, EMPTY);
   }
-
-  // Save game data (in case of a crash, though that's extremely unlikely):
-  save_game_data();
 }
 
 /******************************************************************************
@@ -3532,21 +3503,6 @@ void deinit_window(const int8_t window_index)
 }
 
 /******************************************************************************
-   Function: save_game_data
-
-Description: Saves player and location data to persistent storage.
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-void save_game_data(void)
-{
-  persist_write_data(STORAGE_KEY, g_player, sizeof(player_t));
-  persist_write_data(STORAGE_KEY + 1, g_location, sizeof(location_t));
-}
-
-/******************************************************************************
    Function: init
 
 Description: Initializes the PebbleQuest app.
@@ -3609,7 +3565,8 @@ void deinit(void)
 {
   int8_t i;
 
-  save_game_data();
+  persist_write_data(STORAGE_KEY, g_player, sizeof(player_t));
+  persist_write_data(STORAGE_KEY + 1, g_location, sizeof(location_t));
   tick_timer_service_unsubscribe();
   app_focus_service_unsubscribe();
   free(g_player);

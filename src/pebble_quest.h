@@ -41,23 +41,23 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define MAX_NPCS_AT_ONE_TIME       2
 
 // NPC types:
-#define BLACK_BEAST_LARGE  0
-#define WHITE_BEAST_LARGE  1
-#define BLACK_BEAST_MEDIUM 2
-#define WHITE_BEAST_MEDIUM 3
-#define BLACK_BEAST_SMALL  4
-#define WHITE_BEAST_SMALL  5
-#define DARK_OGRE          6
-#define PALE_OGRE          7
-#define DARK_TROLL         8
-#define PALE_TROLL         9
-#define DARK_GOBLIN        10
-#define PALE_GOBLIN        11
-#define WARRIOR_LARGE      12
-#define WARRIOR_MEDIUM     13
-#define WARRIOR_SMALL      14
-#define MAGE               15
-#define NUM_NPC_TYPES      16
+#define BLACK_MONSTER_LARGE  0
+#define WHITE_MONSTER_LARGE  1
+#define BLACK_MONSTER_MEDIUM 2
+#define WHITE_MONSTER_MEDIUM 3
+#define BLACK_MONSTER_SMALL  4
+#define WHITE_MONSTER_SMALL  5
+#define DARK_OGRE            6
+#define PALE_OGRE            7
+#define DARK_TROLL           8
+#define PALE_TROLL           9
+#define DARK_GOBLIN          10
+#define PALE_GOBLIN          11
+#define WARRIOR_LARGE        12
+#define WARRIOR_MEDIUM       13
+#define WARRIOR_SMALL        14
+#define MAGE                 15
+#define NUM_NPC_TYPES        16
 
 // Character stats (2-8 correspond to Pebble effects in robes/armor/shields):
 #define HEALTH                      -3
@@ -309,8 +309,8 @@ player_t *g_player;
 location_t *g_location;
 
 static const char *const g_narration_strings[] = {
-  "Evil wizards stole the Elderstone and sundered it, creating a hundred Pebbles of Power.",
-  "You have entered the wizards' vast underground lair to recover the Pebbles and save the realm.",
+  "Evil mages split the Elderstone, creating a hundred Pebbles of Power they use to spread fear and ruin.",
+  "You have entered the mages' vast underground lair to recover the Pebbles and save the realm.",
   "Welcome, hero, to PebbleQuest!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
   "You're at your maximum weight capacity. Drop an old item if you're sure you want to keep this new one.",
@@ -544,7 +544,6 @@ void init_wall_coords(void);
 void init_location(void);
 void init_window(const int8_t window_index);
 void deinit_window(const int8_t window_index);
-void save_game_data(void);
 void init(void);
 void deinit(void);
 int main(void);
