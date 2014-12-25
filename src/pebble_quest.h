@@ -202,7 +202,7 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define NO_CORNER_RADIUS      0
 #define SMALL_CORNER_RADIUS   3
 #define NINETY_DEGREES        (TRIG_MAX_ANGLE / 4)
-#define DEFAULT_ROTATION_RATE (TRIG_MAX_ANGLE / 30) // 12 degrees per rotation event.
+#define DEFAULT_ROTATION_RATE (TRIG_MAX_ANGLE / 26) // 13.8 degrees per rotation event.
 #define ELLIPSE_RADIUS_RATIO  0.4
 
 /******************************************************************************

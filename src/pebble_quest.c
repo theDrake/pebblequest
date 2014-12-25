@@ -22,9 +22,6 @@ Description: Sets the player's orientation to a given direction and updates the
 ******************************************************************************/
 int8_t set_player_direction(const int8_t new_direction)
 {
-  g_player->direction = new_direction;
-
-  // Update compass graphic:
   if (new_direction == NORTH)
   {
     gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 2);
@@ -41,10 +38,9 @@ int8_t set_player_direction(const int8_t new_direction)
   {
     gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 4);
   }
-
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 
-  return new_direction;
+  return g_player->direction = new_direction;
 }
 
 /******************************************************************************
@@ -806,14 +802,17 @@ int8_t show_window(const int8_t window, const bool animated)
   if (window < NUM_MENUS)
   {
     menu_layer_reload_data(g_menu_layers[window]);
-    menu_layer_set_selected_index(g_menu_layers[window],
-                                  (MenuIndex) {0, 0},
-                                  MenuRowAlignCenter,
-                                  NOT_ANIMATED);
     if (window == INVENTORY_MENU)
     {
       menu_layer_set_selected_index(g_menu_layers[window],
                                     (MenuIndex) {0, g_current_selection},
+                                    MenuRowAlignCenter,
+                                    NOT_ANIMATED);
+    }
+    else
+    {
+      menu_layer_set_selected_index(g_menu_layers[window],
+                                    (MenuIndex) {0, 0},
                                     MenuRowAlignCenter,
                                     NOT_ANIMATED);
     }
@@ -1503,8 +1502,12 @@ void draw_scene(Layer *layer, GContext *ctx)
   if (g_player_is_attacking)
   {
     graphics_context_set_stroke_color(ctx, GColorWhite);
-    for (i = 0; i < 2; ++i)
+    for (i = 0; i < 3; ++i)
     {
+      if (i == 2)
+      {
+        graphics_context_set_stroke_color(ctx, GColorBlack);
+      }
       graphics_draw_line(ctx,
                          GPoint(g_attack_slash_x1 + i, g_attack_slash_y1),
                          GPoint(g_attack_slash_x2 + i, g_attack_slash_y2));
@@ -1551,7 +1554,7 @@ void draw_floor_and_ceiling(GContext *ctx)
     // Determine horizontal distance between points:
     shading_offset = 1 + y / MAX_VISIBILITY_DEPTH;
     if (y % MAX_VISIBILITY_DEPTH >= MAX_VISIBILITY_DEPTH / 2 +
-                                    MAX_VISIBILITY_DEPTH % 2)
+                                      MAX_VISIBILITY_DEPTH % 2)
     {
       shading_offset++;
     }
@@ -1889,11 +1892,7 @@ void draw_cell_contents(GContext *ctx,
                        GCornersTop);
 
     // Eyes:
-    //graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_context_set_fill_color(ctx,
-                                    (npc->type % 2 == 0 || npc->type == MAGE) ?
-                                      GColorWhite                             :
-                                      GColorBlack);
+    graphics_context_set_fill_color(ctx, GColorWhite);
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 3,
                                 floor_center_point.y - (drawing_unit * 9)),
@@ -1909,41 +1908,64 @@ void draw_cell_contents(GContext *ctx,
   {
     // Legs:
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 2 +
-                               drawing_unit / 5,
-                             floor_center_point.y - drawing_unit * 3,
-                             drawing_unit - 1,
-                             drawing_unit * 3),
+                       GRect(floor_center_point.x - drawing_unit * 2 -
+                               drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 3 -
+                               drawing_unit / 2,
+                             drawing_unit + drawing_unit / 4,
+                             drawing_unit * 3 + drawing_unit / 2),
                        NO_CORNER_RADIUS,
                        GCornerNone);
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x + drawing_unit + 2 -
-                               drawing_unit / 5,
-                             floor_center_point.y - drawing_unit * 3,
-                             drawing_unit - 1,
-                             drawing_unit * 3),
+                       GRect(floor_center_point.x + drawing_unit +
+                               drawing_unit / 4,
+                             floor_center_point.y - drawing_unit * 3 -
+                               drawing_unit / 2,
+                             drawing_unit + drawing_unit / 4,
+                             drawing_unit * 3 + drawing_unit / 2),
                        NO_CORNER_RADIUS,
                        GCornerNone);
 
     // Body and head:
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
-                                floor_center_point.y - drawing_unit * 3),
-                         drawing_unit * 2 - drawing_unit / 5);
+                                floor_center_point.y - drawing_unit * 3 -
+                                  drawing_unit / 2),
+                         drawing_unit * 2 + drawing_unit / 2);
 
     // Eyes:
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
                                                          GColorWhite);
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x - drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 3 -
-                                  drawing_unit / 4),
-                         drawing_unit / 5);
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x + drawing_unit / 2,
-                                floor_center_point.y - drawing_unit * 3 -
-                                  drawing_unit / 4),
-                         drawing_unit / 5);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit -
+                               drawing_unit / 3,
+                             floor_center_point.y - drawing_unit * 4,
+                             drawing_unit - drawing_unit / 3,
+                             drawing_unit / 2),
+                       drawing_unit / 4,
+                       GCornersAll);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x + drawing_unit / 3,
+                             floor_center_point.y - drawing_unit * 4,
+                             drawing_unit - drawing_unit / 3,
+                             drawing_unit / 2),
+                       drawing_unit / 4,
+                       GCornersAll);
+
+    // Mouth:
+    /*for (x = floor_center_point.x - drawing_unit;
+         x < floor_center_point.x + drawing_unit;
+         x += drawing_unit / 2)
+    {
+      graphics_fill_rect(ctx,
+                         GRect(x,
+                               floor_center_point.y - drawing_unit * 3 -
+                                 drawing_unit / 2,
+                               drawing_unit / 2,
+                               drawing_unit + drawing_unit / 3),
+                         drawing_unit / 2,
+                         GCornersAll);
+    }*/
   }
 
   // Goblins, trolls, and ogres:
@@ -2307,7 +2329,7 @@ void fill_ellipse(GContext *ctx,
   uint8_t x_offset, y_offset;
 
   graphics_context_set_stroke_color(ctx, color);
-  for (theta = 0; theta < NINETY_DEGREES; theta += DEFAULT_ROTATION_RATE)
+  for (theta = 0; theta <= NINETY_DEGREES; theta += DEFAULT_ROTATION_RATE)
   {
     x_offset = cos_lookup(theta) * h_radius / TRIG_MAX_RATIO;
     y_offset = sin_lookup(theta) * v_radius / TRIG_MAX_RATIO;
@@ -2637,8 +2659,6 @@ Description: The narration window's single-click handler for all buttons. Shows
 ******************************************************************************/
 void narration_single_click(ClickRecognizerRef recognizer, void *context)
 {
-  //Window *window = (Window *) context;
-
   if (g_current_narration < INTRO_NARRATION_4)
   {
     show_narration(++g_current_narration);
@@ -2646,7 +2666,6 @@ void narration_single_click(ClickRecognizerRef recognizer, void *context)
   else
   {
     window_stack_pop(NOT_ANIMATED);
-
   }
 }
 
@@ -3312,7 +3331,7 @@ void init_location(void)
     set_cell_type(builder_position, EMPTY);
   }
 
-  // Finally, save game data (in case the game crashes, which is unlikely):
+  // Save game data (in case of a crash, though that's extremely unlikely):
   save_game_data();
 }
 
