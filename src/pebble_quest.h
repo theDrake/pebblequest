@@ -14,201 +14,200 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #include <pebble.h>
 
 /******************************************************************************
-  Window/Menu Constants
+  Enumerations
 ******************************************************************************/
 
-#define MAIN_MENU           0
-#define INVENTORY_MENU      1
-#define LEVEL_UP_MENU       2
-#define LOOT_MENU           3
-#define PEBBLE_OPTIONS_MENU 4
-#define HEAVY_ITEMS_MENU    5
-#define STATS_MENU          6
-#define NARRATION_WINDOW    7
-#define GRAPHICS_WINDOW     8
-#define NUM_WINDOWS         9
-#define NUM_MENUS           7
+// Windows:
+enum {
+  MAIN_MENU,
+  INVENTORY_MENU,
+  LEVEL_UP_MENU,
+  LOOT_MENU,
+  PEBBLE_OPTIONS_MENU,
+  HEAVY_ITEMS_MENU,
+  STATS_MENU,
+  NARRATION_WINDOW,
+  GRAPHICS_WINDOW,
+  NUM_WINDOWS
+};
 
-/******************************************************************************
-  Player- and NPC-related Constants
-******************************************************************************/
+// Narration types (ordering here matters for multi-page narrations):
+enum {
+  INTRO_NARRATION_1,
+  INTRO_NARRATION_2,
+  INTRO_NARRATION_3,
+  INTRO_NARRATION_4,
+  ENCUMBRANCE_NARRATION,
+  DEATH_NARRATION,
+  LEVEL_UP_NARRATION,
+  ENDING_NARRATION,
+  NUM_NARRATION_TYPES
+};
 
-#define DEFAULT_MAJOR_STAT_VALUE   1 // AGILITY, STRENGTH, and INTELLECT.
-#define DEFAULT_MAX_HEALTH         10
-#define DEFAULT_MAX_ENERGY         10
-#define MIN_DAMAGE_TO_NPC          1
-#define MIN_FATIGUE_RATE           3
-#define MAX_NPCS_AT_ONE_TIME       2
-
-// NPC types:
-#define BLACK_MONSTER_LARGE  0
-#define WHITE_MONSTER_LARGE  1
-#define BLACK_MONSTER_MEDIUM 2
-#define WHITE_MONSTER_MEDIUM 3
-#define BLACK_MONSTER_SMALL  4
-#define WHITE_MONSTER_SMALL  5
-#define DARK_OGRE            6
-#define PALE_OGRE            7
-#define DARK_TROLL           8
-#define PALE_TROLL           9
-#define DARK_GOBLIN          10
-#define PALE_GOBLIN          11
-#define WARRIOR_LARGE        12
-#define WARRIOR_MEDIUM       13
-#define WARRIOR_SMALL        14
-#define MAGE                 15
-#define NUM_NPC_TYPES        16
-
-// Character stats (2-8 correspond to Pebble effects in robes/armor/shields):
-#define HEALTH                      -3
-#define ENERGY                      -2
-#define EXPERIENCE_POINTS           -1
-#define LEVEL                       0
-#define DEPTH                       1
-#define AGILITY                     2
-#define STRENGTH                    3
-#define INTELLECT                   4
-#define HEALTH_REGEN                5
-#define ENERGY_REGEN                6
-#define SPELL_ABSORPTION            7
-#define BACKLASH_DAMAGE             8
-#define PHYSICAL_POWER              9
-#define PHYSICAL_DEFENSE            10
-#define MAGICAL_POWER               11
-#define MAGICAL_DEFENSE             12
-#define FATIGUE_RATE                13
-#define NUM_INT8_STATS              14
-#define NUM_MAJOR_STATS             3 // AGILITY, STRENGTH, and INTELLECT.
-#define FIRST_MAJOR_STAT            AGILITY
-#define NUM_NEGATIVE_STAT_CONSTANTS 3
-#define CURRENT_HEALTH              0
-#define CURRENT_ENERGY              1
-#define MAX_HEALTH                  2
-#define MAX_ENERGY                  3
-#define NUM_INT16_STATS             4
-
-/******************************************************************************
-  Location-related Constants
-******************************************************************************/
+// Item types:
+enum {
+  NONE = -1,
+  PEBBLE_OF_THUNDER,
+  PEBBLE_OF_FIRE,
+  PEBBLE_OF_ICE,
+  PEBBLE_OF_LIFE,
+  PEBBLE_OF_LIGHT,
+  PEBBLE_OF_SHADOW,
+  PEBBLE_OF_DEATH,
+  DAGGER,
+  STAFF,
+  SWORD,
+  MACE,
+  AXE,
+  FLAIL,
+  SHIELD,
+  ROBE,
+  LIGHT_ARMOR,
+  HEAVY_ARMOR,
+  NUM_ITEM_TYPES
+};
 
 // Cell types (for loot, an item type value is used):
-#define EXIT  -1
-#define EMPTY -2
-#define SOLID -3
-
-// Directions:
-#define NORTH          0
-#define SOUTH          1
-#define EAST           2
-#define WEST           3
-#define NUM_DIRECTIONS 4
-
-// Other:
-#define MAP_WIDTH          10
-#define MAP_HEIGHT         MAP_WIDTH
-#define RANDOM_POINT_NORTH GPoint(rand() % MAP_WIDTH, 0)
-#define RANDOM_POINT_SOUTH GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
-#define RANDOM_POINT_EAST  GPoint(MAP_WIDTH - 1, rand() % MAP_HEIGHT)
-#define RANDOM_POINT_WEST  GPoint(0, rand() % MAP_HEIGHT)
-
-/******************************************************************************
-  Narration-related Constants
-******************************************************************************/
-
-#define NARRATION_TEXT_LAYER_FRAME GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
-#define NARRATION_FONT             fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
-
-// Narration types (ordering matters for multi-page narrations):
-#define INTRO_NARRATION_1     0
-#define INTRO_NARRATION_2     1
-#define INTRO_NARRATION_3     2
-#define INTRO_NARRATION_4     3
-#define ENCUMBRANCE_NARRATION 4
-#define DEATH_NARRATION       5
-#define LEVEL_UP_NARRATION    6
-#define ENDING_NARRATION      7
-#define NUM_NARRATION_TYPES   8
-
-/******************************************************************************
-  Pebble- and Item-related Constants
-******************************************************************************/
-
-#define NONE                 -1
-#define PEBBLE_OF_THUNDER    0
-#define PEBBLE_OF_FIRE       1
-#define PEBBLE_OF_ICE        2
-#define PEBBLE_OF_LIFE       3
-#define PEBBLE_OF_LIGHT      4
-#define PEBBLE_OF_SHADOW     5
-#define PEBBLE_OF_DEATH      6
-#define DAGGER               7
-#define STAFF                8
-#define SWORD                9
-#define MACE                 10
-#define AXE                  11
-#define FLAIL                12
-#define SHIELD               13
-#define ROBE                 14
-#define LIGHT_ARMOR          15
-#define HEAVY_ARMOR          16
-#define NUM_ITEM_TYPES       17
-#define NUM_PEBBLE_TYPES     7
-#define NUM_HEAVY_ITEM_TYPES 10 // Excludes Pebbles.
-#define FIRST_HEAVY_ITEM     DAGGER
-#define MAX_HEAVY_ITEMS      5
-#define RANDOM_ITEM          (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
+enum {
+  SOLID = -3,
+  EMPTY,
+  EXIT
+};
 
 // Equip targets (i.e., places where an item may be equipped):
-#define BODY              0
-#define LEFT_HAND         1
-#define RIGHT_HAND        2
-#define NUM_EQUIP_TARGETS 3
+enum {
+  BODY,
+  LEFT_HAND,
+  RIGHT_HAND,
+  NUM_EQUIP_TARGETS
+};
+
+// NPC types:
+enum {
+  BLACK_MONSTER_LARGE,
+  WHITE_MONSTER_LARGE,
+  BLACK_MONSTER_MEDIUM,
+  WHITE_MONSTER_MEDIUM,
+  BLACK_MONSTER_SMALL,
+  WHITE_MONSTER_SMALL,
+  DARK_OGRE,
+  PALE_OGRE,
+  DARK_TROLL,
+  PALE_TROLL,
+  PALE_GOBLIN,
+  DARK_GOBLIN,
+  WARRIOR_LARGE,
+  WARRIOR_MEDIUM,
+  WARRIOR_SMALL,
+  MAGE,
+  NUM_NPC_TYPES
+};
+
+// 8-bit character stats (2-8 correspond to robe/armor/shield Pebble effects):
+enum {
+  HEALTH = -3,
+  ENERGY,
+  EXPERIENCE_POINTS,
+  LEVEL,
+  DEPTH,
+  AGILITY,
+  STRENGTH,
+  INTELLECT,
+  HEALTH_REGEN,
+  ENERGY_REGEN,
+  SPELL_ABSORPTION,
+  BACKLASH_DAMAGE,
+  PHYSICAL_POWER,
+  PHYSICAL_DEFENSE,
+  MAGICAL_POWER,
+  MAGICAL_DEFENSE,
+  FATIGUE_RATE,
+  NUM_INT8_STATS
+};
+
+// 16-bit character stats:
+enum {
+  CURRENT_HEALTH,
+  CURRENT_ENERGY,
+  MAX_HEALTH,
+  MAX_ENERGY,
+  NUM_INT16_STATS
+};
 
 // Temporary status effects (via spells and infused weapons):
-#define WEAKNESS           0
-#define DAMAGE_OVER_TIME   1
-#define SLOW               2
-//                         3 Pebble of Life doesn't cause a "status effect".
-#define INTIMIDATION       4
-#define STUN               5
-#define DISINTEGRATION     6
-#define NUM_STATUS_EFFECTS 7
+enum {
+  WEAKNESS,
+  DAMAGE_OVER_TIME,
+  SLOW,
+  PEBBLE_OF_LIFE_STATUS_EFFECT, // Not actually used.
+  INTIMIDATION,
+  STUN,
+  DISINTEGRATION,
+  NUM_STATUS_EFFECTS
+};
+
+// Directions:
+enum {
+  NORTH,
+  SOUTH,
+  EAST,
+  WEST,
+  NUM_DIRECTIONS
+};
 
 /******************************************************************************
-  Graphics-related Constants
+  Other Constants
 ******************************************************************************/
 
-#define SCREEN_WIDTH          144
-#define SCREEN_HEIGHT         168
-#define SCREEN_CENTER_POINT_X (SCREEN_WIDTH / 2)
-#define SCREEN_CENTER_POINT_Y (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
-#define SCREEN_CENTER_POINT   GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
-#define STATUS_BAR_HEIGHT     16 // Applies to top and bottom status bars.
-#define FULL_SCREEN_FRAME     GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
-#define STATUS_BAR_FONT       fonts_get_system_font(FONT_KEY_GOTHIC_14)
-#define STATUS_METER_PADDING  4
-#define STATUS_METER_WIDTH    (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
-#define STATUS_METER_HEIGHT   (STATUS_BAR_HEIGHT - STATUS_METER_PADDING * 2)
-#define FIRST_WALL_OFFSET     STATUS_BAR_HEIGHT
-#define MIN_WALL_HEIGHT       STATUS_BAR_HEIGHT
-#define GRAPHICS_FRAME_WIDTH  SCREEN_WIDTH
-#define GRAPHICS_FRAME_HEIGHT (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
-#define GRAPHICS_FRAME        GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
-#define MAX_VISIBILITY_DEPTH  6 // Helps determine no. of cells visible in a given line of sight.
-#define STRAIGHT_AHEAD        (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
-#define TOP_LEFT              0                          // Index value for "g_back_wall_coords".
-#define BOTTOM_RIGHT          1                          // Index value for "g_back_wall_coords".
-#define COMPASS_RADIUS        5
-#define NO_CORNER_RADIUS      0
-#define SMALL_CORNER_RADIUS   3
-#define NINETY_DEGREES        (TRIG_MAX_ANGLE / 4)
-#define DEFAULT_ROTATION_RATE (TRIG_MAX_ANGLE / 26) // 13.8 degrees per rotation event.
-#define ELLIPSE_RADIUS_RATIO  0.4
-
-/******************************************************************************
-  Menu-related Constants
-******************************************************************************/
-
+#define NUM_MAJOR_STATS                 3 // AGILITY, STRENGTH, and INTELLECT.
+#define FIRST_MAJOR_STAT                AGILITY
+#define NUM_NEGATIVE_STAT_CONSTANTS     3
+#define NUM_MENUS                       (STATS_MENU + 1)
+#define DEFAULT_MAJOR_STAT_VALUE        1 // AGILITY, STRENGTH, and INTELLECT.
+#define DEFAULT_MAX_HEALTH              10
+#define DEFAULT_MAX_ENERGY              10
+#define MIN_DAMAGE_TO_NPC               1
+#define MIN_FATIGUE_RATE                3
+#define MAX_NPCS_AT_ONE_TIME            2
+#define MAP_WIDTH                       10
+#define MAP_HEIGHT                      MAP_WIDTH
+#define RANDOM_POINT_NORTH              GPoint(rand() % MAP_WIDTH, 0)
+#define RANDOM_POINT_SOUTH              GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
+#define RANDOM_POINT_EAST               GPoint(MAP_WIDTH - 1, rand() % MAP_HEIGHT)
+#define RANDOM_POINT_WEST               GPoint(0, rand() % MAP_HEIGHT)
+#define NARRATION_TEXT_LAYER_FRAME      GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
+#define NARRATION_FONT                  fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
+#define NUM_PEBBLE_TYPES                (PEBBLE_OF_DEATH + 1)
+#define NUM_HEAVY_ITEM_TYPES            (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES)
+#define FIRST_HEAVY_ITEM                DAGGER
+#define MAX_HEAVY_ITEMS                 5
+#define RANDOM_ITEM                     (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
+#define SCREEN_WIDTH                    144
+#define SCREEN_HEIGHT                   168
+#define SCREEN_CENTER_POINT_X           (SCREEN_WIDTH / 2)
+#define SCREEN_CENTER_POINT_Y           (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
+#define SCREEN_CENTER_POINT             GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
+#define STATUS_BAR_HEIGHT               16 // Applies to top and bottom status bars.
+#define FULL_SCREEN_FRAME               GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
+#define STATUS_BAR_FONT                 fonts_get_system_font(FONT_KEY_GOTHIC_14)
+#define STATUS_METER_PADDING            4
+#define STATUS_METER_WIDTH              (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
+#define STATUS_METER_HEIGHT             (STATUS_BAR_HEIGHT - STATUS_METER_PADDING * 2)
+#define FIRST_WALL_OFFSET               STATUS_BAR_HEIGHT
+#define MIN_WALL_HEIGHT                 STATUS_BAR_HEIGHT
+#define GRAPHICS_FRAME_WIDTH            SCREEN_WIDTH
+#define GRAPHICS_FRAME_HEIGHT           (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
+#define GRAPHICS_FRAME                  GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
+#define MAX_VISIBILITY_DEPTH            6 // Helps determine no. of cells visible in a given line of sight.
+#define STRAIGHT_AHEAD                  (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
+#define TOP_LEFT                        0                          // Index value for "g_back_wall_coords".
+#define BOTTOM_RIGHT                    1                          // Index value for "g_back_wall_coords".
+#define COMPASS_RADIUS                  5
+#define NO_CORNER_RADIUS                0
+#define SMALL_CORNER_RADIUS             3
+#define NINETY_DEGREES                  (TRIG_MAX_ANGLE / 4)
+#define DEFAULT_ROTATION_RATE           (TRIG_MAX_ANGLE / 26) // 13.8 degrees per rotation event.
+#define ELLIPSE_RADIUS_RATIO            0.4
 #define HEAVY_ITEMS_MENU_HEADER_STR_LEN 16
 #define ITEM_TITLE_STR_LEN              19
 #define ITEM_SUBTITLE_STR_LEN           13
@@ -219,30 +218,20 @@ Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
 #define PEBBLE_OPTIONS_MENU_NUM_ROWS    2
 #define LOOT_MENU_NUM_ROWS              1
 #define EQUIPPED_STR                    "Equipped"
-
-/******************************************************************************
-  Button-related Constants
-******************************************************************************/
-
-#define MULTI_CLICK_MIN               2
-#define MULTI_CLICK_MAX               2   // We only care about double-clicks.
-#define MULTI_CLICK_TIMEOUT           0   // milliseconds
-#define PLAYER_ACTION_REPEAT_INTERVAL 250 // milliseconds
-#define LAST_CLICK_ONLY               true
-
-/******************************************************************************
-  General Constants
-******************************************************************************/
-
-#define DEFAULT_TIMER_DURATION      20 // milliseconds
-#define DEFAULT_MAX_SMALL_INT_VALUE 100
-#define MAX_SMALL_INT_DIGITS        3
-#define MAX_LARGE_INT_DIGITS        5
-#define MAX_DEPTH                   DEFAULT_MAX_SMALL_INT_VALUE
-#define MAX_LEVEL                   DEFAULT_MAX_SMALL_INT_VALUE
-#define STORAGE_KEY                 841
-#define ANIMATED                    true
-#define NOT_ANIMATED                false
+#define MULTI_CLICK_MIN                 2
+#define MULTI_CLICK_MAX                 2   // We only care about double-clicks.
+#define MULTI_CLICK_TIMEOUT             0   // milliseconds
+#define PLAYER_ACTION_REPEAT_INTERVAL   250 // milliseconds
+#define LAST_CLICK_ONLY                 true
+#define DEFAULT_TIMER_DURATION          20 // milliseconds
+#define DEFAULT_MAX_SMALL_INT_VALUE     100
+#define MAX_SMALL_INT_DIGITS            3
+#define MAX_LARGE_INT_DIGITS            5
+#define MAX_DEPTH                       DEFAULT_MAX_SMALL_INT_VALUE
+#define MAX_LEVEL                       DEFAULT_MAX_SMALL_INT_VALUE
+#define STORAGE_KEY                     841
+#define ANIMATED                        true
+#define NOT_ANIMATED                    false
 
 /******************************************************************************
   Structure Definitions
