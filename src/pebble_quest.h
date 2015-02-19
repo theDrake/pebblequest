@@ -233,69 +233,13 @@ enum {
 #define ANIMATED                        true
 #define NOT_ANIMATED                    false
 
-/******************************************************************************
-  Structure Definitions
-******************************************************************************/
-
-typedef struct HeavyItem {
-  int8_t type,
-         infused_pebble,
-         equip_target;
-  bool equipped;
-} __attribute__((__packed__)) heavy_item_t;
-
-typedef struct PlayerCharacter {
-  GPoint position;
-  int8_t direction,
-         int8_stats[NUM_INT8_STATS],
-         pebbles[NUM_PEBBLE_TYPES],
-         equipped_pebble;
-  int16_t int16_stats[NUM_INT16_STATS];
-  uint16_t exp_points;
-  heavy_item_t heavy_items[MAX_HEAVY_ITEMS]; // Clothing, armor, and weapons.
-} __attribute__((__packed__)) player_t;
-
-typedef struct NonPlayerCharacter {
-  GPoint position;
-  int8_t type,
-         item,
-         health,
-         power,
-         physical_defense,
-         magical_defense;
-  uint8_t status_effects[NUM_STATUS_EFFECTS];
-} __attribute__((__packed__)) npc_t;
-
-typedef struct Location {
-  int8_t map[MAP_WIDTH][MAP_HEIGHT];
-  GPoint entrance;
-  npc_t npcs[MAX_NPCS_AT_ONE_TIME];
-} __attribute__((__packed__)) location_t;
-
-/******************************************************************************
-  Global Variables
-******************************************************************************/
-
-Window *g_windows[NUM_WINDOWS];
-MenuLayer *g_menu_layers[NUM_MENUS];
-InverterLayer *g_inverter_layer;
-TextLayer *g_narration_text_layer;
-AppTimer *g_flash_timer,
-         *g_attack_timer;
-GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
-                         [(STRAIGHT_AHEAD * 2) + 1]
-                         [2];
-uint8_t g_current_window,
-        g_current_narration,
-        g_current_selection,
-        g_attack_slash_x1,
-        g_attack_slash_x2,
-        g_attack_slash_y1,
-        g_attack_slash_y2;
-bool g_player_is_attacking;
-GPath *g_compass_path;
-player_t *g_player;
-location_t *g_location;
+static const GPathInfo COMPASS_PATH_INFO = {
+  .num_points = 4,
+  .points = (GPoint []) {{-3, -3},
+                         {3, -3},
+                         {0, 6},
+                         {-3, -3}}
+};
 
 static const char *const g_narration_strings[] = {
   "Evil wizards stole the Elderstone and sundered it, creating a hundred Pebbles of Power.",
@@ -375,13 +319,69 @@ static const char *const g_magic_type_names[] = {
   " of Death",
 };
 
-static const GPathInfo COMPASS_PATH_INFO = {
-  .num_points = 4,
-  .points = (GPoint []) {{-3, -3},
-                         {3, -3},
-                         {0, 6},
-                         {-3, -3}}
-};
+/******************************************************************************
+  Structure Definitions
+******************************************************************************/
+
+typedef struct HeavyItem {
+  int8_t type,
+         infused_pebble,
+         equip_target;
+  bool equipped;
+} __attribute__((__packed__)) heavy_item_t;
+
+typedef struct PlayerCharacter {
+  GPoint position;
+  int8_t direction,
+         int8_stats[NUM_INT8_STATS],
+         pebbles[NUM_PEBBLE_TYPES],
+         equipped_pebble;
+  int16_t int16_stats[NUM_INT16_STATS];
+  uint16_t exp_points;
+  heavy_item_t heavy_items[MAX_HEAVY_ITEMS]; // Clothing, armor, and weapons.
+} __attribute__((__packed__)) player_t;
+
+typedef struct NonPlayerCharacter {
+  GPoint position;
+  int8_t type,
+         item,
+         health,
+         power,
+         physical_defense,
+         magical_defense;
+  uint8_t status_effects[NUM_STATUS_EFFECTS];
+} __attribute__((__packed__)) npc_t;
+
+typedef struct Location {
+  int8_t map[MAP_WIDTH][MAP_HEIGHT];
+  GPoint entrance;
+  npc_t npcs[MAX_NPCS_AT_ONE_TIME];
+} __attribute__((__packed__)) location_t;
+
+/******************************************************************************
+  Global Variables
+******************************************************************************/
+
+Window *g_windows[NUM_WINDOWS];
+MenuLayer *g_menu_layers[NUM_MENUS];
+InverterLayer *g_inverter_layer;
+TextLayer *g_narration_text_layer;
+AppTimer *g_flash_timer,
+         *g_attack_timer;
+GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
+                         [(STRAIGHT_AHEAD * 2) + 1]
+                         [2];
+uint8_t g_current_window,
+        g_current_narration,
+        g_current_selection,
+        g_attack_slash_x1,
+        g_attack_slash_x2,
+        g_attack_slash_y1,
+        g_attack_slash_y2;
+bool g_player_is_attacking;
+GPath *g_compass_path;
+player_t *g_player;
+location_t *g_location;
 
 /******************************************************************************
   Function Declarations
