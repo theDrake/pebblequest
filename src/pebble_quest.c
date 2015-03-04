@@ -1851,9 +1851,9 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Prepare to draw the NPC:
-  if (npc->type <= WHITE_MONSTER_MEDIUM ||
-      npc->type == WARRIOR_MEDIUM       ||
-      npc->type == WARRIOR_LARGE        ||
+  if (npc->type  <= WHITE_MONSTER_MEDIUM ||
+      npc->type  == WARRIOR_MEDIUM       ||
+      npc->type  == WARRIOR_LARGE        ||
       (npc->type >= DARK_OGRE && npc->type <= PALE_TROLL))
   {
     drawing_unit++;
