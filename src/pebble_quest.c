@@ -2953,7 +2953,7 @@ void set_player_minor_stats(void)
   {
     for (i = DAGGER; i <= get_heavy_item_equipped_at(RIGHT_HAND)->type; i += 2)
     {
-      g_player->int8_stats[PHYSICAL_POWER] += 2;
+      g_player->int8_stats[PHYSICAL_POWER] += DEFAULT_ITEM_BONUS;
       g_player->int8_stats[FATIGUE_RATE]++;
     }
     if (get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
@@ -2967,7 +2967,7 @@ void set_player_minor_stats(void)
   {
     for (i = LIGHT_ARMOR; i <= get_heavy_item_equipped_at(BODY)->type; ++i)
     {
-      g_player->int8_stats[PHYSICAL_DEFENSE] += 2;
+      g_player->int8_stats[PHYSICAL_DEFENSE] += DEFAULT_ITEM_BONUS;
       g_player->int8_stats[MAGICAL_POWER]--;
       g_player->int8_stats[FATIGUE_RATE]++;
     }
@@ -2976,7 +2976,7 @@ void set_player_minor_stats(void)
   // Shield:
   if (get_heavy_item_equipped_at(LEFT_HAND))
   {
-    g_player->int8_stats[PHYSICAL_DEFENSE] += 2;
+    g_player->int8_stats[PHYSICAL_DEFENSE] += DEFAULT_ITEM_BONUS;
     g_player->int8_stats[MAGICAL_POWER]--;
     g_player->int8_stats[FATIGUE_RATE]++;
   }
