@@ -12,7 +12,7 @@
     "shortName": "PebbleQuest",
     "uuid": "3fb0f2c1-9447-494c-b0e8-1338d9490672",
     "versionCode": 1,
-    "versionLabel": "1.1",
+    "versionLabel": "1.2",
     "watchapp": {
         "watchface": false
     }
