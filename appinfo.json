@@ -9,10 +9,14 @@
     "resources": {
         "media": []
     },
+    "sdkVersion": "3",
     "shortName": "PebbleQuest",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
     "uuid": "3fb0f2c1-9447-494c-b0e8-1338d9490672",
-    "versionCode": 1,
-    "versionLabel": "1.2",
+    "versionLabel": "2.0",
     "watchapp": {
         "watchface": false
     }
