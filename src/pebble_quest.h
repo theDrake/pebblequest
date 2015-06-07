@@ -4,7 +4,7 @@
      Author: David C. Drake (http://davidcdrake.com)
 
 Description: Header file for PebbleQuest, a first-person 3D fantasy RPG
-             developed for the Pebble smartwatch (SDK 2). More info online:
+             developed for the Pebble smartwatch (SDK 3). More info online:
              http://davidcdrake.com/pebblequest
 ******************************************************************************/
 
@@ -365,7 +365,9 @@ typedef struct Location {
 
 Window *g_windows[NUM_WINDOWS];
 MenuLayer *g_menu_layers[NUM_MENUS];
+#ifdef PBL_BW
 InverterLayer *g_inverter_layer;
+#endif
 TextLayer *g_narration_text_layer;
 AppTimer *g_flash_timer,
          *g_attack_timer;

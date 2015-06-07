@@ -4,7 +4,7 @@
      Author: David C. Drake (http://davidcdrake.com)
 
 Description: Function definitions for PebbleQuest, a first-person 3D fantasy
-             RPG developed for the Pebble smartwatch (SDK 2). More information
+             RPG developed for the Pebble smartwatch (SDK 3). More information
              available online: http://davidcdrake.com/pebblequest
 ******************************************************************************/
 
@@ -2330,7 +2330,9 @@ Description: Briefly "flashes" the graphics frame by inverting all its pixels.
 ******************************************************************************/
 void flash_screen(void)
 {
+#ifdef PBL_BW
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), false);
+#endif
   g_flash_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                      flash_timer_callback,
                                      NULL);
@@ -2348,7 +2350,9 @@ Description: Called when the flash timer reaches zero. Hides the inverter
 ******************************************************************************/
 static void flash_timer_callback(void *data)
 {
+#ifdef PBL_BW
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
+#endif
 }
 
 /******************************************************************************
@@ -2377,7 +2381,9 @@ Description: Called when the graphics window appears.
 ******************************************************************************/
 static void graphics_window_appear(Window *window)
 {
+#ifdef PBL_BW
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
+#endif
   g_player_is_attacking = false;
   g_current_window      = GRAPHICS_WINDOW;
 }
@@ -3471,9 +3477,11 @@ void init_window(const int8_t window_index)
                           draw_scene);
 
     // Graphics frame inverter (for the "flash" effect):
+#ifdef PBL_BW
     g_inverter_layer = inverter_layer_create(GRAPHICS_FRAME);
     layer_add_child(window_get_root_layer(g_windows[window_index]),
                     inverter_layer_get_layer(g_inverter_layer));
+#endif
   }
 }
 
@@ -3497,10 +3505,12 @@ void deinit_window(const int8_t window_index)
   {
     text_layer_destroy(g_narration_text_layer);
   }
+#ifdef PBL_BW
   else // if (window_index == GRAPHICS_WINDOW)
   {
     inverter_layer_destroy(g_inverter_layer);
   }
+#endif
   window_destroy(g_windows[window_index]);
 }
 
