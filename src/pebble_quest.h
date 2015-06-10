@@ -365,9 +365,6 @@ typedef struct Location {
 
 Window *g_windows[NUM_WINDOWS];
 MenuLayer *g_menu_layers[NUM_MENUS];
-#ifdef PBL_BW
-InverterLayer *g_inverter_layer;
-#endif
 TextLayer *g_narration_text_layer;
 AppTimer *g_flash_timer,
          *g_attack_timer;
@@ -385,6 +382,12 @@ bool g_player_is_attacking;
 GPath *g_compass_path;
 player_t *g_player;
 location_t *g_location;
+
+#ifdef PBL_COLOR
+StatusBarLayer *g_status_bar;
+#else
+InverterLayer *g_inverter_layer;
+#endif
 
 /******************************************************************************
   Function Declarations
