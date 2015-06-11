@@ -833,7 +833,7 @@ int8_t show_window(const int8_t window, const bool animated)
 
 #ifdef PBL_COLOR
   layer_add_child(window_get_root_layer(g_windows[window]),
-                  g_status_bar);
+                  status_bar_layer_get_layer(g_status_bar));
 #endif
 
   return g_current_window = window;
