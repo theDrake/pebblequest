@@ -1542,17 +1542,7 @@ void draw_floor_and_ceiling(GContext *ctx)
 {
   uint8_t x, y, max_y, shading_offset;
 
-  x     = 2;
-  max_y = g_back_wall_coords[MAX_VISIBILITY_DEPTH - x]
-                            [STRAIGHT_AHEAD]
-                            [TOP_LEFT].y;
-  while (max_y > GRAPHICS_FRAME_HEIGHT / 2 - MIN_WALL_HEIGHT / 2 &&
-         x <= MAX_VISIBILITY_DEPTH)
-  {
-    max_y = g_back_wall_coords[MAX_VISIBILITY_DEPTH - ++x]
-                              [STRAIGHT_AHEAD]
-                              [TOP_LEFT].y;
-  }
+  max_y = g_back_wall_coords[MAX_VISIBILITY_DEPTH - 2][0][TOP_LEFT].y;
   graphics_context_set_stroke_color(ctx, GColorWhite);
   for (y = 0; y < max_y; ++y)
   {
@@ -1567,10 +1557,8 @@ void draw_floor_and_ceiling(GContext *ctx)
          x < GRAPHICS_FRAME_WIDTH;
          x += shading_offset)
     {
-      // Draw a point on the ceiling:
+      // Draw one point on the ceiling and one on the floor:
       graphics_draw_pixel(ctx, GPoint(x, y));
-
-      // Draw a point on the floor:
       graphics_draw_pixel(ctx, GPoint(x, GRAPHICS_FRAME_HEIGHT - y));
     }
   }
