@@ -176,7 +176,6 @@ enum {
 #define RANDOM_POINT_SOUTH              GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
 #define RANDOM_POINT_EAST               GPoint(MAP_WIDTH - 1, rand() % MAP_HEIGHT)
 #define RANDOM_POINT_WEST               GPoint(0, rand() % MAP_HEIGHT)
-#define NARRATION_TEXT_LAYER_FRAME      GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #define NARRATION_FONT                  fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
 #define NUM_PEBBLE_TYPES                (PEBBLE_OF_DEATH + 1)
 #define NUM_HEAVY_ITEM_TYPES            (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES)
@@ -189,7 +188,20 @@ enum {
 #define SCREEN_CENTER_POINT_Y           (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
 #define SCREEN_CENTER_POINT             GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
 #define STATUS_BAR_HEIGHT               16 // Applies to top and bottom status bars.
+
+#ifdef PBL_COLOR
+#define FULL_SCREEN_FRAME               GRect(0, STATUS_BAR_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
+#define GRAPHICS_FRAME                  GRect(0, STATUS_BAR_HEIGHT, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
+#define NARRATION_TEXT_LAYER_FRAME      GRect(2, STATUS_BAR_HEIGHT, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
+#define RANDOM_COLOR                    GColorFromRGB(rand() % 256, rand() % 256, rand() % 256)
+#define RANDOM_DARK_COLOR               GColorFromRGB(rand() % 128, rand() % 128, rand() % 128)
+#define RANDOM_BRIGHT_COLOR             GColorFromRGB(rand() % 128 + 128, rand() % 128 + 128, rand() % 128 + 128)
+#else
 #define FULL_SCREEN_FRAME               GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
+#define GRAPHICS_FRAME                  GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
+#define NARRATION_TEXT_LAYER_FRAME      GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
+#endif
+
 #define STATUS_BAR_FONT                 fonts_get_system_font(FONT_KEY_GOTHIC_14)
 #define STATUS_METER_PADDING            4
 #define STATUS_METER_WIDTH              (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
@@ -198,7 +210,6 @@ enum {
 #define MIN_WALL_HEIGHT                 STATUS_BAR_HEIGHT
 #define GRAPHICS_FRAME_WIDTH            SCREEN_WIDTH
 #define GRAPHICS_FRAME_HEIGHT           (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
-#define GRAPHICS_FRAME                  GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
 #define MAX_VISIBILITY_DEPTH            6 // Helps determine no. of cells visible in a given line of sight.
 #define STRAIGHT_AHEAD                  (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
 #define TOP_LEFT                        0                          // Index value for "g_back_wall_coords".
@@ -354,7 +365,13 @@ typedef struct NonPlayerCharacter {
 } __attribute__((__packed__)) npc_t;
 
 typedef struct Location {
+#ifdef PBL_COLOR
+  int8_t map[MAP_WIDTH][MAP_HEIGHT],
+         floor_color_scheme,
+         wall_color_scheme;
+#else
   int8_t map[MAP_WIDTH][MAP_HEIGHT];
+#endif
   GPoint entrance;
   npc_t npcs[MAX_NPCS_AT_ONE_TIME];
 } __attribute__((__packed__)) location_t;
@@ -384,6 +401,10 @@ player_t *g_player;
 location_t *g_location;
 
 #ifdef PBL_COLOR
+#define NUM_BACKGROUND_COLOR_SCHEMES     8
+#define NUM_BACKGROUND_COLORS_PER_SCHEME 10
+GColor g_background_colors[NUM_BACKGROUND_COLOR_SCHEMES]
+                          [NUM_BACKGROUND_COLORS_PER_SCHEME];
 StatusBarLayer *g_status_bar;
 #else
 InverterLayer *g_inverter_layer;

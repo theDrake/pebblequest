@@ -2206,16 +2206,16 @@ void draw_status_bar(GContext *ctx)
 {
   // Health meter:
   draw_status_meter(ctx,
-                    GPoint (STATUS_METER_PADDING,
-                            GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
+                    GPoint(STATUS_METER_PADDING,
+                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
                     (float) g_player->int16_stats[CURRENT_HEALTH] /
                       g_player->int16_stats[MAX_HEALTH]);
 
   // Energy meter:
   draw_status_meter(ctx,
-                    GPoint (SCREEN_CENTER_POINT_X + STATUS_METER_PADDING +
-                              COMPASS_RADIUS + 1,
-                            GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
+                    GPoint(SCREEN_CENTER_POINT_X + STATUS_METER_PADDING +
+                             COMPASS_RADIUS + 1,
+                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
                     (float) g_player->int16_stats[CURRENT_ENERGY] /
                       g_player->int16_stats[MAX_ENERGY]);
 
@@ -3469,11 +3469,107 @@ void init_window(const int8_t window_index)
     layer_set_update_proc(window_get_root_layer(g_windows[window_index]),
                           draw_scene);
 
-    // Graphics frame inverter (for the "flash" effect):
 #ifdef PBL_BW
+    // Graphics frame inverter (for the "flash" effect):
     g_inverter_layer = inverter_layer_create(GRAPHICS_FRAME);
     layer_add_child(window_get_root_layer(g_windows[window_index]),
                     inverter_layer_get_layer(g_inverter_layer));
+#else
+    // Blue background color scheme:
+    g_background_colors[0][0] = GColorCeleste;
+    g_background_colors[0][1] = GColorCeleste;
+    g_background_colors[0][2] = GColorElectricBlue;
+    g_background_colors[0][3] = GColorElectricBlue;
+    g_background_colors[0][4] = GColorPictonBlue;
+    g_background_colors[0][5] = GColorPictonBlue;
+    g_background_colors[0][6] = GColorVividCerulean;
+    g_background_colors[0][7] = GColorVividCerulean;
+    g_background_colors[0][8] = GColorVeryLightBlue;
+    g_background_colors[0][9] = GColorVeryLightBlue;
+
+    // Orange/brown/red background color scheme:
+    g_background_colors[1][0] = GColorIcterine;
+    g_background_colors[1][1] = GColorIcterine;
+    g_background_colors[1][2] = GColorRajah;
+    g_background_colors[1][3] = GColorRajah;
+    g_background_colors[1][4] = GColorOrange;
+    g_background_colors[1][5] = GColorOrange;
+    g_background_colors[1][6] = GColorWindsorTan;
+    g_background_colors[1][7] = GColorWindsorTan;
+    g_background_colors[1][8] = GColorBulgarianRose;
+    g_background_colors[1][9] = GColorBulgarianRose;
+
+    // Blue/green background color scheme:
+    g_background_colors[2][0] = GColorMediumAquamarine;
+    g_background_colors[2][1] = GColorMediumAquamarine;
+    g_background_colors[2][2] = GColorMediumSpringGreen;
+    g_background_colors[2][3] = GColorMediumSpringGreen;
+    g_background_colors[2][4] = GColorCadetBlue;
+    g_background_colors[2][5] = GColorCadetBlue;
+    g_background_colors[2][6] = GColorTiffanyBlue;
+    g_background_colors[2][7] = GColorTiffanyBlue;
+    g_background_colors[2][8] = GColorMidnightGreen;
+    g_background_colors[2][9] = GColorMidnightGreen;
+
+    // Red background color scheme:
+    g_background_colors[3][0] = GColorMelon;
+    g_background_colors[3][1] = GColorMelon;
+    g_background_colors[3][2] = GColorSunsetOrange;
+    g_background_colors[3][3] = GColorSunsetOrange;
+    g_background_colors[3][4] = GColorFolly;
+    g_background_colors[3][5] = GColorFolly;
+    g_background_colors[3][6] = GColorRed;
+    g_background_colors[3][7] = GColorRed;
+    g_background_colors[3][8] = GColorDarkCandyAppleRed;
+    g_background_colors[3][9] = GColorDarkCandyAppleRed;
+
+    // Green background color scheme:
+    g_background_colors[4][0] = GColorMintGreen;
+    g_background_colors[4][1] = GColorMintGreen;
+    g_background_colors[4][2] = GColorSpringBud;
+    g_background_colors[4][3] = GColorSpringBud;
+    g_background_colors[4][4] = GColorBrightGreen;
+    g_background_colors[4][5] = GColorBrightGreen;
+    g_background_colors[4][6] = GColorGreen;
+    g_background_colors[4][7] = GColorGreen;
+    g_background_colors[4][8] = GColorIslamicGreen;
+    g_background_colors[4][9] = GColorIslamicGreen;
+
+    // Purple background color scheme:
+    g_background_colors[5][0] = GColorBabyBlueEyes;
+    g_background_colors[5][1] = GColorBabyBlueEyes;
+    g_background_colors[5][2] = GColorLavenderIndigo;
+    g_background_colors[5][3] = GColorLavenderIndigo;
+    g_background_colors[5][4] = GColorVividViolet;
+    g_background_colors[5][5] = GColorVividViolet;
+    g_background_colors[5][6] = GColorPurple;
+    g_background_colors[5][7] = GColorPurple;
+    g_background_colors[5][8] = GColorImperialPurple;
+    g_background_colors[5][9] = GColorImperialPurple;
+
+    // Yellow/green background color scheme:
+    g_background_colors[6][0] = GColorYellow;
+    g_background_colors[6][1] = GColorYellow;
+    g_background_colors[6][2] = GColorChromeYellow;
+    g_background_colors[6][3] = GColorChromeYellow;
+    g_background_colors[6][4] = GColorBrass;
+    g_background_colors[6][5] = GColorBrass;
+    g_background_colors[6][6] = GColorLimerick;
+    g_background_colors[6][7] = GColorLimerick;
+    g_background_colors[6][8] = GColorArmyGreen;
+    g_background_colors[6][9] = GColorArmyGreen;
+
+    // Magenta background color scheme:
+    g_background_colors[7][0] = GColorRichBrilliantLavender;
+    g_background_colors[7][1] = GColorRichBrilliantLavender;
+    g_background_colors[7][2] = GColorShockingPink;
+    g_background_colors[7][3] = GColorShockingPink;
+    g_background_colors[7][4] = GColorMagenta;
+    g_background_colors[7][5] = GColorMagenta;
+    g_background_colors[7][6] = GColorFashionMagenta;
+    g_background_colors[7][7] = GColorFashionMagenta;
+    g_background_colors[7][8] = GColorJazzberryJam;
+    g_background_colors[7][9] = GColorJazzberryJam;
 #endif
   }
 }
@@ -3526,14 +3622,19 @@ void init(void)
   // Set up graphics window and graphics-related variables:
   init_window(GRAPHICS_WINDOW);
   init_wall_coords();
-  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
+  g_player_is_attacking = false;
+  g_compass_path        = gpath_create(&COMPASS_PATH_INFO);
 #ifdef PBL_COLOR
+  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
+                                       GRAPHICS_FRAME_HEIGHT +
+                                         STATUS_BAR_HEIGHT   +
+                                         STATUS_BAR_HEIGHT / 2));
   g_status_bar = status_bar_layer_create();
-#endif
+#else
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
-  g_player_is_attacking = false;
+#endif
 
   // Load saved data or initialize a brand new player struct:
   g_player   = malloc(sizeof(player_t));
