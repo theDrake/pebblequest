@@ -2207,7 +2207,12 @@ void draw_status_bar(GContext *ctx)
   // Health meter:
   draw_status_meter(ctx,
                     GPoint(STATUS_METER_PADDING,
+#ifdef PBL_COLOR
+                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING +
+                             STATUS_BAR_HEIGHT),
+#else
                            GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
+#endif
                     (float) g_player->int16_stats[CURRENT_HEALTH] /
                       g_player->int16_stats[MAX_HEALTH]);
 
@@ -2215,14 +2220,24 @@ void draw_status_bar(GContext *ctx)
   draw_status_meter(ctx,
                     GPoint(SCREEN_CENTER_POINT_X + STATUS_METER_PADDING +
                              COMPASS_RADIUS + 1,
+#ifdef PBL_COLOR
+                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING +
+                             STATUS_BAR_HEIGHT),
+#else
                            GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
+#endif
                     (float) g_player->int16_stats[CURRENT_ENERGY] /
                       g_player->int16_stats[MAX_ENERGY]);
 
   // Compass:
   graphics_fill_circle(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
+#ifdef PBL_COLOR
+                              GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2 +
+                                STATUS_BAR_HEIGHT),
+#else
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2),
+#endif
                        COMPASS_RADIUS);
   graphics_context_set_fill_color(ctx, GColorBlack);
   gpath_draw_outline(ctx, g_compass_path);
