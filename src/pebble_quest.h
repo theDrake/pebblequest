@@ -524,7 +524,6 @@ void draw_shaded_quad(GContext *ctx,
                       const GPoint upper_right,
                       const GPoint lower_right,
                       const GPoint shading_ref);
-void draw_status_bar(GContext *ctx);
 void draw_status_meter(GContext *ctx,
                        const GPoint origin,
                        const float ratio);
