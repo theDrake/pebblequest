@@ -3296,6 +3296,11 @@ void init_location(void)
   int8_t i, j, builder_direction;
   GPoint builder_position;
 
+#ifdef PBL_COLOR
+  g_location->floor_color_scheme = rand() % NUM_BACKGROUND_COLOR_SCHEMES;
+  g_location->wall_color_scheme  = rand() % NUM_BACKGROUND_COLOR_SCHEMES;
+#endif
+
   // Remove any preexisting NPCs:
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
   {
