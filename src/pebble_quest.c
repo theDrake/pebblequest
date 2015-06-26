@@ -3736,6 +3736,7 @@ void init(void)
   {
     persist_read_data(STORAGE_KEY, g_player, sizeof(player_t));
     persist_read_data(STORAGE_KEY + 1, g_location, sizeof(location_t));
+    set_player_direction(g_player->direction); // To update compass.
   }
   else
   {
