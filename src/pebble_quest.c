@@ -1872,10 +1872,10 @@ void draw_cell_contents(GContext *ctx,
 {
   uint8_t drawing_unit; // Reference variable for drawing contents at depth.
   int16_t i, x_midpoint1, x_midpoint2;
-  GPoint floor_center_point;
+  GPoint floor_center_point, top_left_point;
   npc_t *npc = get_npc_at(cell);
 
-  // Determine the drawing unit and floor center point:
+  // Determine the drawing unit and top left point:
   drawing_unit = (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
                   g_back_wall_coords[depth][position][TOP_LEFT].x) / 10;
   if ((g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
@@ -1883,14 +1883,10 @@ void draw_cell_contents(GContext *ctx,
   {
     drawing_unit++;
   }
-
-#ifdef PBL_COLOR
-  floor_center_point.y += STATUS_BAR_HEIGHT;
-  top_left_point.y     += STATUS_BAR_HEIGHT;
-#endif
+  top_left_point = g_back_wall_coords[depth][position][TOP_LEFT];
 
   // Determine floor center point:
-  x_midpoint1 = (g_back_wall_coords[depth][position][TOP_LEFT].x +
+  x_midpoint1 = (top_left_point.x +
                  g_back_wall_coords[depth][position][BOTTOM_RIGHT].x) / 2;
   if (depth == 0)
   {
@@ -1919,6 +1915,11 @@ void draw_cell_contents(GContext *ctx,
   }
   floor_center_point.x = (x_midpoint1 + x_midpoint2) / 2;
 
+#ifdef PBL_COLOR
+  floor_center_point.y += STATUS_BAR_HEIGHT;
+  top_left_point.y     += STATUS_BAR_HEIGHT;
+#endif
+
   // Check for an entrance (hole in the ceiling):
   if (gpoint_equal(&cell, &g_location->entrance))
   {
@@ -1927,7 +1928,7 @@ void draw_cell_contents(GContext *ctx,
                         GRAPHICS_FRAME_HEIGHT - floor_center_point.y),
                  ELLIPSE_RADIUS_RATIO *
                    (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
-                    g_back_wall_coords[depth][position][TOP_LEFT].x),
+                    top_left_point.x),
                  depth == 0                                               ?
                    ELLIPSE_RADIUS_RATIO *
                     (GRAPHICS_FRAME_HEIGHT -
@@ -1945,7 +1946,7 @@ void draw_cell_contents(GContext *ctx,
                  GPoint(floor_center_point.x, floor_center_point.y),
                  ELLIPSE_RADIUS_RATIO *
                    (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
-                    g_back_wall_coords[depth][position][TOP_LEFT].x),
+                    top_left_point.x),
                  depth == 0                                               ?
                    ELLIPSE_RADIUS_RATIO *
                     (GRAPHICS_FRAME_HEIGHT -
@@ -2154,10 +2155,7 @@ void draw_cell_contents(GContext *ctx,
                             floor_center_point.y - drawing_unit * 4),
                      GPoint(floor_center_point.x - drawing_unit / 2,
                             floor_center_point.y),
-                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
-                              10,
-                            g_back_wall_coords[depth][position][TOP_LEFT].y -
-                              10));
+                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
     draw_shaded_quad(ctx,
                      GPoint(floor_center_point.x + drawing_unit / 2,
                             floor_center_point.y - drawing_unit * 4),
@@ -2169,10 +2167,7 @@ void draw_cell_contents(GContext *ctx,
                      GPoint(floor_center_point.x + drawing_unit +
                               drawing_unit / 2,
                             floor_center_point.y),
-                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
-                              10,
-                            g_back_wall_coords[depth][position][TOP_LEFT].y -
-                              10));
+                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
 
     // Arms (as one big rectangle behind the torso, shield, and weapon):
     draw_shaded_quad(ctx,
@@ -2188,10 +2183,7 @@ void draw_cell_contents(GContext *ctx,
                      GPoint(floor_center_point.x + drawing_unit * 2 +
                               drawing_unit / 2,
                             floor_center_point.y - drawing_unit * 5),
-                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
-                              10,
-                            g_back_wall_coords[depth][position][TOP_LEFT].y -
-                              10));
+                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
 
     // Torso:
     draw_shaded_quad(ctx,
@@ -2207,10 +2199,7 @@ void draw_cell_contents(GContext *ctx,
                      GPoint(floor_center_point.x + drawing_unit +
                               drawing_unit / 2,
                             floor_center_point.y - drawing_unit * 3),
-                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x +
-                              4,
-                            g_back_wall_coords[depth][position][TOP_LEFT].y +
-                              4));
+                     GPoint(top_left_point.x + 4, top_left_point.y + 4));
 
     // Head:
     draw_shaded_quad(ctx,
@@ -2222,10 +2211,7 @@ void draw_cell_contents(GContext *ctx,
                             floor_center_point.y - drawing_unit * 9),
                      GPoint(floor_center_point.x + drawing_unit - 1,
                             floor_center_point.y - drawing_unit * 7),
-                     GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x -
-                              10,
-                            g_back_wall_coords[depth][position][TOP_LEFT].y -
-                              10));
+                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 8 -
