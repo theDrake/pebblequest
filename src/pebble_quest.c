@@ -791,27 +791,27 @@ int8_t show_narration(const int8_t narration)
 
 Description: Prepares and displays a given window.
 
-     Inputs: window   - Integer representing the desired window.
-             animated - If "true", the window will slide into view.
+     Inputs: window_index - Integer representing the desired window.
+             animated     - If "true", the window will slide into view.
 
     Outputs: Integer representing the newly-displayed window.
 ******************************************************************************/
-int8_t show_window(const int8_t window, const bool animated)
+int8_t show_window(const int8_t window_index, const bool animated)
 {
   // If it's a menu, reload menu data and set to the appropriate index:
-  if (window < NUM_MENUS)
+  if (window_index < NUM_MENUS)
   {
-    menu_layer_reload_data(g_menu_layers[window]);
-    if (window == INVENTORY_MENU)
+    menu_layer_reload_data(g_menu_layers[window_index]);
+    if (window_index == INVENTORY_MENU)
     {
-      menu_layer_set_selected_index(g_menu_layers[window],
+      menu_layer_set_selected_index(g_menu_layers[window_index],
                                     (MenuIndex) {0, g_current_selection},
                                     MenuRowAlignCenter,
                                     NOT_ANIMATED);
     }
     else
     {
-      menu_layer_set_selected_index(g_menu_layers[window],
+      menu_layer_set_selected_index(g_menu_layers[window_index],
                                     (MenuIndex) {0, 0},
                                     MenuRowAlignCenter,
                                     NOT_ANIMATED);
@@ -819,24 +819,19 @@ int8_t show_window(const int8_t window, const bool animated)
   }
 
   // Show the window:
-  if (!window_stack_contains_window(g_windows[window]))
+  if (!window_stack_contains_window(g_windows[window_index]))
   {
-    window_stack_push(g_windows[window], animated);
+    window_stack_push(g_windows[window_index], animated);
   }
   else
   {
-    while (window_stack_get_top_window() != g_windows[window])
+    while (window_stack_get_top_window() != g_windows[window_index])
     {
       window_stack_pop(animated);
     }
   }
 
-#ifdef PBL_COLOR
-  layer_add_child(window_get_root_layer(g_windows[window]),
-                  status_bar_layer_get_layer(g_status_bar));
-#endif
-
-  return g_current_window = window;
+  return g_current_window = window_index;
 }
 
 /******************************************************************************
@@ -3670,6 +3665,13 @@ void init_window(const int8_t window_index)
     g_background_colors[7][9] = GColorJazzberryJam;
 #endif
   }
+
+  // Add top status bar (Basalt watches only):
+#ifdef PBL_COLOR
+  g_status_bars[window_index] = status_bar_layer_create();
+  layer_add_child(window_get_root_layer(g_windows[window_index]),
+                  status_bar_layer_get_layer(g_status_bars[window_index]));
+#endif
 }
 
 /******************************************************************************
@@ -3697,6 +3699,8 @@ void deinit_window(const int8_t window_index)
   {
     inverter_layer_destroy(g_inverter_layer);
   }
+#else
+  status_bar_layer_destroy(g_status_bars[window_index]);
 #endif
   window_destroy(g_windows[window_index]);
 }
@@ -3714,7 +3718,7 @@ void init(void)
 {
   int8_t i;
 
-  srand(time(NULL));
+  srand(time(0));
   g_current_window = MAIN_MENU;
 
   // Set up graphics window and graphics-related variables:
@@ -3727,7 +3731,6 @@ void init(void)
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT   +
                                          STATUS_BAR_HEIGHT / 2));
-  g_status_bar = status_bar_layer_create();
 #else
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
@@ -3779,9 +3782,6 @@ void deinit(void)
   app_focus_service_unsubscribe();
   free(g_player);
   free(g_location);
-#ifdef PBL_COLOR
-  status_bar_layer_destroy(g_status_bar);
-#endif
   for (i = 0; i < NUM_WINDOWS; ++i)
   {
     deinit_window(i);

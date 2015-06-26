@@ -159,91 +159,93 @@ enum {
   Other Constants
 ******************************************************************************/
 
-#define NUM_MAJOR_STATS                 3 // AGILITY, STRENGTH, and INTELLECT.
-#define FIRST_MAJOR_STAT                AGILITY
-#define NUM_NEGATIVE_STAT_CONSTANTS     3
-#define NUM_MENUS                       (STATS_MENU + 1)
-#define DEFAULT_MAJOR_STAT_VALUE        1 // AGILITY, STRENGTH, and INTELLECT.
-#define DEFAULT_MAX_HEALTH              10
-#define DEFAULT_MAX_ENERGY              10
-#define MIN_DAMAGE_TO_NPC               1
-#define MIN_FATIGUE_RATE                3
-#define DEFAULT_ITEM_BONUS              3
-#define MAX_NPCS_AT_ONE_TIME            2
-#define MAP_WIDTH                       10
-#define MAP_HEIGHT                      MAP_WIDTH
-#define RANDOM_POINT_NORTH              GPoint(rand() % MAP_WIDTH, 0)
-#define RANDOM_POINT_SOUTH              GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
-#define RANDOM_POINT_EAST               GPoint(MAP_WIDTH - 1, rand() % MAP_HEIGHT)
-#define RANDOM_POINT_WEST               GPoint(0, rand() % MAP_HEIGHT)
-#define NARRATION_FONT                  fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
-#define NUM_PEBBLE_TYPES                (PEBBLE_OF_DEATH + 1)
-#define NUM_HEAVY_ITEM_TYPES            (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES)
-#define FIRST_HEAVY_ITEM                DAGGER
-#define MAX_HEAVY_ITEMS                 5
-#define RANDOM_ITEM                     (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
-#define SCREEN_WIDTH                    144
-#define SCREEN_HEIGHT                   168
-#define SCREEN_CENTER_POINT_X           (SCREEN_WIDTH / 2)
-#define SCREEN_CENTER_POINT_Y           (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
-#define SCREEN_CENTER_POINT             GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
-#define STATUS_BAR_HEIGHT               16 // Applies to top and bottom status bars.
+#define NUM_MAJOR_STATS                  3 // AGILITY, STRENGTH, and INTELLECT.
+#define FIRST_MAJOR_STAT                 AGILITY
+#define NUM_NEGATIVE_STAT_CONSTANTS      3
+#define NUM_MENUS                        (STATS_MENU + 1)
+#define DEFAULT_MAJOR_STAT_VALUE         1 // AGILITY, STRENGTH, and INTELLECT.
+#define DEFAULT_MAX_HEALTH               10
+#define DEFAULT_MAX_ENERGY               10
+#define MIN_DAMAGE_TO_NPC                1
+#define MIN_FATIGUE_RATE                 3
+#define DEFAULT_ITEM_BONUS               3
+#define MAX_NPCS_AT_ONE_TIME             2
+#define MAP_WIDTH                        10
+#define MAP_HEIGHT                       MAP_WIDTH
+#define RANDOM_POINT_NORTH               GPoint(rand() % MAP_WIDTH, 0)
+#define RANDOM_POINT_SOUTH               GPoint(rand() % MAP_WIDTH, MAP_HEIGHT - 1)
+#define RANDOM_POINT_EAST                GPoint(MAP_WIDTH - 1, rand() % MAP_HEIGHT)
+#define RANDOM_POINT_WEST                GPoint(0, rand() % MAP_HEIGHT)
+#define NARRATION_FONT                   fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
+#define NUM_PEBBLE_TYPES                 (PEBBLE_OF_DEATH + 1)
+#define NUM_HEAVY_ITEM_TYPES             (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES)
+#define FIRST_HEAVY_ITEM                 DAGGER
+#define MAX_HEAVY_ITEMS                  5
+#define RANDOM_ITEM                      (rand() % (NUM_ITEM_TYPES - NUM_PEBBLE_TYPES) + NUM_PEBBLE_TYPES)
+#define SCREEN_WIDTH                     144
+#define SCREEN_HEIGHT                    168
+#define SCREEN_CENTER_POINT_X            (SCREEN_WIDTH / 2)
+#define SCREEN_CENTER_POINT_Y            (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
+#define SCREEN_CENTER_POINT              GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
+#define STATUS_BAR_HEIGHT                16 // Applies to top and bottom status bars.
 
 #ifdef PBL_COLOR
-#define FULL_SCREEN_FRAME               GRect(0, STATUS_BAR_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
-#define GRAPHICS_FRAME                  GRect(0, STATUS_BAR_HEIGHT, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
-#define NARRATION_TEXT_LAYER_FRAME      GRect(2, STATUS_BAR_HEIGHT, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
-#define RANDOM_COLOR                    GColorFromRGB(rand() % 256, rand() % 256, rand() % 256)
-#define RANDOM_DARK_COLOR               GColorFromRGB(rand() % 128, rand() % 128, rand() % 128)
-#define RANDOM_BRIGHT_COLOR             GColorFromRGB(rand() % 128 + 128, rand() % 128 + 128, rand() % 128 + 128)
+#define FULL_SCREEN_FRAME                GRect(0, STATUS_BAR_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
+#define GRAPHICS_FRAME                   GRect(0, STATUS_BAR_HEIGHT, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
+#define NARRATION_TEXT_LAYER_FRAME       GRect(2, STATUS_BAR_HEIGHT, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
+#define NUM_BACKGROUND_COLOR_SCHEMES     8
+#define NUM_BACKGROUND_COLORS_PER_SCHEME 10
+#define RANDOM_COLOR                     GColorFromRGB(rand() % 256, rand() % 256, rand() % 256)
+#define RANDOM_DARK_COLOR                GColorFromRGB(rand() % 128, rand() % 128, rand() % 128)
+#define RANDOM_BRIGHT_COLOR              GColorFromRGB(rand() % 128 + 128, rand() % 128 + 128, rand() % 128 + 128)
 #else
-#define FULL_SCREEN_FRAME               GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
-#define GRAPHICS_FRAME                  GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
-#define NARRATION_TEXT_LAYER_FRAME      GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
+#define FULL_SCREEN_FRAME                GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
+#define GRAPHICS_FRAME                   GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
+#define NARRATION_TEXT_LAYER_FRAME       GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
 #endif
 
-#define STATUS_BAR_FONT                 fonts_get_system_font(FONT_KEY_GOTHIC_14)
-#define STATUS_METER_PADDING            4
-#define STATUS_METER_WIDTH              (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
-#define STATUS_METER_HEIGHT             (STATUS_BAR_HEIGHT - STATUS_METER_PADDING * 2)
-#define FIRST_WALL_OFFSET               STATUS_BAR_HEIGHT
-#define MIN_WALL_HEIGHT                 STATUS_BAR_HEIGHT
-#define GRAPHICS_FRAME_WIDTH            SCREEN_WIDTH
-#define GRAPHICS_FRAME_HEIGHT           (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
-#define MAX_VISIBILITY_DEPTH            6 // Helps determine no. of cells visible in a given line of sight.
-#define STRAIGHT_AHEAD                  (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
-#define TOP_LEFT                        0                          // Index value for "g_back_wall_coords".
-#define BOTTOM_RIGHT                    1                          // Index value for "g_back_wall_coords".
-#define COMPASS_RADIUS                  5
-#define NO_CORNER_RADIUS                0
-#define SMALL_CORNER_RADIUS             3
-#define NINETY_DEGREES                  (TRIG_MAX_ANGLE / 4)
-#define DEFAULT_ROTATION_RATE           (TRIG_MAX_ANGLE / 26) // 13.8 degrees per rotation event.
-#define ELLIPSE_RADIUS_RATIO            0.4
-#define HEAVY_ITEMS_MENU_HEADER_STR_LEN 16
-#define ITEM_TITLE_STR_LEN              19
-#define ITEM_SUBTITLE_STR_LEN           13
-#define STAT_TITLE_STR_LEN              19
-#define STATS_MENU_NUM_ROWS             (NUM_INT8_STATS + NUM_NEGATIVE_STAT_CONSTANTS)
-#define LEVEL_UP_MENU_NUM_ROWS          NUM_MAJOR_STATS // 3
-#define MAIN_MENU_NUM_ROWS              3
-#define PEBBLE_OPTIONS_MENU_NUM_ROWS    2
-#define LOOT_MENU_NUM_ROWS              1
-#define EQUIPPED_STR                    "Equipped"
-#define MULTI_CLICK_MIN                 2
-#define MULTI_CLICK_MAX                 2   // We only care about double-clicks.
-#define MULTI_CLICK_TIMEOUT             0   // milliseconds
-#define PLAYER_ACTION_REPEAT_INTERVAL   250 // milliseconds
-#define LAST_CLICK_ONLY                 true
-#define DEFAULT_TIMER_DURATION          20 // milliseconds
-#define DEFAULT_MAX_SMALL_INT_VALUE     100
-#define MAX_SMALL_INT_DIGITS            3
-#define MAX_LARGE_INT_DIGITS            5
-#define MAX_DEPTH                       DEFAULT_MAX_SMALL_INT_VALUE
-#define MAX_LEVEL                       DEFAULT_MAX_SMALL_INT_VALUE
-#define STORAGE_KEY                     841
-#define ANIMATED                        true
-#define NOT_ANIMATED                    false
+#define STATUS_BAR_FONT                  fonts_get_system_font(FONT_KEY_GOTHIC_14)
+#define STATUS_METER_PADDING             4
+#define STATUS_METER_WIDTH               (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
+#define STATUS_METER_HEIGHT              (STATUS_BAR_HEIGHT - STATUS_METER_PADDING * 2)
+#define FIRST_WALL_OFFSET                STATUS_BAR_HEIGHT
+#define MIN_WALL_HEIGHT                  STATUS_BAR_HEIGHT
+#define GRAPHICS_FRAME_WIDTH             SCREEN_WIDTH
+#define GRAPHICS_FRAME_HEIGHT            (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
+#define MAX_VISIBILITY_DEPTH             6 // Helps determine no. of cells visible in a given line of sight.
+#define STRAIGHT_AHEAD                   (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
+#define TOP_LEFT                         0                          // Index value for "g_back_wall_coords".
+#define BOTTOM_RIGHT                     1                          // Index value for "g_back_wall_coords".
+#define COMPASS_RADIUS                   5
+#define NO_CORNER_RADIUS                 0
+#define SMALL_CORNER_RADIUS              3
+#define NINETY_DEGREES                   (TRIG_MAX_ANGLE / 4)
+#define DEFAULT_ROTATION_RATE            (TRIG_MAX_ANGLE / 26) // 13.8 degrees per rotation event.
+#define ELLIPSE_RADIUS_RATIO             0.4
+#define HEAVY_ITEMS_MENU_HEADER_STR_LEN  16
+#define ITEM_TITLE_STR_LEN               19
+#define ITEM_SUBTITLE_STR_LEN            13
+#define STAT_TITLE_STR_LEN               19
+#define STATS_MENU_NUM_ROWS              (NUM_INT8_STATS + NUM_NEGATIVE_STAT_CONSTANTS)
+#define LEVEL_UP_MENU_NUM_ROWS           NUM_MAJOR_STATS // 3
+#define MAIN_MENU_NUM_ROWS               3
+#define PEBBLE_OPTIONS_MENU_NUM_ROWS     2
+#define LOOT_MENU_NUM_ROWS               1
+#define EQUIPPED_STR                     "Equipped"
+#define MULTI_CLICK_MIN                  2
+#define MULTI_CLICK_MAX                  2   // We only care about double-clicks.
+#define MULTI_CLICK_TIMEOUT              0   // milliseconds
+#define PLAYER_ACTION_REPEAT_INTERVAL    250 // milliseconds
+#define LAST_CLICK_ONLY                  true
+#define DEFAULT_TIMER_DURATION           20 // milliseconds
+#define DEFAULT_MAX_SMALL_INT_VALUE      100
+#define MAX_SMALL_INT_DIGITS             3
+#define MAX_LARGE_INT_DIGITS             5
+#define MAX_DEPTH                        DEFAULT_MAX_SMALL_INT_VALUE
+#define MAX_LEVEL                        DEFAULT_MAX_SMALL_INT_VALUE
+#define STORAGE_KEY                      841
+#define ANIMATED                         true
+#define NOT_ANIMATED                     false
 
 static const GPathInfo COMPASS_PATH_INFO = {
   .num_points = 4,
@@ -401,11 +403,9 @@ player_t *g_player;
 location_t *g_location;
 
 #ifdef PBL_COLOR
-#define NUM_BACKGROUND_COLOR_SCHEMES     8
-#define NUM_BACKGROUND_COLORS_PER_SCHEME 10
 GColor g_background_colors[NUM_BACKGROUND_COLOR_SCHEMES]
                           [NUM_BACKGROUND_COLORS_PER_SCHEME];
-StatusBarLayer *g_status_bar;
+StatusBarLayer *g_status_bars[NUM_WINDOWS];
 #else
 InverterLayer *g_inverter_layer;
 #endif
@@ -442,7 +442,7 @@ npc_t *get_npc_at(const GPoint cell);
 char *get_stat_title_str(const int8_t stat_index);
 bool occupiable(const GPoint cell);
 int8_t show_narration(const int8_t narration);
-int8_t show_window(const int8_t window, const bool animated);
+int8_t show_window(const int8_t window_index, const bool animated);
 static void main_menu_draw_header_callback(GContext *ctx,
                                            const Layer *cell_layer,
                                            uint16_t section_index,
