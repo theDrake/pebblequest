@@ -1925,7 +1925,12 @@ void draw_cell_contents(GContext *ctx,
   {
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x,
+#ifdef PBL_COLOR
+                        GRAPHICS_FRAME_HEIGHT - floor_center_point.y +
+                          STATUS_BAR_HEIGHT),
+#else
                         GRAPHICS_FRAME_HEIGHT - floor_center_point.y),
+#endif
                  ELLIPSE_RADIUS_RATIO *
                    (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
                     top_left_point.x),
