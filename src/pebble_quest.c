@@ -1962,7 +1962,12 @@ void draw_cell_contents(GContext *ctx,
   {
     if (get_cell_type(cell) >= 0) // Loot!
     {
+#ifdef PBL_COLOR
+      graphics_context_set_fill_color(ctx, time(0) % 2 ? GColorYellow :
+                                                         GColorPastelYellow);
+#else
       graphics_context_set_fill_color(ctx, GColorWhite);
+#endif
       graphics_fill_rect(ctx,
                          GRect(floor_center_point.x - drawing_unit * 2,
                                floor_center_point.y - drawing_unit * 2.5,
@@ -1990,10 +1995,12 @@ void draw_cell_contents(GContext *ctx,
   {
     drawing_unit++;
   }
+#ifdef PBL_BW
   graphics_context_set_fill_color(ctx,
                                   (npc->type % 2 == 0 ||
                                    npc->type >= WARRIOR_LARGE) ? GColorBlack :
                                                                  GColorWhite);
+#endif
 
   // Mages:
   if (npc->type == MAGE)
@@ -2017,7 +2024,11 @@ void draw_cell_contents(GContext *ctx,
                        GCornersTop);
 
     // Eyes:
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, RANDOM_BRIGHT_COLOR);
+#else
     graphics_context_set_fill_color(ctx, GColorWhite);
+#endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 3,
                                 floor_center_point.y - drawing_unit * 9),
@@ -2032,6 +2043,10 @@ void draw_cell_contents(GContext *ctx,
   else if (npc->type <= WHITE_MONSTER_SMALL)
   {
     // Body/head:
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorVividCerulean :
+                                                         GColorOxfordBlue);
+#endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 4),
@@ -2047,8 +2062,13 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x, i),
                          drawing_unit / 2);
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, npc->type % 2 ? RANDOM_DARK_COLOR :
+                                                         RANDOM_BRIGHT_COLOR);
+#else
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
                                                          GColorWhite);
+#endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x, i),
                          drawing_unit / 5);
@@ -2060,6 +2080,9 @@ void draw_cell_contents(GContext *ctx,
          i < floor_center_point.x + drawing_unit - drawing_unit / 4;
          i += drawing_unit / 2)
     {
+#ifdef PBL_COLOR
+      graphics_context_set_fill_color(ctx, GColorRichBrilliantLavender);
+#endif
       graphics_fill_rect(ctx,
                          GRect(i,
                                floor_center_point.y - drawing_unit * 4,
@@ -2073,6 +2096,11 @@ void draw_cell_contents(GContext *ctx,
   // Goblins, trolls, and ogres:
   else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
   {
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorLimerick :
+                                                         GColorArmyGreen);
+#endif
+
     // Legs:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2,
@@ -2212,6 +2240,9 @@ void draw_cell_contents(GContext *ctx,
                      GPoint(floor_center_point.x + drawing_unit - 1,
                             floor_center_point.y - drawing_unit * 7),
                      GPoint(top_left_point.x - 10, top_left_point.y - 10));
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, GColorBlack);
+#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 8 -
@@ -2222,6 +2253,9 @@ void draw_cell_contents(GContext *ctx,
                        GCornerNone);
 
     // Shield:
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, GColorDarkGray);
+#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 6,
@@ -2231,7 +2265,11 @@ void draw_cell_contents(GContext *ctx,
                        GCornersBottom);
 
     // Weapon:
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, GColorBrass);
+#else
     graphics_context_set_fill_color(ctx, GColorWhite);
+#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 -
                                drawing_unit / 4,
