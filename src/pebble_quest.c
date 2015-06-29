@@ -1922,7 +1922,7 @@ void draw_cell_contents(GContext *ctx,
                  GPoint(floor_center_point.x,
 #ifdef PBL_COLOR
                         GRAPHICS_FRAME_HEIGHT - floor_center_point.y +
-                          STATUS_BAR_HEIGHT),
+                          STATUS_BAR_HEIGHT * 2),
 #else
                         GRAPHICS_FRAME_HEIGHT - floor_center_point.y),
 #endif
@@ -1963,8 +1963,7 @@ void draw_cell_contents(GContext *ctx,
     if (get_cell_type(cell) >= 0) // Loot!
     {
 #ifdef PBL_COLOR
-      graphics_context_set_fill_color(ctx, time(0) % 2 ? GColorYellow :
-                                                         GColorPastelYellow);
+      graphics_context_set_fill_color(ctx, GColorYellow);
 #else
       graphics_context_set_fill_color(ctx, GColorWhite);
 #endif
@@ -2006,6 +2005,9 @@ void draw_cell_contents(GContext *ctx,
   if (npc->type == MAGE)
   {
     // Body:
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, GColorBlack);
+#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2,
                              floor_center_point.y - drawing_unit * 8,
@@ -2053,18 +2055,25 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit * 3 - drawing_unit / 2);
 
     // Eye:
+#ifdef PBL_COLOR
+    graphics_context_set_stroke_color(ctx, GColorPastelYellow);
+#endif
     i = floor_center_point.y - drawing_unit * 5;
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x, i),
                  drawing_unit + 1,
                  drawing_unit / 2 + 1,
                  npc->type % 2 ? GColorBlack : GColorWhite);
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx,
+                                    npc->type % 2 ? GColorDarkCandyAppleRed :
+                                                    GColorRed);
+#endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x, i),
                          drawing_unit / 2);
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? RANDOM_DARK_COLOR :
-                                                         RANDOM_BRIGHT_COLOR);
+    graphics_context_set_fill_color(ctx, GColorBlack);
 #else
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
                                                          GColorWhite);
@@ -2081,7 +2090,7 @@ void draw_cell_contents(GContext *ctx,
          i += drawing_unit / 2)
     {
 #ifdef PBL_COLOR
-      graphics_context_set_fill_color(ctx, GColorRichBrilliantLavender);
+      graphics_context_set_fill_color(ctx, GColorJazzberryJam);
 #endif
       graphics_fill_rect(ctx,
                          GRect(i,
@@ -2096,12 +2105,11 @@ void draw_cell_contents(GContext *ctx,
   // Goblins, trolls, and ogres:
   else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
   {
+    // Legs:
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorLimerick :
                                                          GColorArmyGreen);
 #endif
-
-    // Legs:
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2,
                              floor_center_point.y - drawing_unit * 3,
@@ -2154,8 +2162,12 @@ void draw_cell_contents(GContext *ctx,
                        GCornersAll);
 
     // Eyes:
+#ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, RANDOM_BRIGHT_COLOR);
+#else
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
                                                          GColorWhite);
+#endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
                                 floor_center_point.y - drawing_unit * 5 -
