@@ -1534,7 +1534,7 @@ void draw_scene(Layer *layer, GContext *ctx)
 
   // Draw compass:
 #ifdef PBL_COLOR
-  graphics_context_set_fill_color(ctx, GColorYellow);
+  graphics_context_set_fill_color(ctx, GColorCeleste);
   graphics_fill_circle(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2 +
@@ -2394,7 +2394,7 @@ void draw_status_meter(GContext *ctx,
   }
   else                                  // Energy meter:
   {
-    graphics_context_set_fill_color(ctx, GColorCyan);
+    graphics_context_set_fill_color(ctx, GColorYellow);
   }
 #endif
 
@@ -2411,7 +2411,7 @@ void draw_status_meter(GContext *ctx,
 #ifdef PBL_COLOR
   if (ratio < 1)
   {
-    graphics_context_set_fill_color(ctx, GColorBulgarianRose);
+    graphics_context_set_fill_color(ctx, GColorDarkCandyAppleRed);
     graphics_fill_rect(ctx,
                        GRect(origin.x + filled_meter_width,
                              origin.y,
