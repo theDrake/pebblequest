@@ -1543,15 +1543,19 @@ void draw_scene(Layer *layer, GContext *ctx)
                       g_player->int16_stats[MAX_ENERGY]);
 
   // Draw compass:
+#ifdef PBL_COLOR
+  graphics_context_set_fill_color(ctx, GColorYellow);
   graphics_fill_circle(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
-#ifdef PBL_COLOR
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2 +
                                 STATUS_BAR_HEIGHT),
-#else
-                              GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2),
-#endif
                        COMPASS_RADIUS);
+#else
+  graphics_fill_circle(ctx,
+                       GPoint(SCREEN_CENTER_POINT_X,
+                              GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2),
+                       COMPASS_RADIUS);
+#endif
   graphics_context_set_fill_color(ctx, GColorBlack);
   gpath_draw_outline(ctx, g_compass_path);
   gpath_draw_filled(ctx, g_compass_path);
@@ -2385,10 +2389,24 @@ void draw_status_meter(GContext *ctx,
                        const GPoint origin,
                        const float ratio)
 {
+#ifdef PBL_BW
   uint8_t i, j;
 
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_fill_color(ctx, GColorWhite);
+#else
+  uint8_t filled_meter_width = ratio * STATUS_METER_WIDTH;
+
+  origin.y += STATUS_BAR_HEIGHT;
+  if (origin.x < SCREEN_CENTER_POINT_X) // Health meter:
+  {
+    graphics_context_set_fill_color(ctx, GColorGreen);
+  }
+  else                                  // Energy meter:
+  {
+    graphics_context_set_fill_color(ctx, GColorCyan);
+  }
+#endif
 
   // First, draw a "full" meter:
   graphics_fill_rect(ctx,
@@ -2399,7 +2417,21 @@ void draw_status_meter(GContext *ctx,
                      SMALL_CORNER_RADIUS,
                      GCornersAll);
 
-  // Now shade the "empty" portion:
+  // Now draw the "empty" portion:
+#ifdef PBL_COLOR
+  if (ratio < 1)
+  {
+    graphics_context_set_fill_color(ctx, GColorBulgarianRose);
+    graphics_fill_rect(ctx,
+                       GRect(origin.x + filled_meter_width,
+                             origin.y,
+                             STATUS_METER_WIDTH - filled_meter_width + 1,
+                             STATUS_METER_HEIGHT),
+                       SMALL_CORNER_RADIUS,
+                       filled_meter_width < SMALL_CORNER_RADIUS ? GCornersAll :
+                                                                GCornersRight);
+  }
+#else
   for (i = origin.x + STATUS_METER_WIDTH;
        i >= origin.x + (ratio * STATUS_METER_WIDTH);
        --i)
@@ -2411,6 +2443,7 @@ void draw_status_meter(GContext *ctx,
       graphics_draw_pixel(ctx, GPoint(i, j));
     }
   }
+#endif
 }
 
 /******************************************************************************
