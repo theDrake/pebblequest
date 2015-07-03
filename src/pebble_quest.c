@@ -1520,12 +1520,7 @@ void draw_scene(Layer *layer, GContext *ctx)
   // Draw health meter:
   draw_status_meter(ctx,
                     GPoint(STATUS_METER_PADDING,
-#ifdef PBL_COLOR
-                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING +
-                             STATUS_BAR_HEIGHT),
-#else
                            GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-#endif
                     (float) g_player->int16_stats[CURRENT_HEALTH] /
                       g_player->int16_stats[MAX_HEALTH]);
 
@@ -1533,12 +1528,7 @@ void draw_scene(Layer *layer, GContext *ctx)
   draw_status_meter(ctx,
                     GPoint(SCREEN_CENTER_POINT_X + STATUS_METER_PADDING +
                              COMPASS_RADIUS + 1,
-#ifdef PBL_COLOR
-                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING +
-                             STATUS_BAR_HEIGHT),
-#else
                            GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
-#endif
                     (float) g_player->int16_stats[CURRENT_ENERGY] /
                       g_player->int16_stats[MAX_ENERGY]);
 
