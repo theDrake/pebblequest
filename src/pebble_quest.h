@@ -525,7 +525,7 @@ void draw_shaded_quad(GContext *ctx,
                       const GPoint lower_right,
                       const GPoint shading_ref);
 void draw_status_meter(GContext *ctx,
-                       const GPoint origin,
+                       GPoint origin,
                        const float ratio);
 void fill_ellipse(GContext *ctx,
                   const GPoint center,

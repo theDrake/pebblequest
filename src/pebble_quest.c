@@ -2386,7 +2386,7 @@ Description: Draws a "status meter" (such as a "health meter") at a given point
     Outputs: None.
 ******************************************************************************/
 void draw_status_meter(GContext *ctx,
-                       const GPoint origin,
+                       GPoint origin,
                        const float ratio)
 {
 #ifdef PBL_BW
