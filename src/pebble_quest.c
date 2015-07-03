@@ -2184,14 +2184,14 @@ void draw_cell_contents(GContext *ctx,
                        GRect(floor_center_point.x - drawing_unit -
                                drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 4,
-                             drawing_unit / 2,
+                             drawing_unit,
                              drawing_unit * 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 4,
-                             drawing_unit / 2,
+                             drawing_unit,
                              drawing_unit * 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
@@ -2365,21 +2365,15 @@ void draw_shaded_quad(GContext *ctx,
                       const GPoint shading_ref)
 {
   int16_t i, j, shading_offset, half_shading_offset;
-  float shading_gradient = 0;
+  float shading_gradient = (float) (upper_right.y - upper_left.y) /
+                                   (upper_right.x - upper_left.x);
   GColor primary_color   = GColorWhite;
 
-  shading_gradient = (float) (upper_right.y - upper_left.y) /
-                             (upper_right.x - upper_left.x);
-
-  for (i = upper_left.x;
-       i <= upper_right.x && i < GRAPHICS_FRAME_WIDTH;
-       ++i)
+  for (i = upper_left.x; i <= upper_right.x && i < GRAPHICS_FRAME_WIDTH; ++i)
   {
     // Calculate a new shading offset for each "x" value:
     shading_offset = 1 + ((shading_ref.y + (i - upper_left.x) *
                            shading_gradient) / MAX_VISIBILITY_DEPTH);
-
-    // Round up, if applicable:
     if ((int16_t) (shading_ref.y + (i - upper_left.x) *
         shading_gradient) % MAX_VISIBILITY_DEPTH >= MAX_VISIBILITY_DEPTH /
         2 + MAX_VISIBILITY_DEPTH % 2)
@@ -2388,10 +2382,20 @@ void draw_shaded_quad(GContext *ctx,
     }
     half_shading_offset = (shading_offset / 2) + (shading_offset % 2);
 #ifdef PBL_COLOR
-    primary_color = g_background_colors[g_location->wall_color_scheme]
-                      [shading_offset > NUM_BACKGROUND_COLORS_PER_SCHEME ?
-                         NUM_BACKGROUND_COLORS_PER_SCHEME - 1            :
-                         shading_offset - 1];
+    if (shading_offset - 3 > NUM_BACKGROUND_COLORS_PER_SCHEME)
+    {
+      primary_color = g_background_colors[g_mission->wall_color_scheme]
+                                        [NUM_BACKGROUND_COLORS_PER_SCHEME - 1];
+    }
+    else if (shading_offset > 4)
+    {
+      primary_color = g_background_colors[g_mission->wall_color_scheme]
+                                         [shading_offset - 4];
+    }
+    else
+    {
+      primary_color = g_background_colors[g_mission->wall_color_scheme][0];
+    }
 #endif
 
     // Now, draw points from top to bottom:
