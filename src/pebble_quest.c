@@ -2288,6 +2288,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 2),
                        drawing_unit / 4,
                        GCornersTop);
+    graphics_context_set_fill_color(ctx, GColorBlack);
 #else
     draw_shaded_quad(ctx,
                      GPoint(floor_center_point.x - drawing_unit + 1,
@@ -2299,8 +2300,6 @@ void draw_cell_contents(GContext *ctx,
                      GPoint(floor_center_point.x + drawing_unit - 1,
                             floor_center_point.y - drawing_unit * 7),
                      GPoint(top_left_point.x - 10, top_left_point.y - 10));
-#ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, GColorBlack);
 #endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit / 2,
