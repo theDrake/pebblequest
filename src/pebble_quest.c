@@ -1534,7 +1534,7 @@ void draw_scene(Layer *layer, GContext *ctx)
 
   // Draw compass:
 #ifdef PBL_COLOR
-  graphics_context_set_fill_color(ctx, GColorCeleste);
+  graphics_context_set_fill_color(ctx, GColorLightGray);
   graphics_fill_circle(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2 +
@@ -1957,7 +1957,7 @@ void draw_cell_contents(GContext *ctx,
     if (get_cell_type(cell) >= 0) // Loot!
     {
 #ifdef PBL_COLOR
-      graphics_context_set_fill_color(ctx, GColorYellow);
+      graphics_context_set_fill_color(ctx, GColorIcterine);
 #else
       graphics_context_set_fill_color(ctx, GColorWhite);
 #endif
@@ -2252,7 +2252,7 @@ void draw_cell_contents(GContext *ctx,
 
     // Torso:
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, GColorLightGray);
+    graphics_context_set_fill_color(ctx, GColorDarkGray);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit -
                                drawing_unit / 2,
@@ -2280,7 +2280,7 @@ void draw_cell_contents(GContext *ctx,
 
     // Head:
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, GColorDarkGray);
+    graphics_context_set_fill_color(ctx, GColorLightGray);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit + 1,
                              floor_center_point.y - drawing_unit * 9,
@@ -2312,7 +2312,7 @@ void draw_cell_contents(GContext *ctx,
 
     // Shield:
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, GColorDarkGray);
+    graphics_context_set_fill_color(ctx, GColorBrass);
 #endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit / 2,
@@ -2324,7 +2324,7 @@ void draw_cell_contents(GContext *ctx,
 
     // Weapon:
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, GColorBrass);
+    graphics_context_set_fill_color(ctx, GColorLightGray);
 #else
     graphics_context_set_fill_color(ctx, GColorWhite);
 #endif
@@ -2446,11 +2446,11 @@ void draw_status_meter(GContext *ctx,
   origin.y += STATUS_BAR_HEIGHT;
   if (origin.x < SCREEN_CENTER_POINT_X) // Health meter:
   {
-    graphics_context_set_fill_color(ctx, GColorGreen);
+    graphics_context_set_fill_color(ctx, GColorRed);
   }
   else                                  // Energy meter:
   {
-    graphics_context_set_fill_color(ctx, GColorYellow);
+    graphics_context_set_fill_color(ctx, GColorBlue);
   }
 #endif
 
@@ -2467,7 +2467,14 @@ void draw_status_meter(GContext *ctx,
 #ifdef PBL_COLOR
   if (ratio < 1)
   {
-    graphics_context_set_fill_color(ctx, GColorDarkCandyAppleRed);
+    if (origin.x < SCREEN_CENTER_POINT_X) // Health meter:
+    {
+      graphics_context_set_fill_color(ctx, GColorBulgarianRose);
+    }
+    else                                  // Energy meter:
+    {
+      graphics_context_set_fill_color(ctx, GColorOxfordBlue);
+    }
     graphics_fill_rect(ctx,
                        GRect(origin.x + filled_meter_width,
                              origin.y,
