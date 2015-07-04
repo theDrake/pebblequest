@@ -2384,17 +2384,17 @@ void draw_shaded_quad(GContext *ctx,
 #ifdef PBL_COLOR
     if (shading_offset - 3 > NUM_BACKGROUND_COLORS_PER_SCHEME)
     {
-      primary_color = g_background_colors[g_mission->wall_color_scheme]
+      primary_color = g_background_colors[g_location->wall_color_scheme]
                                         [NUM_BACKGROUND_COLORS_PER_SCHEME - 1];
     }
     else if (shading_offset > 4)
     {
-      primary_color = g_background_colors[g_mission->wall_color_scheme]
+      primary_color = g_background_colors[g_location->wall_color_scheme]
                                          [shading_offset - 4];
     }
     else
     {
-      primary_color = g_background_colors[g_mission->wall_color_scheme][0];
+      primary_color = g_background_colors[g_location->wall_color_scheme][0];
     }
 #endif
 
