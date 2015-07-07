@@ -167,7 +167,7 @@ enum {
 #define DEFAULT_MAX_HEALTH               10
 #define DEFAULT_MAX_ENERGY               10
 #define MIN_DAMAGE_TO_NPC                1
-#define MIN_FATIGUE_RATE                 3
+#define MIN_FATIGUE_RATE                 2
 #define DEFAULT_ITEM_BONUS               3
 #define MAX_NPCS_AT_ONE_TIME             2
 #define MAP_WIDTH                        10
