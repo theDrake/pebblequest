@@ -1957,7 +1957,7 @@ void draw_cell_contents(GContext *ctx,
     if (get_cell_type(cell) >= 0) // Loot!
     {
 #ifdef PBL_COLOR
-      graphics_context_set_fill_color(ctx, GColorIcterine);
+      graphics_context_set_fill_color(ctx, GColorYellow);
 #else
       graphics_context_set_fill_color(ctx, GColorWhite);
 #endif
@@ -2040,8 +2040,9 @@ void draw_cell_contents(GContext *ctx,
   {
     // Body/head:
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorVividCerulean :
-                                                         GColorOxfordBlue);
+    graphics_context_set_fill_color(ctx,
+                                    npc->type % 2 ? GColorDarkCandyAppleRed :
+                                                    GColorBulgarianRose);
 #endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
@@ -2059,9 +2060,8 @@ void draw_cell_contents(GContext *ctx,
                  drawing_unit / 2 + 1,
                  npc->type % 2 ? GColorBlack : GColorWhite);
 #ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx,
-                                    npc->type % 2 ? GColorDarkCandyAppleRed :
-                                                    GColorRed);
+    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorDukeBlue :
+                                                         GColorOxfordBlue);
 #endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x, i),
@@ -2084,7 +2084,7 @@ void draw_cell_contents(GContext *ctx,
          i += drawing_unit / 2)
     {
 #ifdef PBL_COLOR
-      graphics_context_set_fill_color(ctx, GColorJazzberryJam);
+      graphics_context_set_fill_color(ctx, GColorChromeYellow);
 #endif
       graphics_fill_rect(ctx,
                          GRect(i,
