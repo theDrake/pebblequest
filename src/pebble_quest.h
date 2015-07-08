@@ -403,7 +403,8 @@ player_t *g_player;
 location_t *g_location;
 
 #ifdef PBL_COLOR
-GColor g_background_colors[NUM_BACKGROUND_COLOR_SCHEMES]
+GColor g_magic_type_colors[NUM_PEBBLE_TYPES][2],
+       g_background_colors[NUM_BACKGROUND_COLOR_SCHEMES]
                           [NUM_BACKGROUND_COLORS_PER_SCHEME];
 StatusBarLayer *g_status_bars[NUM_WINDOWS];
 #else

@@ -3706,6 +3706,22 @@ void init_window(const int8_t window_index)
     layer_add_child(window_get_root_layer(g_windows[window_index]),
                     inverter_layer_get_layer(g_inverter_layer));
 #else
+    // Colors for magical effects:
+    g_magic_type_colors[PEBBLE_OF_THUNDER][0] = GColorYellow;
+    g_magic_type_colors[PEBBLE_OF_THUNDER][1] = GColorOxfordBlue;
+    g_magic_type_colors[PEBBLE_OF_FIRE][0]    = GColorRed;
+    g_magic_type_colors[PEBBLE_OF_FIRE][1]    = GColorChromeYellow;
+    g_magic_type_colors[PEBBLE_OF_ICE][0]     = GColorElectricBlue;
+    g_magic_type_colors[PEBBLE_OF_ICE][1]     = GColorCeleste;
+    g_magic_type_colors[PEBBLE_OF_LIFE][0]    = GColorMediumAquamarine;
+    g_magic_type_colors[PEBBLE_OF_LIFE][1]    = GColorMidnightGreen;
+    g_magic_type_colors[PEBBLE_OF_LIGHT][0]   = GColorWhite;
+    g_magic_type_colors[PEBBLE_OF_LIGHT][1]   = GColorPastelYellow;
+    g_magic_type_colors[PEBBLE_OF_SHADOW][0]  = GColorBlack;
+    g_magic_type_colors[PEBBLE_OF_SHADOW][1]  = GColorImperialPurple;
+    g_magic_type_colors[PEBBLE_OF_DEATH][0]   = GColorBlack;
+    g_magic_type_colors[PEBBLE_OF_DEATH][1]   = GColorBulgarianRose;
+
     // Blue background color scheme:
     g_background_colors[0][0] = GColorCeleste;
     g_background_colors[0][1] = GColorCeleste;
