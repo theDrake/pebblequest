@@ -2050,18 +2050,20 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit * 3 - drawing_unit / 2);
 
     // Eye:
-#ifdef PBL_COLOR
-    graphics_context_set_stroke_color(ctx, GColorPastelYellow);
-#endif
     i = floor_center_point.y - drawing_unit * 5;
+#ifdef PBL_COLOR
+    fill_ellipse(ctx,
+                 GPoint(floor_center_point.x, i),
+                 drawing_unit + 1,
+                 drawing_unit / 2 + 1,
+                 GColorPastelYellow);
+    graphics_context_set_fill_color(ctx, GColorDukeBlue);
+#else
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x, i),
                  drawing_unit + 1,
                  drawing_unit / 2 + 1,
                  npc->type % 2 ? GColorBlack : GColorWhite);
-#ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorDukeBlue :
-                                                         GColorOxfordBlue);
 #endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x, i),
@@ -2084,7 +2086,7 @@ void draw_cell_contents(GContext *ctx,
          i += drawing_unit / 2)
     {
 #ifdef PBL_COLOR
-      graphics_context_set_fill_color(ctx, GColorChromeYellow);
+      graphics_context_set_fill_color(ctx, GColorSunsetOrange);
 #endif
       graphics_fill_rect(ctx,
                          GRect(i,
