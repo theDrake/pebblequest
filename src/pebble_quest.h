@@ -405,6 +405,8 @@ player_t *g_player;
 location_t *g_location;
 
 #ifdef PBL_COLOR
+AppTimer *g_player_spell_timer,
+         *g_enemy_spell_timer;
 int8_t g_player_current_spell_animation,
        g_enemy_current_spell_animation;
 GColor g_magic_type_colors[NUM_PEBBLE_TYPES][2],
@@ -543,6 +545,10 @@ void flash_screen(void);
 static void flash_timer_callback(void *data);
 #endif
 static void attack_timer_callback(void *data);
+#ifdef PBL_COLOR
+static void player_spell_timer_callback(void *data);
+static void enemy_spell_timer_callback(void *data);
+#endif
 static void graphics_window_appear(Window *window);
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
                                         void *context);

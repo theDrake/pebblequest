@@ -1517,6 +1517,39 @@ void draw_scene(Layer *layer, GContext *ctx)
     }
   }
 
+  // Draw a "spell beam", if applicable (Basalt only):
+#ifdef PBL_COLOR
+  if (g_player_current_spell_animation > 0 && g_player->equipped_pebble > NONE)
+  {
+    graphics_context_set_stroke_color(ctx,
+                            g_magic_type_colors[g_player->equipped_pebble][0]);
+    graphics_draw_line(ctx,
+                       GPoint(SCREEN_CENTER_POINT_X,
+                              GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
+                       GPoint(SCREEN_CENTER_POINT.x,
+                              SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
+    for (i = 0;
+         i <= g_player_current_spell_animation % 2 ?
+                MAX_SPELL_BEAM_BASE_WIDTH          :
+                MIN_SPELL_BEAM_BASE_WIDTH;
+         ++i)
+    {
+      graphics_context_set_stroke_color(ctx,
+                        g_magic_type_colors[g_player->equipped_pebble][i % 2]);
+      graphics_draw_line(ctx,
+                         GPoint(SCREEN_CENTER_POINT_X - i,
+                                GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
+                         GPoint(SCREEN_CENTER_POINT_X - i / 3,
+                                SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
+      graphics_draw_line(ctx,
+                         GPoint(SCREEN_CENTER_POINT_X + i,
+                                GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
+                         GPoint(SCREEN_CENTER_POINT_X + i / 3,
+                                SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
+    }
+  }
+#endif
+
   // Draw health meter:
   draw_status_meter(ctx,
                     GPoint(STATUS_METER_PADDING,
@@ -2591,6 +2624,50 @@ static void attack_timer_callback(void *data)
 }
 
 /******************************************************************************
+   Function: player_spell_timer_callback
+
+Description: Called when the player's spell timer reaches zero.
+
+     Inputs: data - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+#ifdef PBL_COLOR
+static void player_spell_timer_callback(void *data)
+{
+  if (--g_player_current_spell_animation > 0)
+  {
+    g_player_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
+                                              player_spell_timer_callback,
+                                              NULL);
+    layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
+  }
+}
+#endif
+
+/******************************************************************************
+   Function: enemy_spell_timer_callback
+
+Description: Called when the enemy's spell timer reaches zero.
+
+     Inputs: data - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+#ifdef PBL_COLOR
+static void enemy_spell_timer_callback(void *data)
+{
+  if (--g_enemy_current_spell_animation > 0)
+  {
+    g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
+                                             enemy_spell_timer_callback,
+                                             NULL);
+    layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
+  }
+}
+#endif
+
+/******************************************************************************
    Function: graphics_window_appear
 
 Description: Called when the graphics window appears.
@@ -2754,6 +2831,10 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     {
 #ifdef PBL_COLOR
       g_player_current_spell_animation = NUM_SPELL_ANIMATIONS;
+      g_player_spell_timer             = app_timer_register(
+                                                   DEFAULT_TIMER_DURATION,
+                                                   player_spell_timer_callback,
+                                                   NULL);
 #else
       flash_screen();
 #endif
