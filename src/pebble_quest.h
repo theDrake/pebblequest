@@ -198,6 +198,9 @@ enum {
 #define RANDOM_COLOR                     GColorFromRGB(rand() % 256, rand() % 256, rand() % 256)
 #define RANDOM_DARK_COLOR                GColorFromRGB(rand() % 128, rand() % 128, rand() % 128)
 #define RANDOM_BRIGHT_COLOR              GColorFromRGB(rand() % 128 + 128, rand() % 128 + 128, rand() % 128 + 128)
+#define NUM_SPELL_ANIMATIONS             3
+#define MIN_SPELL_BEAM_BASE_WIDTH        8
+#define MAX_SPELL_BEAM_BASE_WIDTH        12
 #else
 #define FULL_SCREEN_FRAME                GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
 #define GRAPHICS_FRAME                   GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
@@ -385,8 +388,7 @@ typedef struct Location {
 Window *g_windows[NUM_WINDOWS];
 MenuLayer *g_menu_layers[NUM_MENUS];
 TextLayer *g_narration_text_layer;
-AppTimer *g_flash_timer,
-         *g_attack_timer;
+AppTimer *g_attack_timer;
 GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
@@ -403,11 +405,14 @@ player_t *g_player;
 location_t *g_location;
 
 #ifdef PBL_COLOR
+int8_t g_player_current_spell_animation,
+       g_enemy_current_spell_animation;
 GColor g_magic_type_colors[NUM_PEBBLE_TYPES][2],
        g_background_colors[NUM_BACKGROUND_COLOR_SCHEMES]
                           [NUM_BACKGROUND_COLORS_PER_SCHEME];
 StatusBarLayer *g_status_bars[NUM_WINDOWS];
 #else
+AppTimer *g_flash_timer;
 InverterLayer *g_inverter_layer;
 #endif
 
@@ -533,8 +538,10 @@ void fill_ellipse(GContext *ctx,
                   const int8_t h_radius,
                   const int8_t v_radius,
                   const GColor color);
+#ifdef PBL_BW
 void flash_screen(void);
 static void flash_timer_callback(void *data);
+#endif
 static void attack_timer_callback(void *data);
 static void graphics_window_appear(Window *window);
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,

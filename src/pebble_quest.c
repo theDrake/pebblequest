@@ -2541,38 +2541,39 @@ void fill_ellipse(GContext *ctx,
 /******************************************************************************
    Function: flash_screen
 
-Description: Briefly "flashes" the graphics frame by inverting all its pixels.
+Description: Briefly "flashes" the graphics frame by inverting all its pixels
+             (Aplite watches only).
 
      Inputs: None.
 
     Outputs: None.
 ******************************************************************************/
+#ifdef PBL_BW
 void flash_screen(void)
 {
-#ifdef PBL_BW
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), false);
-#endif
   g_flash_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                      flash_timer_callback,
                                      NULL);
 }
+#endif
 
 /******************************************************************************
    Function: flash_timer_callback
 
 Description: Called when the flash timer reaches zero. Hides the inverter
-             layer, ending the "flash."
+             layer, ending the "flash" (Aplite watches only).
 
      Inputs: data - Pointer to additional data (not used).
 
     Outputs: None.
 ******************************************************************************/
+#ifdef PBL_BW
 static void flash_timer_callback(void *data)
 {
-#ifdef PBL_BW
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
-#endif
 }
+#endif
 
 /******************************************************************************
    Function: attack_timer_callback
@@ -2751,7 +2752,11 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     // If a Pebble is equipped, cast a spell:
     if (g_player->equipped_pebble > NONE)
     {
+#ifdef PBL_COLOR
+      g_player_current_spell_animation = NUM_SPELL_ANIMATIONS;
+#else
       flash_screen();
+#endif
       cast_spell_on_npc(npc,
                         g_player->equipped_pebble,
                         g_player->int8_stats[MAGICAL_POWER]);
@@ -2781,7 +2786,9 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
         // Check for an infused Pebble:
         if (weapon->infused_pebble > NONE)
         {
+#ifdef PBL_BW
           flash_screen();
+#endif
           cast_spell_on_npc(npc,
                             weapon->infused_pebble,
                             g_player->int8_stats[MAGICAL_POWER] / 2);
@@ -2958,7 +2965,11 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
           }
           else if (npc->type == MAGE && player_is_visible_to_npc)
           {
+#ifdef PBL_COLOR
+            g_enemy_current_spell_animation = NUM_SPELL_ANIMATIONS;
+#else
             flash_screen();
+#endif
             if (g_player->int8_stats[SPELL_ABSORPTION] &&
                 (rand() % g_player->int8_stats[INTELLECT] +
                    g_player->int8_stats[SPELL_ABSORPTION] > damage))
