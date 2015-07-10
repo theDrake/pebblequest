@@ -1454,6 +1454,9 @@ void draw_scene(Layer *layer, GContext *ctx)
 {
   int8_t i, depth;
   GPoint cell, cell_2;
+#ifdef PBL_COLOR
+  int8_t spell_beam_width;
+#endif
 
   // First, draw the background, floor, and ceiling:
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -1519,8 +1522,11 @@ void draw_scene(Layer *layer, GContext *ctx)
 
   // Draw a "spell beam", if applicable (Basalt only):
 #ifdef PBL_COLOR
-  if (g_player_current_spell_animation > 0 && g_player->equipped_pebble > NONE)
+  if (g_player_current_spell_animation > 0)
   {
+    spell_beam_width = g_player_current_spell_animation % 2 ?
+                         MIN_SPELL_BEAM_BASE_WIDTH          :
+                         MAX_SPELL_BEAM_BASE_WIDTH;
     graphics_context_set_stroke_color(ctx,
                             g_magic_type_colors[g_player->equipped_pebble][0]);
     graphics_draw_line(ctx,
@@ -1528,11 +1534,7 @@ void draw_scene(Layer *layer, GContext *ctx)
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
                        GPoint(SCREEN_CENTER_POINT.x,
                               SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
-    for (i = 0;
-         i <= g_player_current_spell_animation % 2 ?
-                MAX_SPELL_BEAM_BASE_WIDTH          :
-                MIN_SPELL_BEAM_BASE_WIDTH;
-         ++i)
+    for (i = 0; i <= spell_beam_width; ++i)
     {
       graphics_context_set_stroke_color(ctx,
                         g_magic_type_colors[g_player->equipped_pebble][i % 2]);
@@ -2678,7 +2680,9 @@ Description: Called when the graphics window appears.
 ******************************************************************************/
 static void graphics_window_appear(Window *window)
 {
-#ifdef PBL_BW
+#ifdef PBL_COLOR
+  g_player_current_spell_animation = g_enemy_current_spell_animation = 0;
+#else
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
 #endif
   g_player_is_attacking = false;
