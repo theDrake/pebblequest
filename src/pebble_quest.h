@@ -235,12 +235,12 @@ enum {
 #define PEBBLE_OPTIONS_MENU_NUM_ROWS     2
 #define LOOT_MENU_NUM_ROWS               1
 #define EQUIPPED_STR                     "Equipped"
+#define LAST_CLICK_ONLY                  true
 #define MULTI_CLICK_MIN                  2
 #define MULTI_CLICK_MAX                  2   // We only care about double-clicks.
 #define MULTI_CLICK_TIMEOUT              0   // milliseconds
 #define PLAYER_ACTION_REPEAT_INTERVAL    250 // milliseconds
-#define LAST_CLICK_ONLY                  true
-#define DEFAULT_TIMER_DURATION           20 // milliseconds
+#define DEFAULT_TIMER_DURATION           20  // milliseconds
 #define DEFAULT_MAX_SMALL_INT_VALUE      100
 #define MAX_SMALL_INT_DIGITS             3
 #define MAX_LARGE_INT_DIGITS             5
@@ -543,12 +543,11 @@ void fill_ellipse(GContext *ctx,
 #ifdef PBL_BW
 void flash_screen(void);
 static void flash_timer_callback(void *data);
-#endif
-static void attack_timer_callback(void *data);
-#ifdef PBL_COLOR
+#else
 static void player_spell_timer_callback(void *data);
 static void enemy_spell_timer_callback(void *data);
 #endif
+static void attack_timer_callback(void *data);
 static void graphics_window_appear(Window *window);
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
                                         void *context);

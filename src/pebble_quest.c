@@ -2611,21 +2611,6 @@ static void flash_timer_callback(void *data)
 #endif
 
 /******************************************************************************
-   Function: attack_timer_callback
-
-Description: Called when the attack timer reaches zero.
-
-     Inputs: data - Pointer to additional data (not used).
-
-    Outputs: None.
-******************************************************************************/
-static void attack_timer_callback(void *data)
-{
-  g_player_is_attacking = false;
-  layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
-}
-
-/******************************************************************************
    Function: player_spell_timer_callback
 
 Description: Called when the player's spell timer reaches zero.
@@ -2668,6 +2653,21 @@ static void enemy_spell_timer_callback(void *data)
   }
 }
 #endif
+
+/******************************************************************************
+   Function: attack_timer_callback
+
+Description: Called when the attack timer reaches zero.
+
+     Inputs: data - Pointer to additional data (not used).
+
+    Outputs: None.
+******************************************************************************/
+static void attack_timer_callback(void *data)
+{
+  g_player_is_attacking = false;
+  layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
+}
 
 /******************************************************************************
    Function: graphics_window_appear
