@@ -1630,6 +1630,7 @@ void draw_scene(Layer *layer, GContext *ctx)
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2 +
                                 STATUS_BAR_HEIGHT),
                        COMPASS_RADIUS);
+  graphics_context_set_stroke_color(ctx, GColorDarkGreen);
 #else
   graphics_fill_circle(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
