@@ -1455,7 +1455,7 @@ void draw_scene(Layer *layer, GContext *ctx)
   int8_t i, depth;
   GPoint cell, cell_2;
 #ifdef PBL_COLOR
-  int8_t spell_beam_width;
+  int8_t spell_beam_width, infused_pebble;
 #endif
 
   // First, draw the background, floor, and ceiling:
@@ -1501,16 +1501,33 @@ void draw_scene(Layer *layer, GContext *ctx)
     }
   }
 
-  // Draw the "attack slash", if applicable:
+  // Draw the "attack slash," if applicable:
   if (g_player_is_attacking)
   {
+#ifdef PBL_COLOR
+    infused_pebble = get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble;
+#else
     graphics_context_set_stroke_color(ctx, GColorWhite);
+#endif
     for (i = 0; i < 3; ++i)
     {
+#ifdef PBL_COLOR
+      if (infused_pebble > NONE)
+      {
+        graphics_context_set_stroke_color(ctx,
+                                   g_magic_type_colors[infused_pebble][i % 2]);
+      }
+      else
+      {
+        graphics_context_set_stroke_color(ctx, i % 2 ? GColorLightGray :
+                                                       GColorDarkGray);
+      }
+#else
       if (i == 2)
       {
         graphics_context_set_stroke_color(ctx, GColorBlack);
       }
+#endif
       graphics_draw_line(ctx,
                          GPoint(g_attack_slash_x1 + i, g_attack_slash_y1),
                          GPoint(g_attack_slash_x2 + i, g_attack_slash_y2));
@@ -1520,7 +1537,7 @@ void draw_scene(Layer *layer, GContext *ctx)
     }
   }
 
-  // Draw a "spell beam", if applicable (Basalt only):
+  // Draw "spell beams," if applicable (Basalt only):
 #ifdef PBL_COLOR
   if (g_player_current_spell_animation > 0)
   {
