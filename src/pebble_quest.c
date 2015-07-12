@@ -1455,7 +1455,8 @@ void draw_scene(Layer *layer, GContext *ctx)
   int8_t i, depth;
   GPoint cell, cell_2;
 #ifdef PBL_COLOR
-  int8_t spell_beam_width, infused_pebble;
+  int8_t spell_beam_width, magic_type;
+  npc_t *mage = &g_location->npcs[0];
 #endif
 
   // First, draw the background, floor, and ceiling:
@@ -1505,17 +1506,17 @@ void draw_scene(Layer *layer, GContext *ctx)
   if (g_player_is_attacking)
   {
 #ifdef PBL_COLOR
-    infused_pebble = get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble;
+    magic_type = get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble;
 #else
     graphics_context_set_stroke_color(ctx, GColorWhite);
 #endif
     for (i = 0; i < 3; ++i)
     {
 #ifdef PBL_COLOR
-      if (infused_pebble > NONE)
+      if (magic_type > NONE)
       {
         graphics_context_set_stroke_color(ctx,
-                                   g_magic_type_colors[infused_pebble][i % 2]);
+                                       g_magic_type_colors[magic_type][i % 2]);
       }
       else
       {
@@ -1541,11 +1542,11 @@ void draw_scene(Layer *layer, GContext *ctx)
 #ifdef PBL_COLOR
   if (g_player_current_spell_animation > 0)
   {
+    magic_type = g_player->equipped_pebble;
     spell_beam_width = g_player_current_spell_animation % 2 ?
                          MIN_SPELL_BEAM_BASE_WIDTH          :
                          MAX_SPELL_BEAM_BASE_WIDTH;
-    graphics_context_set_stroke_color(ctx,
-                            g_magic_type_colors[g_player->equipped_pebble][0]);
+    graphics_context_set_stroke_color(ctx, g_magic_type_colors[magic_type][0]);
     graphics_draw_line(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
@@ -1554,7 +1555,39 @@ void draw_scene(Layer *layer, GContext *ctx)
     for (i = 0; i <= spell_beam_width; ++i)
     {
       graphics_context_set_stroke_color(ctx,
-                        g_magic_type_colors[g_player->equipped_pebble][i % 2]);
+                                       g_magic_type_colors[magic_type][i % 2]);
+      graphics_draw_line(ctx,
+                         GPoint(SCREEN_CENTER_POINT_X - i,
+                                GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
+                         GPoint(SCREEN_CENTER_POINT_X - i / 3,
+                                SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
+      graphics_draw_line(ctx,
+                         GPoint(SCREEN_CENTER_POINT_X + i,
+                                GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
+                         GPoint(SCREEN_CENTER_POINT_X + i / 3,
+                                SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
+    }
+  }
+  if (g_enemy_current_spell_animation > 0        &&
+      (g_player->position.x == mage->position.x ||
+       g_player->position.y == mage->position.y) &&
+      get_pursuit_direction(g_player->position, mage->position) ==
+        g_player->direction)
+  {
+    magic_type = mage->item;
+    spell_beam_width = g_enemy_current_spell_animation % 2 ?
+                         MIN_SPELL_BEAM_BASE_WIDTH         :
+                         MAX_SPELL_BEAM_BASE_WIDTH;
+    graphics_context_set_stroke_color(ctx, g_magic_type_colors[magic_type][0]);
+    graphics_draw_line(ctx,
+                       GPoint(SCREEN_CENTER_POINT_X,
+                              GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
+                       GPoint(SCREEN_CENTER_POINT.x,
+                              SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
+    for (i = 0; i <= spell_beam_width; ++i)
+    {
+      graphics_context_set_stroke_color(ctx,
+                                       g_magic_type_colors[magic_type][i % 2]);
       graphics_draw_line(ctx,
                          GPoint(SCREEN_CENTER_POINT_X - i,
                                 GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
