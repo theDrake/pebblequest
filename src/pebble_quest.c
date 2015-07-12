@@ -2682,8 +2682,8 @@ static void player_spell_timer_callback(void *data)
     g_player_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                               player_spell_timer_callback,
                                               NULL);
-    layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
   }
+  layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
 #endif
 
@@ -2704,8 +2704,8 @@ static void enemy_spell_timer_callback(void *data)
     g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                              enemy_spell_timer_callback,
                                              NULL);
-    layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
   }
+  layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
 #endif
 
