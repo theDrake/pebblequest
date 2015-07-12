@@ -1455,8 +1455,10 @@ void draw_scene(Layer *layer, GContext *ctx)
   int8_t i, depth;
   GPoint cell, cell_2;
 #ifdef PBL_COLOR
-  int8_t spell_beam_width, magic_type;
-  npc_t *mage = &g_location->npcs[0];
+  int8_t spell_beam_width,
+         magic_type    = NONE;
+  heavy_item_t *weapon = get_heavy_item_equipped_at(RIGHT_HAND);
+  npc_t *mage          = &g_location->npcs[0];
 #endif
 
   // First, draw the background, floor, and ceiling:
@@ -1506,7 +1508,10 @@ void draw_scene(Layer *layer, GContext *ctx)
   if (g_player_is_attacking)
   {
 #ifdef PBL_COLOR
-    magic_type = get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble;
+    if (weapon)
+    {
+      magic_type = weapon->infused_pebble;
+    }
 #else
     graphics_context_set_stroke_color(ctx, GColorWhite);
 #endif
