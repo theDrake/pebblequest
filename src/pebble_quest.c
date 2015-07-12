@@ -3107,6 +3107,10 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
           {
 #ifdef PBL_COLOR
             g_enemy_current_spell_animation = NUM_SPELL_ANIMATIONS;
+            g_enemy_spell_timer             = app_timer_register(
+                                                    DEFAULT_TIMER_DURATION,
+                                                    enemy_spell_timer_callback,
+                                                    NULL);
 #else
             flash_screen();
 #endif
