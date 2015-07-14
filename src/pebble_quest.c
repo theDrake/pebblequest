@@ -2148,7 +2148,8 @@ void draw_cell_contents(GContext *ctx,
                  drawing_unit + 1,
                  drawing_unit / 2 + 1,
                  GColorPastelYellow);
-    graphics_context_set_fill_color(ctx, GColorDukeBlue);
+    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorDukeBlue :
+                                                         GColorVividCerulean);
 #else
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x, i),
@@ -2178,7 +2179,15 @@ void draw_cell_contents(GContext *ctx,
     {
 #ifdef PBL_COLOR
       graphics_context_set_fill_color(ctx, GColorSunsetOrange);
-#endif
+      graphics_fill_rect(ctx,
+                         GRect(i,
+                               floor_center_point.y - drawing_unit * 4,
+                               drawing_unit / 2,
+                               drawing_unit * (2 - time(0) % 2) -
+                                 drawing_unit / 2),
+                         drawing_unit / 2,
+                         GCornersAll);
+#else
       graphics_fill_rect(ctx,
                          GRect(i,
                                floor_center_point.y - drawing_unit * 4,
@@ -2186,6 +2195,7 @@ void draw_cell_contents(GContext *ctx,
                                drawing_unit * 2 - drawing_unit / 2),
                          drawing_unit / 2,
                          GCornersAll);
+#endif
     }
   }
 
