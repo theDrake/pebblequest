@@ -1521,11 +1521,11 @@ void draw_scene(Layer *layer, GContext *ctx)
       if (magic_type > NONE)
       {
         graphics_context_set_stroke_color(ctx,
-                                       g_magic_type_colors[magic_type][i % 2]);
+                                      g_magic_type_colors[magic_type][i == 2]);
       }
       else
       {
-        graphics_context_set_stroke_color(ctx, i % 2 ? GColorLightGray :
+        graphics_context_set_stroke_color(ctx, i < 2 ? GColorLightGray :
                                                        GColorDarkGray);
       }
 #else
