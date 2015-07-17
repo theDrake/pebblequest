@@ -2184,7 +2184,7 @@ void draw_cell_contents(GContext *ctx,
                                floor_center_point.y - drawing_unit * 4,
                                drawing_unit / 2,
                                drawing_unit * 2 - (time(0) % 2 ? 0 :
-                                                   drawing_unit / 2),
+                                                   drawing_unit / 2)),
                          drawing_unit / 2,
                          GCornersAll);
 #else
@@ -2288,7 +2288,7 @@ void draw_cell_contents(GContext *ctx,
                                floor_center_point.y - drawing_unit * 5,
                                drawing_unit / 3,
                                drawing_unit + (time(0) % 2 ? 0 :
-                                               drawing_unit / 2),
+                                               drawing_unit / 2)),
                          drawing_unit / 2,
                          GCornersAll);
     }
