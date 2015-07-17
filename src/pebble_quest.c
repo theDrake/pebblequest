@@ -2280,13 +2280,14 @@ void draw_cell_contents(GContext *ctx,
 #ifdef PBL_COLOR
     for (i = floor_center_point.x - drawing_unit / 2;
          i < floor_center_point.x + drawing_unit / 2;
-         i += drawing_unit / 4)
+         i += drawing_unit / 3)
     {
       graphics_context_set_fill_color(ctx, GColorSunsetOrange);
       graphics_fill_rect(ctx,
                          GRect(i,
-                               floor_center_point.y - drawing_unit * 4,
-                               drawing_unit / 2,
+                               floor_center_point.y - drawing_unit * 4 -
+                                 drawing_unit / 2,
+                               drawing_unit / 3,
                                drawing_unit * (2 - time(0) % 2) -
                                  drawing_unit / 2),
                          drawing_unit / 2,
