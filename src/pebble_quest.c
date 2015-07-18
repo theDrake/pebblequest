@@ -2183,8 +2183,8 @@ void draw_cell_contents(GContext *ctx,
                          GRect(i,
                                floor_center_point.y - drawing_unit * 4,
                                drawing_unit / 2,
-                               drawing_unit * 2 - (time(0) % 2 ? 0 :
-                                                   drawing_unit / 2)),
+                               drawing_unit + (drawing_unit / 4) *
+                                 (time(0) % 2 + 1)),
                          drawing_unit / 2,
                          GCornersAll);
 #else
@@ -2278,7 +2278,7 @@ void draw_cell_contents(GContext *ctx,
 
     // Mouth (Basalt only):
 #ifdef PBL_COLOR
-    for (i = floor_center_point.x - drawing_unit / 2 - 1;
+    for (i = floor_center_point.x - drawing_unit / 2 - drawing_unit % 2;
          i < floor_center_point.x + drawing_unit / 2;
          i += drawing_unit / 3)
     {
@@ -2287,8 +2287,8 @@ void draw_cell_contents(GContext *ctx,
                          GRect(i,
                                floor_center_point.y - drawing_unit * 5,
                                drawing_unit / 3,
-                               drawing_unit + (time(0) % 2 ? 0 :
-                                               drawing_unit / 2)),
+                               drawing_unit / 2 + (time(0) % 2 ? 0 :
+                                                   drawing_unit / 4)),
                          drawing_unit / 2,
                          GCornersAll);
     }
