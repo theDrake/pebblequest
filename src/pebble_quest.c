@@ -2278,7 +2278,8 @@ void draw_cell_contents(GContext *ctx,
 
     // Mouth (Basalt only):
 #ifdef PBL_COLOR
-    for (i = floor_center_point.x - drawing_unit / 2 - drawing_unit % 2;
+    for (i = floor_center_point.x - drawing_unit / 2 -
+           (npc->type < DARK_TROLL ? 1 : 0);
          i < floor_center_point.x + drawing_unit / 2;
          i += drawing_unit / 3)
     {
@@ -2351,7 +2352,8 @@ void draw_cell_contents(GContext *ctx,
                                drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 7,
                              drawing_unit * 5,
-                             drawing_unit * 2),
+                             drawing_unit * 2 -
+                               (time(0) % 2 ? drawing_unit / 2 : 0)),
                        drawing_unit / 2,
                        GCornersAll);
 #else
@@ -2423,7 +2425,8 @@ void draw_cell_contents(GContext *ctx,
                      GPoint(top_left_point.x - 10, top_left_point.y - 10));
 #endif
     graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit / 2,
+                       GRect(floor_center_point.x - drawing_unit / 2 -
+                               drawing_unit % 2,
                              floor_center_point.y - drawing_unit * 8 -
                                drawing_unit / 2,
                              drawing_unit,
@@ -2445,10 +2448,27 @@ void draw_cell_contents(GContext *ctx,
 
     // Weapon:
 #ifdef PBL_COLOR
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit * 2 -
+                               drawing_unit / 2,
+                             floor_center_point.y - drawing_unit * 6 -
+                               (time(0) % 2 ? drawing_unit / 2 : 0),
+                             drawing_unit + drawing_unit / 2,
+                             drawing_unit / 2),
+                       drawing_unit / 4,
+                       GCornersBottom);
     graphics_context_set_fill_color(ctx, GColorLightGray);
+    graphics_fill_rect(ctx,
+                       GRect(floor_center_point.x - drawing_unit * 2 -
+                               drawing_unit / 4,
+                             floor_center_point.y - drawing_unit * 10 -
+                               (time(0) % 2 ? drawing_unit / 2 : 0),
+                             drawing_unit / 2,
+                             drawing_unit * 4),
+                       drawing_unit,
+                       GCornersTop);
 #else
     graphics_context_set_fill_color(ctx, GColorWhite);
-#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 -
                                drawing_unit / 4,
@@ -2457,6 +2477,7 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
+#endif
   }
 }
 
