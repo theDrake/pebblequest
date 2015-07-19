@@ -2278,20 +2278,22 @@ void draw_cell_contents(GContext *ctx,
 
     // Mouth (Basalt only):
 #ifdef PBL_COLOR
-    for (i = floor_center_point.x - drawing_unit / 2 -
-           (npc->type < DARK_TROLL ? 1 : 0);
-         i < floor_center_point.x + drawing_unit / 2;
-         i += drawing_unit / 3)
+    if (depth < 4)
     {
-      graphics_context_set_fill_color(ctx, GColorSunsetOrange);
-      graphics_fill_rect(ctx,
-                         GRect(i,
-                               floor_center_point.y - drawing_unit * 5,
-                               drawing_unit / 3,
-                               drawing_unit / 2 + (time(0) % 2 ? 0 :
-                                                   drawing_unit / 4)),
-                         drawing_unit / 2,
-                         GCornersAll);
+      for (i = floor_center_point.x - drawing_unit / 2 - 1;
+           i < floor_center_point.x + drawing_unit / 2;
+           i += drawing_unit / 3)
+      {
+        graphics_context_set_fill_color(ctx, GColorSunsetOrange);
+        graphics_fill_rect(ctx,
+                           GRect(i,
+                                 floor_center_point.y - drawing_unit * 5,
+                                 drawing_unit / 3,
+                                 drawing_unit / 2 + (time(0) % 2 ? 0 :
+                                                     drawing_unit / 4)),
+                           drawing_unit / 2,
+                           GCornersAll);
+      }
     }
 #endif
   }
@@ -2450,7 +2452,7 @@ void draw_cell_contents(GContext *ctx,
 #ifdef PBL_COLOR
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 -
-                               drawing_unit / 2,
+                               drawing_unit / 2 - drawing_unit / 4,
                              floor_center_point.y - drawing_unit * 6 -
                                (time(0) % 2 ? drawing_unit / 2 : 0),
                              drawing_unit + drawing_unit / 2,
