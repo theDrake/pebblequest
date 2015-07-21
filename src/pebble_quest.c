@@ -3166,11 +3166,12 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 #else
             flash_screen();
 #endif
-            if (g_player->int8_stats[SPELL_ABSORPTION] &&
+            if (g_player->int8_stats[SHADOW_FORM] &&
                 (rand() % g_player->int8_stats[INTELLECT] +
-                   g_player->int8_stats[SPELL_ABSORPTION] > damage))
+                   g_player->int8_stats[SHADOW_FORM] > damage))
             {
-              adjust_player_current_energy(damage);
+              adjust_player_current_health(damage / 2 + 1);
+              adjust_player_current_energy(damage / 2 + 1);
             }
             else
             {
@@ -3298,6 +3299,10 @@ void equip_heavy_item(heavy_item_t *const heavy_item)
         heavy_item->infused_pebble > NONE)
     {
       g_player->int8_stats[heavy_item->infused_pebble + FIRST_MAJOR_STAT]++;
+      if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW)
+      {
+        g_player->int8_stats[PHYSICAL_DEFENSE]++;
+      }
     }
     set_player_minor_stats();
   }
@@ -3320,6 +3325,10 @@ void unequip_heavy_item(heavy_item_t *const heavy_item)
       heavy_item->infused_pebble > NONE)
   {
     g_player->int8_stats[heavy_item->infused_pebble + FIRST_MAJOR_STAT]--;
+    if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW)
+    {
+      g_player->int8_stats[PHYSICAL_DEFENSE]--;
+    }
   }
   set_player_minor_stats();
 }
@@ -3433,13 +3442,13 @@ void init_player(void)
   {
     g_player->int8_stats[i] = DEFAULT_MAJOR_STAT_VALUE;
   }
-  g_player->int8_stats[LEVEL]              =
-    g_player->int8_stats[HEALTH_REGEN]     =
-    g_player->int8_stats[ENERGY_REGEN]     = 1;
-  g_player->exp_points                     = // 58806 to reach max. level!
-    g_player->int8_stats[DEPTH]            =
-    g_player->int8_stats[BACKLASH_DAMAGE]  =
-    g_player->int8_stats[SPELL_ABSORPTION] = 0;
+  g_player->int8_stats[LEVEL]             =
+    g_player->int8_stats[HEALTH_REGEN]    =
+    g_player->int8_stats[ENERGY_REGEN]    = 1;
+  g_player->exp_points                    = // 58806 to reach max. level!
+    g_player->int8_stats[DEPTH]           =
+    g_player->int8_stats[BACKLASH_DAMAGE] =
+    g_player->int8_stats[SHADOW_FORM]     = 0;
 
   // Assign starting inventory:
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
