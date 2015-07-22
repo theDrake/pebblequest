@@ -537,8 +537,8 @@ void draw_status_meter(GContext *ctx,
                        const float ratio);
 void fill_ellipse(GContext *ctx,
                   const GPoint center,
-                  const int8_t h_radius,
-                  const int8_t v_radius,
+                  const uint8_t h_radius,
+                  const uint8_t v_radius,
                   const GColor color);
 #ifdef PBL_BW
 void flash_screen(void);
