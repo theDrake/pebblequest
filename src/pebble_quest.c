@@ -1662,13 +1662,12 @@ void draw_floor_and_ceiling(GContext *ctx)
 #ifdef PBL_BW
   graphics_context_set_stroke_color(ctx, GColorWhite);
 #endif
-  graphics_context_set_stroke_color(ctx, GColorWhite);
   for (y = 0; y < max_y; ++y)
   {
     // Determine horizontal distance between points:
     shading_offset = 1 + y / MAX_VISIBILITY_DEPTH;
     if (y % MAX_VISIBILITY_DEPTH >= MAX_VISIBILITY_DEPTH / 2 +
-                                      MAX_VISIBILITY_DEPTH % 2)
+                                    MAX_VISIBILITY_DEPTH % 2)
     {
       shading_offset++;
     }
@@ -2509,18 +2508,18 @@ void draw_shaded_quad(GContext *ctx,
                       const GPoint shading_ref)
 {
   int16_t i, j, shading_offset, half_shading_offset;
-  float shading_gradient = (float) (upper_right.y - upper_left.y) /
-                                   (upper_right.x - upper_left.x);
-  GColor primary_color   = GColorWhite;
+  float dy_over_dx     = (float) (upper_right.y - upper_left.y) /
+                                 (upper_right.x - upper_left.x);
+  GColor primary_color = GColorWhite;
 
   for (i = upper_left.x; i <= upper_right.x && i < GRAPHICS_FRAME_WIDTH; ++i)
   {
-    // Calculate a new shading offset for each "x" value:
-    shading_offset = 1 + ((shading_ref.y + (i - upper_left.x) *
-                           shading_gradient) / MAX_VISIBILITY_DEPTH);
-    if ((int16_t) (shading_ref.y + (i - upper_left.x) *
-        shading_gradient) % MAX_VISIBILITY_DEPTH >= MAX_VISIBILITY_DEPTH /
-        2 + MAX_VISIBILITY_DEPTH % 2)
+    // Determine vertical distance between points:
+    shading_offset = 1 + ((shading_ref.y + (i - upper_left.x) * dy_over_dx) /
+                          MAX_VISIBILITY_DEPTH);
+    if ((int16_t) (shading_ref.y + (i - upper_left.x) * dy_over_dx) %
+        MAX_VISIBILITY_DEPTH >= MAX_VISIBILITY_DEPTH / 2 +
+                                MAX_VISIBILITY_DEPTH % 2)
     {
       shading_offset++;
     }
@@ -2543,11 +2542,11 @@ void draw_shaded_quad(GContext *ctx,
 #endif
 
     // Now, draw points from top to bottom:
-    for (j = upper_left.y + (i - upper_left.x) * shading_gradient;
-         j < lower_left.y - (i - upper_left.x) * shading_gradient;
+    for (j = upper_left.y + (i - upper_left.x) * dy_over_dx;
+         j < lower_left.y - (i - upper_left.x) * dy_over_dx;
          ++j)
     {
-      if ((j + (int16_t) ((i - upper_left.x) * shading_gradient) +
+      if ((j + (int16_t) ((i - upper_left.x) * dy_over_dx) +
           (i % 2 == 0 ? 0 : half_shading_offset)) % shading_offset == 0)
       {
         graphics_context_set_stroke_color(ctx, primary_color);
@@ -2659,8 +2658,8 @@ Description: Draws a filled ellipse according to given specifications.
 ******************************************************************************/
 void fill_ellipse(GContext *ctx,
                   const GPoint center,
-                  const int8_t h_radius,
-                  const int8_t v_radius,
+                  const uint8_t h_radius,
+                  const uint8_t v_radius,
                   const GColor color)
 {
   int16_t theta;
@@ -3614,7 +3613,6 @@ void init_wall_coords(void)
                    g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].x;
     for (j = 1; j <= STRAIGHT_AHEAD; ++j)
     {
-
       g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT]       =
         g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT];
       g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT].x     -= wall_width *
