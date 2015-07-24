@@ -2147,8 +2147,8 @@ void draw_cell_contents(GContext *ctx,
                  drawing_unit + 1,
                  drawing_unit / 2 + 1,
                  GColorPastelYellow);
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorDukeBlue :
-                                                         GColorVividCerulean);
+    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorVividCerulean :
+                                                         GColorDukeBlue);
 #else
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x, i),
@@ -2279,7 +2279,8 @@ void draw_cell_contents(GContext *ctx,
 #ifdef PBL_COLOR
     if (depth < 4)
     {
-      for (i = floor_center_point.x - drawing_unit / 2 - 1;
+      for (i = floor_center_point.x - drawing_unit / 2 -
+                 npc->type <= PALE_OGRE ? 1 : 0;
            i < floor_center_point.x + drawing_unit / 2;
            i += drawing_unit / 3)
       {
