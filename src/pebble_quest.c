@@ -2280,7 +2280,7 @@ void draw_cell_contents(GContext *ctx,
     if (depth < 4)
     {
       for (i = floor_center_point.x - drawing_unit / 2 -
-                 npc->type <= PALE_OGRE ? 1 : 0;
+                 (npc->type <= PALE_OGRE ? 1 : 0);
            i < floor_center_point.x + drawing_unit / 2;
            i += drawing_unit / 3)
       {
