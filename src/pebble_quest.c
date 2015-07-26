@@ -1573,36 +1573,44 @@ void draw_scene(Layer *layer, GContext *ctx)
                                 SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
     }
   }
-  if (g_enemy_current_spell_animation > 0        &&
-      (g_player->position.x == mage->position.x ||
-       g_player->position.y == mage->position.y) &&
-      get_pursuit_direction(g_player->position, mage->position) ==
-        g_player->direction)
+  if (g_enemy_current_spell_animation > 0)
   {
-    magic_type = mage->item;
-    spell_beam_width = g_enemy_current_spell_animation % 2 ?
-                         MIN_SPELL_BEAM_BASE_WIDTH         :
-                         MAX_SPELL_BEAM_BASE_WIDTH;
-    graphics_context_set_stroke_color(ctx, g_magic_type_colors[magic_type][0]);
-    graphics_draw_line(ctx,
-                       GPoint(SCREEN_CENTER_POINT_X,
-                              GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
-                       GPoint(SCREEN_CENTER_POINT.x,
-                              SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
-    for (i = 0; i <= spell_beam_width; ++i)
+    cell   = g_player->position;
+    cell_2 = mage->position;
+    if (((cell.x == cell_2.x) &&
+         ((cell.y < cell_2.y && g_player->direction == SOUTH) ||
+          g_player->direction == NORTH)) ||
+        ((cell.y == cell_2.y) &&
+         ((cell.x < cell_2.x && g_player->direction == EAST) ||
+          g_player->direction == WEST)))
     {
+      magic_type       = mage->item;
+      spell_beam_width = g_enemy_current_spell_animation % 2 ?
+                           MIN_SPELL_BEAM_BASE_WIDTH         :
+                           MAX_SPELL_BEAM_BASE_WIDTH;
       graphics_context_set_stroke_color(ctx,
-                                       g_magic_type_colors[magic_type][i % 2]);
+                                        g_magic_type_colors[magic_type][0]);
       graphics_draw_line(ctx,
-                         GPoint(SCREEN_CENTER_POINT_X - i,
+                         GPoint(SCREEN_CENTER_POINT_X,
                                 GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
-                         GPoint(SCREEN_CENTER_POINT_X - i / 3,
+                         GPoint(SCREEN_CENTER_POINT.x,
                                 SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
-      graphics_draw_line(ctx,
-                         GPoint(SCREEN_CENTER_POINT_X + i,
-                                GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
-                         GPoint(SCREEN_CENTER_POINT_X + i / 3,
-                                SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
+      for (i = 0; i <= spell_beam_width; ++i)
+      {
+        graphics_context_set_stroke_color(ctx,
+                                          g_magic_type_colors[magic_type]
+                                                             [i % 2]);
+        graphics_draw_line(ctx,
+                           GPoint(SCREEN_CENTER_POINT_X - i,
+                                  GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
+                           GPoint(SCREEN_CENTER_POINT_X - i / 3,
+                                  SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
+        graphics_draw_line(ctx,
+                           GPoint(SCREEN_CENTER_POINT_X + i,
+                                  GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
+                           GPoint(SCREEN_CENTER_POINT_X + i / 3,
+                                  SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
+      }
     }
   }
 #endif
