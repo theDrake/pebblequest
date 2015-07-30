@@ -3382,13 +3382,17 @@ void set_player_minor_stats(void)
   int8_t i;
 
   g_player->int8_stats[PHYSICAL_POWER]   =
-    g_player->int8_stats[STRENGTH] + g_player->int8_stats[AGILITY] / 2;
+    g_player->int8_stats[STRENGTH] + g_player->int8_stats[AGILITY] / 2 +
+    g_player->int8_stats[INTELLECT] / 5;
   g_player->int8_stats[PHYSICAL_DEFENSE] =
-    g_player->int8_stats[AGILITY] + g_player->int8_stats[STRENGTH] / 2;
+    g_player->int8_stats[STRENGTH] / 2 + g_player->int8_stats[AGILITY] +
+    g_player->int8_stats[INTELLECT] / 5;
   g_player->int8_stats[MAGICAL_POWER]    =
-    g_player->int8_stats[INTELLECT] + g_player->int8_stats[AGILITY] / 2;
+    g_player->int8_stats[STRENGTH] / 2 + g_player->int8_stats[AGILITY] / 5 +
+    g_player->int8_stats[INTELLECT];
   g_player->int8_stats[MAGICAL_DEFENSE]  =
-    g_player->int8_stats[AGILITY] + g_player->int8_stats[INTELLECT] / 2;
+    g_player->int8_stats[STRENGTH] / 5 + g_player->int8_stats[AGILITY] / 2 +
+    g_player->int8_stats[INTELLECT];
   g_player->int16_stats[MAX_HEALTH]      =
     DEFAULT_MAX_HEALTH + g_player->int8_stats[STRENGTH] * 4 +
     g_player->int8_stats[LEVEL];
