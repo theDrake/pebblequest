@@ -3433,6 +3433,12 @@ void set_player_minor_stats(void)
     g_player->int8_stats[MAGICAL_POWER]--;
     g_player->int8_stats[FATIGUE_RATE]++;
   }
+
+  // Ensure magical power doesn't fall below DEFAULT_MAJOR_STAT_VALUE:
+  if (g_player->int8_stats[MAGICAL_POWER] < DEFAULT_MAJOR_STAT_VALUE)
+  {
+    g_player->int8_stats[MAGICAL_POWER] = DEFAULT_MAJOR_STAT_VALUE;
+  }
 }
 
 /******************************************************************************
