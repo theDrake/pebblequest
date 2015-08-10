@@ -3307,10 +3307,6 @@ void equip_heavy_item(heavy_item_t *const heavy_item)
         heavy_item->infused_pebble > NONE)
     {
       g_player->int8_stats[heavy_item->infused_pebble + FIRST_MAJOR_STAT]++;
-      if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW)
-      {
-        g_player->int8_stats[PHYSICAL_DEFENSE]++;
-      }
     }
     set_player_minor_stats();
   }
@@ -3333,10 +3329,6 @@ void unequip_heavy_item(heavy_item_t *const heavy_item)
       heavy_item->infused_pebble > NONE)
   {
     g_player->int8_stats[heavy_item->infused_pebble + FIRST_MAJOR_STAT]--;
-    if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW)
-    {
-      g_player->int8_stats[PHYSICAL_DEFENSE]--;
-    }
   }
   set_player_minor_stats();
 }
@@ -3380,6 +3372,7 @@ Description: Assigns values to the player's minor stats according to major stat
 void set_player_minor_stats(void)
 {
   int8_t i;
+  heavy_item_t *heavy_item;
 
   g_player->int8_stats[PHYSICAL_POWER]   =
     g_player->int8_stats[STRENGTH] + g_player->int8_stats[AGILITY] / 2 +
@@ -3402,39 +3395,47 @@ void set_player_minor_stats(void)
   g_player->int8_stats[FATIGUE_RATE]     = MIN_FATIGUE_RATE;
 
   // Weapon:
-  if (get_heavy_item_equipped_at(RIGHT_HAND))
+  if (heavy_item = get_heavy_item_equipped_at(RIGHT_HAND))
   {
-    for (i = DAGGER; i <= get_heavy_item_equipped_at(RIGHT_HAND)->type; i += 2)
+    for (i = DAGGER; i <= heavy_item->type; i += 2)
     {
       g_player->int8_stats[PHYSICAL_POWER] += DEFAULT_ITEM_BONUS;
       g_player->int8_stats[FATIGUE_RATE]++;
     }
-    if (get_heavy_item_equipped_at(RIGHT_HAND)->infused_pebble > NONE)
+    if (heavy_item->infused_pebble > NONE)
     {
       g_player->int8_stats[FATIGUE_RATE]++;
     }
   }
 
-  // Armor:
-  if (get_heavy_item_equipped_at(BODY))
+  // Armor/Robe:
+  if (heavy_item = get_heavy_item_equipped_at(BODY))
   {
-    for (i = LIGHT_ARMOR; i <= get_heavy_item_equipped_at(BODY)->type; ++i)
+    for (i = LIGHT_ARMOR; i <= heavy_item->type; ++i)
     {
       g_player->int8_stats[PHYSICAL_DEFENSE] += DEFAULT_ITEM_BONUS;
       g_player->int8_stats[MAGICAL_POWER]--;
       g_player->int8_stats[FATIGUE_RATE]++;
     }
+    if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW)
+    {
+      g_player->int8_stats[PHYSICAL_DEFENSE]++;
+    }
   }
 
   // Shield:
-  if (get_heavy_item_equipped_at(LEFT_HAND))
+  if (heavy_item = get_heavy_item_equipped_at(LEFT_HAND))
   {
     g_player->int8_stats[PHYSICAL_DEFENSE] += DEFAULT_ITEM_BONUS;
     g_player->int8_stats[MAGICAL_POWER]--;
     g_player->int8_stats[FATIGUE_RATE]++;
+    if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW)
+    {
+      g_player->int8_stats[PHYSICAL_DEFENSE]++;
+    }
   }
 
-  // Ensure magical power doesn't fall below DEFAULT_MAJOR_STAT_VALUE:
+  // Ensure magical power doesn't fall too low:
   if (g_player->int8_stats[MAGICAL_POWER] < DEFAULT_MAJOR_STAT_VALUE)
   {
     g_player->int8_stats[MAGICAL_POWER] = DEFAULT_MAJOR_STAT_VALUE;
