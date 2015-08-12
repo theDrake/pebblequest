@@ -3426,7 +3426,7 @@ void set_player_minor_stats(void)
   }
 
   // Shield:
-  heavy_item = get_heavy_item_equipped_at(LEFT_HAND);)
+  heavy_item = get_heavy_item_equipped_at(LEFT_HAND);
   if (heavy_item)
   {
     g_player->int8_stats[PHYSICAL_DEFENSE] += DEFAULT_ITEM_BONUS;
