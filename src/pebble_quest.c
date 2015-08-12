@@ -2362,7 +2362,7 @@ void draw_cell_contents(GContext *ctx,
                                drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 7,
                              drawing_unit * 5,
-                             drawing_unit * 2 -
+                             drawing_unit * 2 + 1 -
                                (time(0) % 2 ? drawing_unit / 2 : 0)),
                        drawing_unit / 2,
                        GCornersAll);
@@ -2373,13 +2373,13 @@ void draw_cell_contents(GContext *ctx,
                             floor_center_point.y - drawing_unit * 7),
                      GPoint(floor_center_point.x - drawing_unit * 2 -
                               drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 5),
+                            floor_center_point.y - drawing_unit * 5 + 1),
                      GPoint(floor_center_point.x + drawing_unit * 2 +
                               drawing_unit / 2,
                             floor_center_point.y - drawing_unit * 7),
                      GPoint(floor_center_point.x + drawing_unit * 2 +
                               drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 5),
+                            floor_center_point.y - drawing_unit * 5 + 1),
                      GPoint(top_left_point.x - 10, top_left_point.y - 10));
 #endif
 
