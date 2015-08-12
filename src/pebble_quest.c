@@ -3395,7 +3395,8 @@ void set_player_minor_stats(void)
   g_player->int8_stats[FATIGUE_RATE]     = MIN_FATIGUE_RATE;
 
   // Weapon:
-  if (heavy_item = get_heavy_item_equipped_at(RIGHT_HAND))
+  heavy_item = get_heavy_item_equipped_at(RIGHT_HAND);
+  if (heavy_item)
   {
     for (i = DAGGER; i <= heavy_item->type; i += 2)
     {
@@ -3409,7 +3410,8 @@ void set_player_minor_stats(void)
   }
 
   // Armor/Robe:
-  if (heavy_item = get_heavy_item_equipped_at(BODY))
+  heavy_item = get_heavy_item_equipped_at(BODY);
+  if (heavy_item)
   {
     for (i = LIGHT_ARMOR; i <= heavy_item->type; ++i)
     {
@@ -3424,7 +3426,8 @@ void set_player_minor_stats(void)
   }
 
   // Shield:
-  if (heavy_item = get_heavy_item_equipped_at(LEFT_HAND))
+  heavy_item = get_heavy_item_equipped_at(LEFT_HAND);)
+  if (heavy_item)
   {
     g_player->int8_stats[PHYSICAL_DEFENSE] += DEFAULT_ITEM_BONUS;
     g_player->int8_stats[MAGICAL_POWER]--;
