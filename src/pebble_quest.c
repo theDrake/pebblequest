@@ -1579,10 +1579,10 @@ void draw_scene(Layer *layer, GContext *ctx)
     cell_2 = mage->position;
     if (((cell.x == cell_2.x) &&
          ((cell.y < cell_2.y && g_player->direction == SOUTH) ||
-          g_player->direction == NORTH)) ||
+          (cell.y > cell_2.y && g_player->direction == NORTH))) ||
         ((cell.y == cell_2.y) &&
          ((cell.x < cell_2.x && g_player->direction == EAST) ||
-          g_player->direction == WEST)))
+          (cell.x > cell_2.x && g_player->direction == WEST))))
     {
       magic_type       = mage->item;
       spell_beam_width = g_enemy_current_spell_animation % 2 ?
