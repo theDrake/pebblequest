@@ -4131,10 +4131,10 @@ void init(void)
   // Load saved data or initialize a brand new player struct:
   g_player   = malloc(sizeof(player_t));
   g_location = malloc(sizeof(location_t));
-  if (persist_exists(STORAGE_KEY))
+  if (persist_exists(PLAYER_STORAGE_KEY))
   {
-    persist_read_data(STORAGE_KEY, g_player, sizeof(player_t));
-    persist_read_data(STORAGE_KEY + 1, g_location, sizeof(location_t));
+    persist_read_data(PLAYER_STORAGE_KEY, g_player, sizeof(player_t));
+    persist_read_data(LOCATION_STORAGE_KEY, g_location, sizeof(location_t));
     set_player_direction(g_player->direction); // To update compass.
   }
   else
@@ -4167,8 +4167,8 @@ void deinit(void)
 {
   int8_t i;
 
-  persist_write_data(STORAGE_KEY, g_player, sizeof(player_t));
-  persist_write_data(STORAGE_KEY + 1, g_location, sizeof(location_t));
+  persist_write_data(PLAYER_STORAGE_KEY, g_player, sizeof(player_t));
+  persist_write_data(LOCATION_STORAGE_KEY, g_location, sizeof(location_t));
   tick_timer_service_unsubscribe();
   app_focus_service_unsubscribe();
   free(g_player);

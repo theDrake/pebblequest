@@ -246,7 +246,8 @@ enum {
 #define MAX_LARGE_INT_DIGITS             5
 #define MAX_DEPTH                        DEFAULT_MAX_SMALL_INT_VALUE
 #define MAX_LEVEL                        DEFAULT_MAX_SMALL_INT_VALUE
-#define STORAGE_KEY                      841
+#define PLAYER_STORAGE_KEY               841
+#define LOCATION_STORAGE_KEY             (PLAYER_STORAGE_KEY + 1)
 #define ANIMATED                         true
 #define NOT_ANIMATED                     false
 
