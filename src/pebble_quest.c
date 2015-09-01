@@ -3660,7 +3660,8 @@ void init_wall_coords(void)
    Function: init_location
 
 Description: Initializes the global location struct, setting up a new location
-             with an entrance, an exit, and a single NPC of type "MAGE".
+             with an entrance, an exit, and a single NPC of type "MAGE". Also
+             saves data to persistent storage as a precaution.
 
      Inputs: None.
 
@@ -3774,6 +3775,10 @@ void init_location(void)
   {
     set_cell_type(builder_position, EMPTY);
   }
+
+  // Save data to persistent storage as a precaution:
+  persist_write_data(PLAYER_STORAGE_KEY, g_player, sizeof(player_t));
+  persist_write_data(LOCATION_STORAGE_KEY, g_location, sizeof(location_t));
 }
 
 /******************************************************************************
