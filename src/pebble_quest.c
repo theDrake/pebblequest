@@ -20,22 +20,14 @@ Description: Sets the player's orientation to a given direction and updates the
 
     Outputs: The player's new direction.
 ******************************************************************************/
-int8_t set_player_direction(const int8_t new_direction)
-{
-  if (new_direction == NORTH)
-  {
+int8_t set_player_direction(const int8_t new_direction) {
+  if (new_direction == NORTH) {
     gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 2);
-  }
-  else if (new_direction == SOUTH)
-  {
+  } else if (new_direction == SOUTH) {
     gpath_rotate_to(g_compass_path, 0);
-  }
-  else if (new_direction == EAST)
-  {
+  } else if (new_direction == EAST) {
     gpath_rotate_to(g_compass_path, (TRIG_MAX_ANGLE * 3) / 4);
-  }
-  else // if (new_direction == WEST)
-  {
+  } else {  // if (new_direction == WEST)
     gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 4);
   }
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
@@ -55,29 +47,22 @@ Description: Attempts to move the player one cell forward (or backward) in a
 
     Outputs: "True" if the move is successful.
 ******************************************************************************/
-bool move_player(const int8_t direction)
-{
+bool move_player(const int8_t direction) {
   GPoint destination = get_cell_farther_away(g_player->position, direction, 1);
 
-  if (occupiable(destination))
-  {
+  if (occupiable(destination)) {
     // Check for loot:
-    if (get_cell_type(destination) >= 0)
-    {
+    if (get_cell_type(destination) >= 0) {
       g_current_selection = get_cell_type(destination);
       show_window(LOOT_MENU, NOT_ANIMATED);
       set_cell_type(destination, EMPTY);
-    }
 
     // Check for an exit:
-    else if (get_cell_type(destination) == EXIT)
-    {
+    } else if (get_cell_type(destination) == EXIT) {
       init_location();
-    }
 
     // Shift the player's position:
-    else
-    {
+    } else {
       g_player->position = destination;
     }
 
@@ -100,12 +85,10 @@ Description: Attempts to move a given NPC one cell forward in a given
 
     Outputs: None.
 ******************************************************************************/
-void move_npc(npc_t *const npc, const int8_t direction)
-{
+void move_npc(npc_t *const npc, const int8_t direction) {
   GPoint destination = get_cell_farther_away(npc->position, direction, 1);
 
-  if (occupiable(destination) && get_cell_type(destination) != EXIT)
-  {
+  if (occupiable(destination) && get_cell_type(destination) != EXIT) {
     npc->position = destination;
   }
 }
@@ -121,12 +104,10 @@ Description: Damages the player according to a given damage value (or one more
 
     Outputs: The amount of damage actually dealt.
 ******************************************************************************/
-int8_t damage_player(int8_t damage)
-{
+int8_t damage_player(int8_t damage) {
   int8_t min_damage = g_player->int8_stats[HEALTH_REGEN] + 1;
 
-  if (damage < min_damage)
-  {
+  if (damage < min_damage) {
     damage = min_damage;
   }
   vibes_short_pulse();
@@ -148,27 +129,22 @@ Description: Damages a given NPC according to a given damage value (or
 
     Outputs: The amount of damage actually dealt.
 ******************************************************************************/
-int8_t damage_npc(npc_t *const npc, int8_t damage)
-{
-  if (damage < MIN_DAMAGE_TO_NPC)
-  {
+int8_t damage_npc(npc_t *const npc, int8_t damage) {
+  if (damage < MIN_DAMAGE_TO_NPC) {
     damage = MIN_DAMAGE_TO_NPC;
   }
   npc->health -= damage;
 
   // Check for NPC death:
-  if (npc->health <= 0 || npc->status_effects[DISINTEGRATION])
-  {
+  if (npc->health <= 0 || npc->status_effects[DISINTEGRATION]) {
     // Drop loot, if any (extra checks prevent overwriting of Pebbles/exits):
     if (npc->type == MAGE ||
-        (npc->item > NONE && get_cell_type(npc->position) < EXIT))
-    {
+        (npc->item > NONE && get_cell_type(npc->position) < EXIT)) {
       set_cell_type(npc->position, npc->item);
     }
 
     // Check for "game completion" (death of the final mage):
-    if (g_player->int8_stats[DEPTH] == MAX_DEPTH && npc->type == MAGE)
-    {
+    if (g_player->int8_stats[DEPTH] == MAX_DEPTH && npc->type == MAGE) {
       show_narration(ENDING_NARRATION);
       npc->type = NONE;
 
@@ -179,12 +155,10 @@ int8_t damage_npc(npc_t *const npc, int8_t damage)
     npc->type = NONE;
 
     // Add experience points and check for a "level up":
-    if (g_player->int8_stats[LEVEL] < MAX_LEVEL)
-    {
+    if (g_player->int8_stats[LEVEL] < MAX_LEVEL) {
       g_player->exp_points += npc->power;
       if (g_player->exp_points / (6 * g_player->int8_stats[LEVEL]) >=
-            g_player->int8_stats[LEVEL])
-      {
+            g_player->int8_stats[LEVEL]) {
         g_player->int8_stats[LEVEL]++;
         show_window(LEVEL_UP_MENU, NOT_ANIMATED);
         show_narration(LEVEL_UP_NARRATION);
@@ -212,31 +186,26 @@ Description: Applies the effects of a given spell type, according a given max.
 ******************************************************************************/
 int8_t cast_spell_on_npc(npc_t *const npc,
                          const int8_t magic_type,
-                         const int8_t max_potency)
-{
+                         const int8_t max_potency) {
   int8_t potency = 0,
          damage  = 0,
          spell_resistance;
 
-  if (npc)
-  {
+  if (npc) {
     // Determine actual spell potency along with the NPC's resistance:
-    if (max_potency > 0)
-    {
+    if (max_potency > 0) {
       potency = rand() % max_potency;
     }
     spell_resistance = rand() % npc->magical_defense;
 
     // Next, attempt to apply a status effect:
-    if (magic_type < PEBBLE_OF_DEATH || potency > spell_resistance)
-    {
+    if (magic_type < PEBBLE_OF_DEATH || potency > spell_resistance) {
       npc->status_effects[magic_type] += potency;
     }
 
     // Finally, apply damage and check for health absorption:
     damage = damage_npc(npc, potency - spell_resistance);
-    if (magic_type == PEBBLE_OF_LIFE)
-    {
+    if (magic_type == PEBBLE_OF_LIFE) {
       adjust_player_current_health(damage);
     }
   }
@@ -255,12 +224,10 @@ Description: Adjusts the player's current health by a given amount, which may
 
     Outputs: The adjustment amount passed in as input.
 ******************************************************************************/
-int8_t adjust_player_current_health(const int8_t amount)
-{
+int8_t adjust_player_current_health(const int8_t amount) {
   g_player->int16_stats[CURRENT_HEALTH] += amount;
   if (g_player->int16_stats[CURRENT_HEALTH] >
-        g_player->int16_stats[MAX_HEALTH])
-  {
+        g_player->int16_stats[MAX_HEALTH]) {
     g_player->int16_stats[CURRENT_HEALTH] = g_player->int16_stats[MAX_HEALTH];
   }
 
@@ -278,12 +245,10 @@ Description: Adjusts the player's current energy by a given amount, which may
 
     Outputs: The adjustment amount passed in as input.
 ******************************************************************************/
-int8_t adjust_player_current_energy(const int8_t amount)
-{
+int8_t adjust_player_current_energy(const int8_t amount) {
   g_player->int16_stats[CURRENT_ENERGY] += amount;
   if (g_player->int16_stats[CURRENT_ENERGY] >
-        g_player->int16_stats[MAX_ENERGY])
-  {
+        g_player->int16_stats[MAX_ENERGY]) {
     g_player->int16_stats[CURRENT_ENERGY] = g_player->int16_stats[MAX_ENERGY];
   }
 
@@ -302,18 +267,14 @@ Description: Initializes a new NPC of a given type at a given position (unless
 
     Outputs: "True" if a new NPC is successfully added.
 ******************************************************************************/
-bool add_new_npc(const int8_t npc_type, const GPoint position)
-{
+bool add_new_npc(const int8_t npc_type, const GPoint position) {
   int8_t i;
   npc_t *npc;
 
-  if (occupiable(position) && get_cell_type(position) != EXIT)
-  {
-    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
-    {
+  if (occupiable(position) && get_cell_type(position) != EXIT) {
+    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i) {
       npc = &g_location->npcs[i];
-      if (npc->type == NONE)
-      {
+      if (npc->type == NONE) {
         init_npc(npc, npc_type, position);
 
         return true;
@@ -340,10 +301,8 @@ Description: Given a set of cell coordinates, returns new cell coordinates a
 ******************************************************************************/
 GPoint get_cell_farther_away(const GPoint reference_point,
                              const int8_t direction,
-                             const int8_t distance)
-{
-  switch (direction)
-  {
+                             const int8_t distance) {
+  switch (direction) {
     case NORTH:
       return GPoint(reference_point.x, reference_point.y - distance);
     case SOUTH:
@@ -367,8 +326,7 @@ Description: Determines in which direction a character at a given position
 
     Outputs: Integer representing the direction in which the NPC ought to move.
 ******************************************************************************/
-int8_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee)
-{
+int8_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee) {
   int8_t diff_x                     = pursuer.x - pursuee.x,
          diff_y                     = pursuer.y - pursuee.y;
   const int8_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
@@ -377,51 +335,41 @@ int8_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee)
        checked_vertical_direction   = false;
 
   // Check for alignment along the x-axis:
-  if (diff_x == 0)
-  {
+  if (diff_x == 0) {
     if (diff_y == 1 /* The two are already touching. */ ||
         occupiable(get_cell_farther_away(pursuer,
                                          vertical_direction,
-                                         1)))
-    {
+                                         1))) {
       return vertical_direction;
     }
     checked_vertical_direction = true;
-  }
 
   // Check for alignment along the y-axis:
-  else if (diff_y == 0)
-  {
+  } else if (diff_y == 0) {
     if (diff_x == 1 /* The two are already touching. */ ||
         occupiable(get_cell_farther_away(pursuer,
                                          horizontal_direction,
-                                         1)))
-    {
+                                         1))) {
       return horizontal_direction;
     }
     checked_horizontal_direction = true;
   }
 
   // If not aligned along either axis, a direction in either axis will do:
-  while (!checked_horizontal_direction || !checked_vertical_direction)
-  {
+  while (!checked_horizontal_direction || !checked_vertical_direction) {
     if (checked_vertical_direction ||
-        (!checked_horizontal_direction && rand() % 2))
-    {
+        (!checked_horizontal_direction && rand() % 2)) {
       if (occupiable(get_cell_farther_away(pursuer,
                                            horizontal_direction,
-                                           1)))
-      {
+                                           1))) {
         return horizontal_direction;
       }
       checked_horizontal_direction = true;
     }
-    if (!checked_vertical_direction)
-    {
+    if (!checked_vertical_direction) {
       if (occupiable(get_cell_farther_away(pursuer,
                                            vertical_direction,
-                                           1)))
-      {
+                                           1))) {
         return vertical_direction;
       }
       checked_vertical_direction = true;
@@ -443,22 +391,14 @@ Description: Given a north/south/east/west reference direction, returns the
     Outputs: Integer representing the direction to the left of the reference
              direction.
 ******************************************************************************/
-int8_t get_direction_to_the_left(const int8_t reference_direction)
-{
-  if (reference_direction == NORTH)
-  {
+int8_t get_direction_to_the_left(const int8_t reference_direction) {
+  if (reference_direction == NORTH) {
     return WEST;
-  }
-  else if (reference_direction == WEST)
-  {
+  } else if (reference_direction == WEST) {
     return SOUTH;
-  }
-  else if (reference_direction == SOUTH)
-  {
+  } else if (reference_direction == SOUTH) {
     return EAST;
-  }
-  else // if (reference_direction == EAST)
-  {
+  } else {  // if (reference_direction == EAST)
     return NORTH;
   }
 }
@@ -474,22 +414,14 @@ Description: Given a north/south/east/west reference direction, returns the
     Outputs: Integer representing the direction to the right of the reference
              direction.
 ******************************************************************************/
-int8_t get_direction_to_the_right(const int8_t reference_direction)
-{
-  if (reference_direction == NORTH)
-  {
+int8_t get_direction_to_the_right(const int8_t reference_direction) {
+  if (reference_direction == NORTH) {
     return EAST;
-  }
-  else if (reference_direction == EAST)
-  {
+  } else if (reference_direction == EAST) {
     return SOUTH;
-  }
-  else if (reference_direction == SOUTH)
-  {
+  } else if (reference_direction == SOUTH) {
     return WEST;
-  }
-  else // if (reference_direction == WEST)
-  {
+  } else {  // if (reference_direction == WEST)
     return NORTH;
   }
 }
@@ -504,22 +436,14 @@ Description: Returns the opposite of a given direction value (i.e., given the
 
     Outputs: Integer representing the opposite of the given direction.
 ******************************************************************************/
-int8_t get_opposite_direction(const int8_t direction)
-{
-  if (direction == NORTH)
-  {
+int8_t get_opposite_direction(const int8_t direction) {
+  if (direction == NORTH) {
     return SOUTH;
-  }
-  else if (direction == SOUTH)
-  {
+  } else if (direction == SOUTH) {
     return NORTH;
-  }
-  else if (direction == EAST)
-  {
+  } else if (direction == EAST) {
     return WEST;
-  }
-  else // if (direction == WEST)
-  {
+  } else {  // if (direction == WEST)
     return EAST;
   }
 }
@@ -533,24 +457,19 @@ Description: Returns the type of the nth item in the player's inventory.
 
     Outputs: The nth item's type.
 ******************************************************************************/
-int8_t get_nth_item_type(const int8_t n)
-{
+int8_t get_nth_item_type(const int8_t n) {
   int8_t i, item_count = 0;
 
   // Search Pebbles:
-  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
-  {
-    if (g_player->pebbles[i] > 0 && item_count++ == n)
-    {
+  for (i = 0; i < NUM_PEBBLE_TYPES; ++i) {
+    if (g_player->pebbles[i] > 0 && item_count++ == n) {
       return i;
     }
   }
 
   // Search heavy items:
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
-    if (g_player->heavy_items[i].type > NONE && item_count++ == n)
-    {
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i) {
+    if (g_player->heavy_items[i].type > NONE && item_count++ == n) {
       return g_player->heavy_items[i].type;
     }
   }
@@ -567,14 +486,11 @@ Description: Returns the number of types of Pebbles in the player's inventory.
 
     Outputs: Number of Pebble types owned by the player.
 ******************************************************************************/
-int8_t get_num_pebble_types_owned(void)
-{
+int8_t get_num_pebble_types_owned(void) {
   int8_t i, num_pebble_types = 0;
 
-  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
-  {
-    if (g_player->pebbles[i] > 0)
-    {
+  for (i = 0; i < NUM_PEBBLE_TYPES; ++i) {
+    if (g_player->pebbles[i] > 0) {
       num_pebble_types++;
     }
   }
@@ -594,14 +510,11 @@ Description: Returns the row where a given Pebble type will be displayed in the
     Outputs: Integer indicating the inventory row where the Pebble type will be
              found (starting from zero).
 ******************************************************************************/
-int8_t get_inventory_row_for_pebble(const int8_t pebble_type)
-{
+int8_t get_inventory_row_for_pebble(const int8_t pebble_type) {
   int8_t i;
 
-  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
-  {
-    if (get_nth_item_type(i) == pebble_type)
-    {
+  for (i = 0; i < NUM_PEBBLE_TYPES; ++i) {
+    if (get_nth_item_type(i) == pebble_type) {
       return i;
     }
   }
@@ -620,16 +533,13 @@ Description: Given an equip target (RIGHT_HAND, LEFT_HAND, or BODY), returns
 
     Outputs: Pointer to the item equipped at the specified target.
 ******************************************************************************/
-heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target)
-{
+heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target) {
   int8_t i;
   heavy_item_t *heavy_item;
 
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i) {
     heavy_item = &g_player->heavy_items[i];
-    if (heavy_item->equipped && heavy_item->equip_target == equip_target)
-    {
+    if (heavy_item->equipped && heavy_item->equip_target == equip_target) {
       return heavy_item;
     }
   }
@@ -646,13 +556,11 @@ Description: Returns the type of cell at a given set of coordinates.
 
     Outputs: The indicated cell's type.
 ******************************************************************************/
-int8_t get_cell_type(const GPoint cell)
-{
+int8_t get_cell_type(const GPoint cell) {
   if (cell.x < 0          ||
       cell.x >= MAP_WIDTH ||
       cell.y < 0          ||
-      cell.y >= MAP_HEIGHT)
-  {
+      cell.y >= MAP_HEIGHT) {
     return SOLID;
   }
 
@@ -670,8 +578,7 @@ Description: Sets the cell at a given set of coordinates to a given type.
 
     Outputs: None.
 ******************************************************************************/
-void set_cell_type(GPoint cell, const int8_t type)
-{
+void set_cell_type(GPoint cell, const int8_t type) {
   g_location->map[cell.x][cell.y] = type;
 }
 
@@ -685,16 +592,13 @@ Description: Returns a pointer to the NPC occupying a given cell.
     Outputs: Pointer to the NPC occupying the indicated cell, or NULL if there
              is none.
 ******************************************************************************/
-npc_t *get_npc_at(const GPoint cell)
-{
+npc_t *get_npc_at(const GPoint cell) {
   int8_t i;
   npc_t *npc;
 
-  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
-  {
+  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i) {
     npc = &g_location->npcs[i];
-    if (npc->type > NONE && gpoint_equal(&npc->position, &cell))
-    {
+    if (npc->type > NONE && gpoint_equal(&npc->position, &cell)) {
       return npc;
     }
   }
@@ -712,8 +616,7 @@ Description: Returns a "title" string for a given character stat, including
 
     Outputs: String containing the stat name and its current value.
 ******************************************************************************/
-char *get_stat_title_str(const int8_t stat_index)
-{
+char *get_stat_title_str(const int8_t stat_index) {
   static char stat_str[STAT_TITLE_STR_LEN + 1];
   int8_t remaining_str_len;
 
@@ -724,24 +627,19 @@ char *get_stat_title_str(const int8_t stat_index)
 
   // Add the stat's current value:
   remaining_str_len = STAT_TITLE_STR_LEN - strlen(stat_str) + 1;
-  if (stat_index == EXPERIENCE_POINTS)
-  {
+  if (stat_index == EXPERIENCE_POINTS) {
     snprintf(stat_str + strlen(stat_str),
              remaining_str_len,
              "%u",
              g_player->exp_points);
-  }
-  else if (stat_index < 0)
-  {
+  } else if (stat_index < 0) {
     snprintf(stat_str + strlen(stat_str),
              remaining_str_len,
              "%d/%d",
              g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS],
              g_player->int16_stats[stat_index + NUM_NEGATIVE_STAT_CONSTANTS +
                                      2]);
-  }
-  else
-  {
+  } else {
     snprintf(stat_str + strlen(stat_str),
              remaining_str_len,
              "%d",
@@ -762,8 +660,7 @@ Description: Determines whether the cell at a given set of coordinates may be
 
     Outputs: "True" if the cell is occupiable.
 ******************************************************************************/
-bool occupiable(const GPoint cell)
-{
+bool occupiable(const GPoint cell) {
   return get_cell_type(cell) >= EMPTY              &&
          !gpoint_equal(&g_player->position, &cell) &&
          get_npc_at(cell) == NULL;
@@ -778,8 +675,7 @@ Description: Displays desired narration text via the narration window.
 
     Outputs: Integer representing the narration text shown.
 ******************************************************************************/
-int8_t show_narration(const int8_t narration)
-{
+int8_t show_narration(const int8_t narration) {
   text_layer_set_text(g_narration_text_layer, g_narration_strings[narration]);
   show_window(NARRATION_WINDOW, NOT_ANIMATED);
 
@@ -796,21 +692,16 @@ Description: Prepares and displays a given window.
 
     Outputs: Integer representing the newly-displayed window.
 ******************************************************************************/
-int8_t show_window(const int8_t window_index, const bool animated)
-{
+int8_t show_window(const int8_t window_index, const bool animated) {
   // If it's a menu, reload menu data and set to the appropriate index:
-  if (window_index < NUM_MENUS)
-  {
+  if (window_index < NUM_MENUS) {
     menu_layer_reload_data(g_menu_layers[window_index]);
-    if (window_index == INVENTORY_MENU)
-    {
+    if (window_index == INVENTORY_MENU) {
       menu_layer_set_selected_index(g_menu_layers[window_index],
                                     (MenuIndex) {0, g_current_selection},
                                     MenuRowAlignCenter,
                                     NOT_ANIMATED);
-    }
-    else
-    {
+    } else {
       menu_layer_set_selected_index(g_menu_layers[window_index],
                                     (MenuIndex) {0, 0},
                                     MenuRowAlignCenter,
@@ -819,14 +710,10 @@ int8_t show_window(const int8_t window_index, const bool animated)
   }
 
   // Show the window:
-  if (!window_stack_contains_window(g_windows[window_index]))
-  {
+  if (!window_stack_contains_window(g_windows[window_index])) {
     window_stack_push(g_windows[window_index], animated);
-  }
-  else
-  {
-    while (window_stack_get_top_window() != g_windows[window_index])
-    {
+  } else {
+    while (window_stack_get_top_window() != g_windows[window_index]) {
       window_stack_pop(animated);
     }
   }
@@ -849,8 +736,7 @@ Description: Instructions for drawing the main menu's header.
 static void main_menu_draw_header_callback(GContext *ctx,
                                            const Layer *cell_layer,
                                            uint16_t section_index,
-                                           void *data)
-{
+                                           void *data) {
   menu_cell_basic_header_draw(ctx, cell_layer, "MAIN MENU");
 }
 
@@ -869,8 +755,7 @@ Description: Instructions for drawing the level-up menu's header.
 static void level_up_menu_draw_header_callback(GContext *ctx,
                                                const Layer *cell_layer,
                                                uint16_t section_index,
-                                               void *data)
-{
+                                               void *data) {
   menu_cell_basic_header_draw(ctx, cell_layer, "BOOST AN ATTRIBUTE");
 }
 
@@ -889,8 +774,7 @@ Description: Instructions for drawing the stats menu's header.
 static void stats_menu_draw_header_callback(GContext *ctx,
                                             const Layer *cell_layer,
                                             uint16_t section_index,
-                                            void *data)
-{
+                                            void *data) {
   menu_cell_basic_header_draw(ctx, cell_layer, "CHARACTER STATS");
 }
 
@@ -909,8 +793,7 @@ Description: Instructions for drawing the inventory menu's header.
 static void inventory_menu_draw_header_callback(GContext *ctx,
                                                 const Layer *cell_layer,
                                                 uint16_t section_index,
-                                                void *data)
-{
+                                                void *data) {
   menu_cell_basic_header_draw(ctx, cell_layer, "INVENTORY");
 }
 
@@ -929,8 +812,7 @@ Description: Instructions for drawing the loot menu's header.
 static void loot_menu_draw_header_callback(GContext *ctx,
                                            const Layer *cell_layer,
                                            uint16_t section_index,
-                                           void *data)
-{
+                                           void *data) {
   menu_cell_basic_header_draw(ctx, cell_layer, "LOOT");
 }
 
@@ -949,8 +831,7 @@ Description: Instructions for drawing the Pebble options menu's header.
 static void pebble_options_menu_draw_header_callback(GContext *ctx,
                                                      const Layer *cell_layer,
                                                      uint16_t section_index,
-                                                     void *data)
-{
+                                                     void *data) {
   menu_cell_basic_header_draw(ctx, cell_layer, "OPTIONS");
 }
 
@@ -969,8 +850,7 @@ Description: Instructions for drawing the heavy items menu's header.
 static void heavy_items_menu_draw_header_callback(GContext *ctx,
                                                   const Layer *cell_layer,
                                                   uint16_t section_index,
-                                                  void *data)
-{
+                                                  void *data) {
   char header_str[HEAVY_ITEMS_MENU_HEADER_STR_LEN + 1];
 
   snprintf(header_str,
@@ -995,8 +875,7 @@ Description: Instructions for drawing each row (cell) of the main menu.
 static void main_menu_draw_row_callback(GContext *ctx,
                                         const Layer *cell_layer,
                                         MenuIndex *cell_index,
-                                        void *data)
-{
+                                        void *data) {
   menu_cell_basic_draw(ctx,
                        cell_layer,
                        g_main_menu_strings[cell_index->row],
@@ -1020,8 +899,7 @@ Description: Instructions for drawing each row (cell) of the inventory menu.
 static void inventory_menu_draw_row_callback(GContext *ctx,
                                              const Layer *cell_layer,
                                              MenuIndex *cell_index,
-                                             void *data)
-{
+                                             void *data) {
   char title_str[ITEM_TITLE_STR_LEN + 1],
        subtitle_str[ITEM_SUBTITLE_STR_LEN + 1] = "";
   heavy_item_t *heavy_item;
@@ -1030,23 +908,18 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
   strcpy(title_str, g_item_names[item_type]);
 
   // Pebbles:
-  if (item_type < FIRST_HEAVY_ITEM)
-  {
+  if (item_type < FIRST_HEAVY_ITEM) {
     snprintf(subtitle_str, 6, "(%d) ", g_player->pebbles[item_type]);
-    if (g_player->equipped_pebble == item_type)
-    {
+    if (g_player->equipped_pebble == item_type) {
       strcat(subtitle_str, EQUIPPED_STR);
     }
-  }
 
   // Heavy items:
-  else
-  {
+  } else {
     heavy_item = &g_player->heavy_items[cell_index->row -
                                           get_num_pebble_types_owned()];
     strcat(title_str, g_magic_type_names[heavy_item->infused_pebble + 1]);
-    if (heavy_item->equipped)
-    {
+    if (heavy_item->equipped) {
       strcat(subtitle_str, EQUIPPED_STR);
     }
   }
@@ -1068,8 +941,7 @@ Description: Instructions for drawing each row (cell) of the level-up menu.
 static void level_up_menu_draw_row_callback(GContext *ctx,
                                             const Layer *cell_layer,
                                             MenuIndex *cell_index,
-                                            void *data)
-{
+                                            void *data) {
   menu_cell_basic_draw(ctx,
                        cell_layer,
                        get_stat_title_str(cell_index->row + FIRST_MAJOR_STAT),
@@ -1093,8 +965,7 @@ Description: Instructions for drawing the rows (cells) of each "heavy items"
 static void stats_menu_draw_row_callback(GContext *ctx,
                                          const Layer *cell_layer,
                                          MenuIndex *cell_index,
-                                         void *data)
-{
+                                         void *data) {
   menu_cell_basic_draw(ctx,
                        cell_layer,
                        get_stat_title_str(cell_index->row -
@@ -1118,8 +989,7 @@ Description: Instructions for drawing each row (cell) of the loot menu.
 static void loot_menu_draw_row_callback(GContext *ctx,
                                         const Layer *cell_layer,
                                         MenuIndex *cell_index,
-                                        void *data)
-{
+                                        void *data) {
   menu_cell_basic_draw(ctx,
                        cell_layer,
                        g_item_names[g_current_selection],
@@ -1143,8 +1013,7 @@ Description: Instructions for drawing each row (cell) of the Pebble options
 static void pebble_options_menu_draw_row_callback(GContext *ctx,
                                                   const Layer *cell_layer,
                                                   MenuIndex *cell_index,
-                                                  void *data)
-{
+                                                  void *data) {
   menu_cell_basic_draw(ctx,
                        cell_layer,
                        g_pebble_options_menu_strings[cell_index->row],
@@ -1169,16 +1038,14 @@ Description: Instructions for drawing the rows (cells) of each "heavy items"
 static void heavy_items_menu_draw_row_callback(GContext *ctx,
                                                const Layer *cell_layer,
                                                MenuIndex *cell_index,
-                                               void *data)
-{
+                                               void *data) {
   char title_str[ITEM_TITLE_STR_LEN + 1],
        subtitle_str[ITEM_SUBTITLE_STR_LEN + 1] = "";
   heavy_item_t *heavy_item = &g_player->heavy_items[cell_index->row];
 
   strcpy(title_str, g_item_names[heavy_item->type]);
   strcat(title_str, g_magic_type_names[heavy_item->infused_pebble + 1]);
-  if (heavy_item->equipped)
-  {
+  if (heavy_item->equipped) {
     strcpy(subtitle_str, EQUIPPED_STR);
   }
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
@@ -1197,81 +1064,59 @@ Description: Called when a menu cell is selected.
 ******************************************************************************/
 void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
-                          void *data)
-{
+                          void *data) {
   int8_t i, old_item_equip_target;
   bool item_was_equipped = false;
   heavy_item_t *heavy_item;
 
-  if (menu_layer == g_menu_layers[MAIN_MENU])
-  {
-    if (cell_index->row == 0) // Play
-    {
+  if (menu_layer == g_menu_layers[MAIN_MENU]) {
+    if (cell_index->row == 0) {  // Play
       show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
       if (g_player->int8_stats[DEPTH] == 0 ||
-          g_player->int16_stats[CURRENT_HEALTH] <= 0)
-      {
+          g_player->int16_stats[CURRENT_HEALTH] <= 0) {
         init_player();
         show_narration(INTRO_NARRATION_1);
         init_location();
       }
-    }
-    else if (cell_index->row == 1) // Inventory
-    {
-      g_current_selection = 0; // To scroll menu to the top.
+    } else if (cell_index->row == 1) {  // Inventory
+      g_current_selection = 0;  // To scroll menu to the top.
       show_window(INVENTORY_MENU, ANIMATED);
-    }
-    else // Character Stats
-    {
+    } else {  // Character Stats
       show_window(STATS_MENU, ANIMATED);
     }
-  }
-  else if (menu_layer == g_menu_layers[LEVEL_UP_MENU])
-  {
+  } else if (menu_layer == g_menu_layers[LEVEL_UP_MENU]) {
     g_player->int8_stats[cell_index->row + FIRST_MAJOR_STAT]++;
     set_player_minor_stats();
     g_player->int16_stats[CURRENT_HEALTH] = g_player->int16_stats[MAX_HEALTH];
     g_player->int16_stats[CURRENT_ENERGY] = g_player->int16_stats[MAX_ENERGY];
     window_stack_pop(NOT_ANIMATED);
     show_window(STATS_MENU, NOT_ANIMATED);
-  }
-  else if (menu_layer == g_menu_layers[INVENTORY_MENU])
-  {
+  } else if (menu_layer == g_menu_layers[INVENTORY_MENU]) {
     // Pebbles:
-    if (get_nth_item_type(cell_index->row) < FIRST_HEAVY_ITEM)
-    {
+    if (get_nth_item_type(cell_index->row) < FIRST_HEAVY_ITEM) {
       g_current_selection = get_nth_item_type(cell_index->row);
       show_window(PEBBLE_OPTIONS_MENU, ANIMATED);
-    }
 
     // Heavy items:
-    else
-    {
+    } else {
       equip_heavy_item(&g_player->heavy_items[cell_index->row -
                                                 get_num_pebble_types_owned()]);
       menu_layer_reload_data(g_menu_layers[INVENTORY_MENU]);
     }
-  }
-  else if (menu_layer == g_menu_layers[LOOT_MENU])
-  {
+  } else if (menu_layer == g_menu_layers[LOOT_MENU]) {
     show_window(GRAPHICS_WINDOW, NOT_ANIMATED);
 
     // If it's a Pebble, simply add it to the player's inventory:
-    if (g_current_selection < FIRST_HEAVY_ITEM)
-    {
+    if (g_current_selection < FIRST_HEAVY_ITEM) {
       g_player->pebbles[g_current_selection]++;
       g_current_selection = get_inventory_row_for_pebble(g_current_selection);
       show_window(INVENTORY_MENU, NOT_ANIMATED);
-    }
 
     // If it's a heavy item, attempt to add it to the player's inventory:
-    else
-    {
-      for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-      {
+    } else {
+      for (i = 0; i < MAX_HEAVY_ITEMS; ++i) {
         heavy_item = &g_player->heavy_items[i];
-        if (heavy_item->type == NONE)
-        {
+        if (heavy_item->type == NONE) {
           init_heavy_item(heavy_item, g_current_selection);
           g_current_selection = i + get_num_pebble_types_owned();
           show_window(INVENTORY_MENU, NOT_ANIMATED);
@@ -1284,49 +1129,37 @@ void menu_select_callback(MenuLayer *menu_layer,
       show_window(HEAVY_ITEMS_MENU, NOT_ANIMATED);
       show_narration(ENCUMBRANCE_NARRATION);
     }
-  }
-  else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU])
-  {
-    if (cell_index->row == 0) // Equip
-    {
+  } else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU]) {
+    if (cell_index->row == 0) {  // Equip
       unequip_item_at(RIGHT_HAND);
       g_player->equipped_pebble = g_current_selection;
       g_current_selection       =
         get_inventory_row_for_pebble(g_current_selection);
       show_window(INVENTORY_MENU, NOT_ANIMATED);
-    }
-    else // Infuse into Item
-    {
+    } else {  // Infuse into Item
       show_window(HEAVY_ITEMS_MENU, ANIMATED);
     }
-  }
-  else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
-  {
+  } else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU]) {
     heavy_item = &g_player->heavy_items[cell_index->row];
 
     // "Infuse item" mode:
-    if (g_current_selection < FIRST_HEAVY_ITEM)
-    {
+    if (g_current_selection < FIRST_HEAVY_ITEM) {
       // Ensure the item isn't already infused:
-      if (heavy_item->infused_pebble == NONE)
-      {
+      if (heavy_item->infused_pebble == NONE) {
         // Infuse the item:
-        if (heavy_item->equipped)
-        {
+        if (heavy_item->equipped) {
           unequip_heavy_item(heavy_item);
           item_was_equipped = true;
         }
         heavy_item->infused_pebble = g_current_selection;
-        if (item_was_equipped)
-        {
+        if (item_was_equipped) {
           equip_heavy_item(heavy_item);
         }
 
         // Remove the Pebble from the pool of equippable/infusable Pebbles:
         g_player->pebbles[g_current_selection]--;
         if (g_player->equipped_pebble == g_current_selection &&
-            g_player->pebbles[g_current_selection] == 0)
-        {
+            g_player->pebbles[g_current_selection] == 0) {
           g_player->equipped_pebble = NONE;
         }
 
@@ -1334,15 +1167,12 @@ void menu_select_callback(MenuLayer *menu_layer,
         g_current_selection = cell_index->row + get_num_pebble_types_owned();
         show_window(INVENTORY_MENU, NOT_ANIMATED);
       }
-    }
 
     // "Replace item" mode:
-    else
-    {
+    } else {
       // If the item to be replaced is equipped, unequip it:
       old_item_equip_target = heavy_item->equip_target;
-      if (heavy_item->equipped)
-      {
+      if (heavy_item->equipped) {
         unequip_heavy_item(heavy_item);
         item_was_equipped = true;
       }
@@ -1352,8 +1182,7 @@ void menu_select_callback(MenuLayer *menu_layer,
 
       // If old item was equipped, equip new one if equip target is the same:
       if (item_was_equipped &&
-          heavy_item->equip_target == old_item_equip_target)
-      {
+          heavy_item->equip_target == old_item_equip_target) {
         equip_heavy_item(heavy_item);
       }
 
@@ -1381,8 +1210,7 @@ Description: Returns the section height for a given section of a given menu.
 ******************************************************************************/
 static int16_t menu_get_header_height_callback(MenuLayer *menu_layer,
                                                uint16_t section_index,
-                                               void *data)
-{
+                                               void *data) {
   return MENU_CELL_BASIC_HEADER_HEIGHT;
 }
 
@@ -1400,41 +1228,27 @@ Description: Returns the number of rows in a given menu (or in a given section
 ******************************************************************************/
 static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
                                            uint16_t section_index,
-                                           void *data)
-{
+                                           void *data) {
   int8_t i, num_heavy_items = 0;
 
   // Get number of heavy items owned for inventory and heavy items menus:
-  for (i = 0; i < MAX_HEAVY_ITEMS; ++i)
-  {
-    if (g_player->heavy_items[i].type > NONE)
-    {
+  for (i = 0; i < MAX_HEAVY_ITEMS; ++i) {
+    if (g_player->heavy_items[i].type > NONE) {
       num_heavy_items++;
     }
   }
 
-  if (menu_layer == g_menu_layers[INVENTORY_MENU])
-  {
+  if (menu_layer == g_menu_layers[INVENTORY_MENU]) {
     return get_num_pebble_types_owned() + num_heavy_items;
-  }
-  else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU])
-  {
+  } else if (menu_layer == g_menu_layers[HEAVY_ITEMS_MENU]) {
     return num_heavy_items;
-  }
-  else if (menu_layer == g_menu_layers[STATS_MENU])
-  {
+  } else if (menu_layer == g_menu_layers[STATS_MENU]) {
     return STATS_MENU_NUM_ROWS;
-  }
-  else if (menu_layer == g_menu_layers[LOOT_MENU])
-  {
+  } else if (menu_layer == g_menu_layers[LOOT_MENU]) {
     return LOOT_MENU_NUM_ROWS;
-  }
-  else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU])
-  {
+  } else if (menu_layer == g_menu_layers[PEBBLE_OPTIONS_MENU]) {
     return PEBBLE_OPTIONS_MENU_NUM_ROWS;
-  }
-  else // MAIN_MENU or LEVEL_UP_MENU
-  {
+  } else {  // MAIN_MENU or LEVEL_UP_MENU
     return MAIN_MENU_NUM_ROWS;
   }
 }
@@ -1450,8 +1264,7 @@ Description: Draws a (simplistic) 3D scene based on the player's current
 
     Outputs: None.
 ******************************************************************************/
-void draw_scene(Layer *layer, GContext *ctx)
-{
+void draw_scene(Layer *layer, GContext *ctx) {
   int8_t i, depth;
   GPoint cell, cell_2;
 #ifdef PBL_COLOR
@@ -1470,34 +1283,29 @@ void draw_scene(Layer *layer, GContext *ctx)
   draw_floor_and_ceiling(ctx);
 
   // Now draw walls and cell contents:
-  for (depth = MAX_VISIBILITY_DEPTH - 2; depth >= 0; --depth)
-  {
+  for (depth = MAX_VISIBILITY_DEPTH - 2; depth >= 0; --depth) {
     // Straight ahead at the current depth:
     cell = get_cell_farther_away(g_player->position,
                                  g_player->direction,
                                  depth);
-    if (get_cell_type(cell) >= EMPTY)
-    {
+    if (get_cell_type(cell) >= EMPTY) {
       draw_cell_walls(ctx, cell, depth, STRAIGHT_AHEAD);
       draw_cell_contents(ctx, cell, depth, STRAIGHT_AHEAD);
     }
 
     // To the left and right at the same depth:
-    for (i = depth + 1; i > 0; --i)
-    {
+    for (i = depth + 1; i > 0; --i) {
       cell_2 = get_cell_farther_away(cell,
                                 get_direction_to_the_left(g_player->direction),
                                 i);
-      if (get_cell_type(cell_2) >= EMPTY)
-      {
+      if (get_cell_type(cell_2) >= EMPTY) {
         draw_cell_walls(ctx, cell_2, depth, STRAIGHT_AHEAD - i);
         draw_cell_contents(ctx, cell_2, depth, STRAIGHT_AHEAD - i);
       }
       cell_2 = get_cell_farther_away(cell,
                                get_direction_to_the_right(g_player->direction),
                                i);
-      if (get_cell_type(cell_2) >= EMPTY)
-      {
+      if (get_cell_type(cell_2) >= EMPTY) {
         draw_cell_walls(ctx, cell_2, depth, STRAIGHT_AHEAD + i);
         draw_cell_contents(ctx, cell_2, depth, STRAIGHT_AHEAD + i);
       }
@@ -1505,32 +1313,25 @@ void draw_scene(Layer *layer, GContext *ctx)
   }
 
   // Draw the "attack slash," if applicable:
-  if (g_player_is_attacking)
-  {
+  if (g_player_is_attacking) {
 #ifdef PBL_COLOR
-    if (weapon)
-    {
+    if (weapon) {
       magic_type = weapon->infused_pebble;
     }
 #else
     graphics_context_set_stroke_color(ctx, GColorWhite);
 #endif
-    for (i = 0; i < 3; ++i)
-    {
+    for (i = 0; i < 3; ++i) {
 #ifdef PBL_COLOR
-      if (magic_type > NONE)
-      {
+      if (magic_type > NONE) {
         graphics_context_set_stroke_color(ctx,
                                       g_magic_type_colors[magic_type][i == 2]);
-      }
-      else
-      {
+      } else {
         graphics_context_set_stroke_color(ctx, i < 2 ? GColorLightGray :
                                                        GColorDarkGray);
       }
 #else
-      if (i == 2)
-      {
+      if (i == 2) {
         graphics_context_set_stroke_color(ctx, GColorBlack);
       }
 #endif
@@ -1545,8 +1346,7 @@ void draw_scene(Layer *layer, GContext *ctx)
 
   // Draw "spell beams," if applicable (Basalt only):
 #ifdef PBL_COLOR
-  if (g_player_current_spell_animation > 0)
-  {
+  if (g_player_current_spell_animation > 0) {
     magic_type = g_player->equipped_pebble;
     spell_beam_width = g_player_current_spell_animation % 2 ?
                          MIN_SPELL_BEAM_BASE_WIDTH          :
@@ -1557,8 +1357,7 @@ void draw_scene(Layer *layer, GContext *ctx)
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
                        GPoint(SCREEN_CENTER_POINT.x,
                               SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
-    for (i = 0; i <= spell_beam_width; ++i)
-    {
+    for (i = 0; i <= spell_beam_width; ++i) {
       graphics_context_set_stroke_color(ctx,
                                        g_magic_type_colors[magic_type][i % 2]);
       graphics_draw_line(ctx,
@@ -1573,8 +1372,7 @@ void draw_scene(Layer *layer, GContext *ctx)
                                 SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
     }
   }
-  if (g_enemy_current_spell_animation > 0)
-  {
+  if (g_enemy_current_spell_animation > 0) {
     cell   = g_player->position;
     cell_2 = mage->position;
     if (((cell.x == cell_2.x) &&
@@ -1582,8 +1380,7 @@ void draw_scene(Layer *layer, GContext *ctx)
           (cell.y > cell_2.y && g_player->direction == NORTH))) ||
         ((cell.y == cell_2.y) &&
          ((cell.x < cell_2.x && g_player->direction == EAST) ||
-          (cell.x > cell_2.x && g_player->direction == WEST))))
-    {
+          (cell.x > cell_2.x && g_player->direction == WEST)))) {
       magic_type       = mage->item;
       spell_beam_width = g_enemy_current_spell_animation % 2 ?
                            MIN_SPELL_BEAM_BASE_WIDTH         :
@@ -1595,8 +1392,7 @@ void draw_scene(Layer *layer, GContext *ctx)
                                 GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
                          GPoint(SCREEN_CENTER_POINT.x,
                                 SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
-      for (i = 0; i <= spell_beam_width; ++i)
-      {
+      for (i = 0; i <= spell_beam_width; ++i) {
         graphics_context_set_stroke_color(ctx,
                                           g_magic_type_colors[magic_type]
                                                              [i % 2]);
@@ -1662,21 +1458,18 @@ Description: Draws the floor and ceiling.
 
     Outputs: None.
 ******************************************************************************/
-void draw_floor_and_ceiling(GContext *ctx)
-{
+void draw_floor_and_ceiling(GContext *ctx) {
   uint8_t x, y, max_y, shading_offset;
 
   max_y = g_back_wall_coords[MAX_VISIBILITY_DEPTH - 2][0][TOP_LEFT].y;
 #ifdef PBL_BW
   graphics_context_set_stroke_color(ctx, GColorWhite);
 #endif
-  for (y = 0; y < max_y; ++y)
-  {
+  for (y = 0; y < max_y; ++y) {
     // Determine horizontal distance between points:
     shading_offset = 1 + y / MAX_VISIBILITY_DEPTH;
     if (y % MAX_VISIBILITY_DEPTH >= MAX_VISIBILITY_DEPTH / 2 +
-                                    MAX_VISIBILITY_DEPTH % 2)
-    {
+                                    MAX_VISIBILITY_DEPTH % 2) {
       shading_offset++;
     }
 #ifdef PBL_COLOR
@@ -1688,8 +1481,7 @@ void draw_floor_and_ceiling(GContext *ctx)
 #endif
     for (x = y % 2 ? 0 : (shading_offset / 2) + (shading_offset % 2);
          x < GRAPHICS_FRAME_WIDTH;
-         x += shading_offset)
-    {
+         x += shading_offset) {
       // Draw one point on the ceiling and another on the floor:
 #ifdef PBL_COLOR
       graphics_draw_pixel(ctx, GPoint(x, y + STATUS_BAR_HEIGHT));
@@ -1721,8 +1513,7 @@ Description: Draws any walls that exist along the back and sides of a given
 void draw_cell_walls(GContext *ctx,
                      const GPoint cell,
                      const int8_t depth,
-                     const int8_t position)
-{
+                     const int8_t position) {
   int16_t left, right, top, bottom, y_offset;
   bool back_wall_drawn, left_wall_drawn, right_wall_drawn;
   GPoint cell_2;
@@ -1732,14 +1523,12 @@ void draw_cell_walls(GContext *ctx,
   right  = g_back_wall_coords[depth][position][BOTTOM_RIGHT].x;
   top    = g_back_wall_coords[depth][position][TOP_LEFT].y;
   bottom = g_back_wall_coords[depth][position][BOTTOM_RIGHT].y;
-  if (bottom - top < MIN_WALL_HEIGHT)
-  {
+  if (bottom - top < MIN_WALL_HEIGHT) {
     return;
   }
   back_wall_drawn = left_wall_drawn = right_wall_drawn = false;
   cell_2          = get_cell_farther_away(cell, g_player->direction, 1);
-  if (get_cell_type(cell_2) <= SOLID)
-  {
+  if (get_cell_type(cell_2) <= SOLID) {
 #ifdef PBL_COLOR
     draw_shaded_quad(ctx,
                      GPoint(left, top + STATUS_BAR_HEIGHT),
@@ -1767,8 +1556,7 @@ void draw_cell_walls(GContext *ctx,
 #endif
 
     // Ad hoc solution to a minor visual issue (remove if no longer relevant):
-    if (top == g_back_wall_coords[1][0][TOP_LEFT].y)
-    {
+    if (top == g_back_wall_coords[1][0][TOP_LEFT].y) {
 #ifdef PBL_COLOR
       graphics_draw_line(ctx,
                          GPoint(left, bottom + 1 + STATUS_BAR_HEIGHT),
@@ -1785,23 +1573,18 @@ void draw_cell_walls(GContext *ctx,
 
   // Left wall:
   right = left;
-  if (depth == 0)
-  {
+  if (depth == 0) {
     left     = 0;
     y_offset = top;
-  }
-  else
-  {
+  } else {
     left     = g_back_wall_coords[depth - 1][position][TOP_LEFT].x;
     y_offset = top - g_back_wall_coords[depth - 1][position][TOP_LEFT].y;
   }
-  if (position <= STRAIGHT_AHEAD)
-  {
+  if (position <= STRAIGHT_AHEAD) {
     cell_2 = get_cell_farther_away(cell,
                                 get_direction_to_the_left(g_player->direction),
                                 1);
-    if (get_cell_type(cell_2) <= SOLID)
-    {
+    if (get_cell_type(cell_2) <= SOLID) {
 #ifdef PBL_COLOR
       draw_shaded_quad(ctx,
                        GPoint(left, top - y_offset + STATUS_BAR_HEIGHT),
@@ -1837,21 +1620,16 @@ void draw_cell_walls(GContext *ctx,
 
   // Right wall:
   left = g_back_wall_coords[depth][position][BOTTOM_RIGHT].x;
-  if (depth == 0)
-  {
+  if (depth == 0) {
     right = GRAPHICS_FRAME_WIDTH - 1;
-  }
-  else
-  {
+  } else {
     right = g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].x;
   }
-  if (position >= STRAIGHT_AHEAD)
-  {
+  if (position >= STRAIGHT_AHEAD) {
     cell_2 = get_cell_farther_away(cell,
                                get_direction_to_the_right(g_player->direction),
                                1);
-    if (get_cell_type(cell_2) <= SOLID)
-    {
+    if (get_cell_type(cell_2) <= SOLID) {
 #ifdef PBL_COLOR
       draw_shaded_quad(ctx,
                        GPoint(left, top + STATUS_BAR_HEIGHT),
@@ -1895,8 +1673,7 @@ void draw_cell_walls(GContext *ctx,
       (left_wall_drawn &&
        get_cell_type(get_cell_farther_away(cell_2,
                                 get_direction_to_the_left(g_player->direction),
-                                1)) >= EMPTY))
-  {
+                                1)) >= EMPTY)) {
 #ifdef PBL_COLOR
     graphics_draw_line(ctx,
                        GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x,
@@ -1919,8 +1696,7 @@ void draw_cell_walls(GContext *ctx,
       (right_wall_drawn &&
        get_cell_type(get_cell_farther_away(cell_2,
                                get_direction_to_the_right(g_player->direction),
-                               1)) >= EMPTY))
-  {
+                               1)) >= EMPTY)) {
 #ifdef PBL_COLOR
     graphics_draw_line(ctx,
                     GPoint(g_back_wall_coords[depth][position][BOTTOM_RIGHT].x,
@@ -1955,8 +1731,7 @@ Description: Draws an NPC or any other contents present in a given cell.
 void draw_cell_contents(GContext *ctx,
                         const GPoint cell,
                         const int8_t depth,
-                        const int8_t position)
-{
+                        const int8_t position) {
   uint8_t drawing_unit; // Reference variable for drawing contents at depth.
   int16_t i, x_midpoint1, x_midpoint2;
   GPoint floor_center_point, top_left_point;
@@ -1966,8 +1741,7 @@ void draw_cell_contents(GContext *ctx,
   drawing_unit = (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
                   g_back_wall_coords[depth][position][TOP_LEFT].x) / 10;
   if ((g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
-       g_back_wall_coords[depth][position][TOP_LEFT].x) % 10 >= 5)
-  {
+       g_back_wall_coords[depth][position][TOP_LEFT].x) % 10 >= 5) {
     drawing_unit++;
   }
   top_left_point = g_back_wall_coords[depth][position][TOP_LEFT];
@@ -1975,24 +1749,16 @@ void draw_cell_contents(GContext *ctx,
   // Determine floor center point:
   x_midpoint1 = (top_left_point.x +
                  g_back_wall_coords[depth][position][BOTTOM_RIGHT].x) / 2;
-  if (depth == 0)
-  {
-    if (position < STRAIGHT_AHEAD)      // Just to the left of the player.
-    {
+  if (depth == 0) {
+    if (position < STRAIGHT_AHEAD) {         // To the left of the player.
       x_midpoint2 = GRAPHICS_FRAME_WIDTH / -2;
-    }
-    else if (position > STRAIGHT_AHEAD) // Just to the right of the player.
-    {
+    } else if (position > STRAIGHT_AHEAD) {  // To the right of the player.
       x_midpoint2 = GRAPHICS_FRAME_WIDTH + GRAPHICS_FRAME_WIDTH / 2;
-    }
-    else                                // Directly under the player.
-    {
+    } else {                                 // Directly under the player.
       x_midpoint2 = x_midpoint1;
     }
     floor_center_point.y = GRAPHICS_FRAME_HEIGHT;
-  }
-  else
-  {
+  } else {
     x_midpoint2          =
       (g_back_wall_coords[depth - 1][position][TOP_LEFT].x +
        g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].x) / 2;
@@ -2008,8 +1774,7 @@ void draw_cell_contents(GContext *ctx,
 #endif
 
   // Check for an entrance (hole in the ceiling):
-  if (gpoint_equal(&cell, &g_location->entrance))
-  {
+  if (gpoint_equal(&cell, &g_location->entrance)) {
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x,
 #ifdef PBL_COLOR
@@ -2032,8 +1797,7 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Check for an exit (hole in the ground) or a shadow cast by loot/NPC:
-  if (npc || get_cell_type(cell) >= EXIT)
-  {
+  if (npc || get_cell_type(cell) >= EXIT) {
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x, floor_center_point.y),
                  ELLIPSE_RADIUS_RATIO *
@@ -2050,10 +1814,8 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // If there's no NPC, check for loot, then we're done:
-  if (npc == NULL)
-  {
-    if (get_cell_type(cell) >= 0) // Loot!
-    {
+  if (npc == NULL) {
+    if (get_cell_type(cell) >= 0) {  // Loot!
 #ifdef PBL_COLOR
       graphics_context_set_fill_color(ctx, GColorYellow);
 #else
@@ -2075,15 +1837,13 @@ void draw_cell_contents(GContext *ctx,
   if (npc->type  <= WHITE_MONSTER_MEDIUM ||
       npc->type  == WARRIOR_MEDIUM       ||
       npc->type  == WARRIOR_LARGE        ||
-      (npc->type >= DARK_OGRE && npc->type <= PALE_TROLL))
-  {
+      (npc->type >= DARK_OGRE && npc->type <= PALE_TROLL)) {
     drawing_unit++;
   }
   if (npc->type <= WHITE_MONSTER_LARGE ||
       npc->type == WARRIOR_LARGE       ||
       npc->type == DARK_OGRE           ||
-      npc->type == PALE_OGRE)
-  {
+      npc->type == PALE_OGRE) {
     drawing_unit++;
   }
 #ifdef PBL_BW
@@ -2094,8 +1854,7 @@ void draw_cell_contents(GContext *ctx,
 #endif
 
   // Mages:
-  if (npc->type == MAGE)
-  {
+  if (npc->type == MAGE) {
     // Body:
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorBlack);
@@ -2131,11 +1890,9 @@ void draw_cell_contents(GContext *ctx,
                          GPoint(floor_center_point.x + drawing_unit / 3,
                                 floor_center_point.y - drawing_unit * 9),
                          drawing_unit / 5);
-  }
 
   // Floating monsters:
-  else if (npc->type <= WHITE_MONSTER_SMALL)
-  {
+  } else if (npc->type <= WHITE_MONSTER_SMALL) {
     // Body/head:
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx,
@@ -2182,8 +1939,7 @@ void draw_cell_contents(GContext *ctx,
                ((npc->type == BLACK_MONSTER_MEDIUM ||
                  npc->type == WHITE_MONSTER_MEDIUM) ? 1 : 0);
          i < floor_center_point.x + drawing_unit - drawing_unit / 4;
-         i += drawing_unit / 2)
-    {
+         i += drawing_unit / 2) {
 #ifdef PBL_COLOR
       graphics_context_set_fill_color(ctx, GColorSunsetOrange);
       graphics_fill_rect(ctx,
@@ -2204,11 +1960,9 @@ void draw_cell_contents(GContext *ctx,
                          GCornersAll);
 #endif
     }
-  }
 
   // Goblins, trolls, and ogres:
-  else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN)
-  {
+  } else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN) {
     // Legs:
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorLimerick :
@@ -2285,13 +2039,11 @@ void draw_cell_contents(GContext *ctx,
 
     // Mouth (Basalt only):
 #ifdef PBL_COLOR
-    if (depth < 4)
-    {
+    if (depth < 4) {
       for (i = floor_center_point.x - drawing_unit / 2 -
                  (npc->type <= PALE_OGRE ? 1 : 0);
            i < floor_center_point.x + drawing_unit / 2;
-           i += drawing_unit / 3)
-      {
+           i += drawing_unit / 3) {
         graphics_context_set_fill_color(ctx, GColorSunsetOrange);
         graphics_fill_rect(ctx,
                            GRect(i,
@@ -2304,11 +2056,9 @@ void draw_cell_contents(GContext *ctx,
       }
     }
 #endif
-  }
 
   // Warriors:
-  else
-  {
+  } else {
     // Legs:
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorWindsorTan);
@@ -2514,38 +2264,30 @@ void draw_shaded_quad(GContext *ctx,
                       const GPoint lower_left,
                       const GPoint upper_right,
                       const GPoint lower_right,
-                      const GPoint shading_ref)
-{
+                      const GPoint shading_ref) {
   int16_t i, j, shading_offset, half_shading_offset;
   float dy_over_dx     = (float) (upper_right.y - upper_left.y) /
                                  (upper_right.x - upper_left.x);
   GColor primary_color = GColorWhite;
 
-  for (i = upper_left.x; i <= upper_right.x && i < GRAPHICS_FRAME_WIDTH; ++i)
-  {
+  for (i = upper_left.x; i <= upper_right.x && i < GRAPHICS_FRAME_WIDTH; ++i) {
     // Determine vertical distance between points:
     shading_offset = 1 + ((shading_ref.y + (i - upper_left.x) * dy_over_dx) /
                           MAX_VISIBILITY_DEPTH);
     if ((int16_t) (shading_ref.y + (i - upper_left.x) * dy_over_dx) %
         MAX_VISIBILITY_DEPTH >= MAX_VISIBILITY_DEPTH / 2 +
-                                MAX_VISIBILITY_DEPTH % 2)
-    {
+                                MAX_VISIBILITY_DEPTH % 2) {
       shading_offset++;
     }
     half_shading_offset = (shading_offset / 2) + (shading_offset % 2);
 #ifdef PBL_COLOR
-    if (shading_offset - 3 > NUM_BACKGROUND_COLORS_PER_SCHEME)
-    {
+    if (shading_offset - 3 > NUM_BACKGROUND_COLORS_PER_SCHEME) {
       primary_color = g_background_colors[g_location->wall_color_scheme]
                                         [NUM_BACKGROUND_COLORS_PER_SCHEME - 1];
-    }
-    else if (shading_offset > 4)
-    {
+    } else if (shading_offset > 4) {
       primary_color = g_background_colors[g_location->wall_color_scheme]
                                          [shading_offset - 4];
-    }
-    else
-    {
+    } else {
       primary_color = g_background_colors[g_location->wall_color_scheme][0];
     }
 #endif
@@ -2553,15 +2295,11 @@ void draw_shaded_quad(GContext *ctx,
     // Now, draw points from top to bottom:
     for (j = upper_left.y + (i - upper_left.x) * dy_over_dx;
          j < lower_left.y - (i - upper_left.x) * dy_over_dx;
-         ++j)
-    {
+         ++j) {
       if ((j + (int16_t) ((i - upper_left.x) * dy_over_dx) +
-          (i % 2 == 0 ? 0 : half_shading_offset)) % shading_offset == 0)
-      {
+          (i % 2 == 0 ? 0 : half_shading_offset)) % shading_offset == 0) {
         graphics_context_set_stroke_color(ctx, primary_color);
-      }
-      else
-      {
+      } else {
         graphics_context_set_stroke_color(ctx, GColorBlack);
       }
       graphics_draw_pixel(ctx, GPoint(i, j));
@@ -2585,8 +2323,7 @@ Description: Draws a "status meter" (such as a "health meter") at a given point
 ******************************************************************************/
 void draw_status_meter(GContext *ctx,
                        GPoint origin,
-                       const float ratio)
-{
+                       const float ratio) {
 #ifdef PBL_BW
   uint8_t i, j;
 
@@ -2596,12 +2333,9 @@ void draw_status_meter(GContext *ctx,
   uint8_t filled_meter_width = ratio * STATUS_METER_WIDTH;
 
   origin.y += STATUS_BAR_HEIGHT;
-  if (origin.x < SCREEN_CENTER_POINT_X) // Health meter:
-  {
+  if (origin.x < SCREEN_CENTER_POINT_X) {  // Health meter:
     graphics_context_set_fill_color(ctx, GColorRed);
-  }
-  else                                  // Energy meter:
-  {
+  } else {                                 // Energy meter:
     graphics_context_set_fill_color(ctx, GColorBlue);
   }
 #endif
@@ -2617,14 +2351,10 @@ void draw_status_meter(GContext *ctx,
 
   // Now draw the "empty" portion:
 #ifdef PBL_COLOR
-  if (ratio < 1)
-  {
-    if (origin.x < SCREEN_CENTER_POINT_X) // Health meter:
-    {
+  if (ratio < 1) {
+    if (origin.x < SCREEN_CENTER_POINT_X) {  // Health meter:
       graphics_context_set_fill_color(ctx, GColorBulgarianRose);
-    }
-    else                                  // Energy meter:
-    {
+    } else {                                 // Energy meter:
       graphics_context_set_fill_color(ctx, GColorOxfordBlue);
     }
     graphics_fill_rect(ctx,
@@ -2639,12 +2369,10 @@ void draw_status_meter(GContext *ctx,
 #else
   for (i = origin.x + STATUS_METER_WIDTH;
        i >= origin.x + (ratio * STATUS_METER_WIDTH);
-       --i)
-  {
+       --i) {
     for (j = origin.y + (i % 2);
          j <= origin.y + STATUS_METER_HEIGHT;
-         j += 2)
-    {
+         j += 2) {
       graphics_draw_pixel(ctx, GPoint(i, j));
     }
   }
@@ -2669,14 +2397,12 @@ void fill_ellipse(GContext *ctx,
                   const GPoint center,
                   const uint8_t h_radius,
                   const uint8_t v_radius,
-                  const GColor color)
-{
+                  const GColor color) {
   int16_t theta;
   uint8_t x_offset, y_offset;
 
   graphics_context_set_stroke_color(ctx, color);
-  for (theta = 0; theta < NINETY_DEGREES; theta += DEFAULT_ROTATION_RATE)
-  {
+  for (theta = 0; theta < NINETY_DEGREES; theta += DEFAULT_ROTATION_RATE) {
     x_offset = cos_lookup(theta) * h_radius / TRIG_MAX_RATIO;
     y_offset = sin_lookup(theta) * v_radius / TRIG_MAX_RATIO;
     graphics_draw_line(ctx,
@@ -2699,8 +2425,7 @@ Description: Briefly "flashes" the graphics frame by inverting all its pixels
     Outputs: None.
 ******************************************************************************/
 #ifdef PBL_BW
-void flash_screen(void)
-{
+void flash_screen(void) {
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), false);
   g_flash_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                      flash_timer_callback,
@@ -2719,8 +2444,7 @@ Description: Called when the flash timer reaches zero. Hides the inverter
     Outputs: None.
 ******************************************************************************/
 #ifdef PBL_BW
-static void flash_timer_callback(void *data)
-{
+static void flash_timer_callback(void *data) {
   layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
 }
 #endif
@@ -2735,10 +2459,8 @@ Description: Called when the player's spell timer reaches zero.
     Outputs: None.
 ******************************************************************************/
 #ifdef PBL_COLOR
-static void player_spell_timer_callback(void *data)
-{
-  if (--g_player_current_spell_animation > 0)
-  {
+static void player_spell_timer_callback(void *data) {
+  if (--g_player_current_spell_animation > 0) {
     g_player_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                               player_spell_timer_callback,
                                               NULL);
@@ -2757,10 +2479,8 @@ Description: Called when the enemy's spell timer reaches zero.
     Outputs: None.
 ******************************************************************************/
 #ifdef PBL_COLOR
-static void enemy_spell_timer_callback(void *data)
-{
-  if (--g_enemy_current_spell_animation > 0)
-  {
+static void enemy_spell_timer_callback(void *data) {
+  if (--g_enemy_current_spell_animation > 0) {
     g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                              enemy_spell_timer_callback,
                                              NULL);
@@ -2778,8 +2498,7 @@ Description: Called when the attack timer reaches zero.
 
     Outputs: None.
 ******************************************************************************/
-static void attack_timer_callback(void *data)
-{
+static void attack_timer_callback(void *data) {
   g_player_is_attacking = false;
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
@@ -2793,8 +2512,7 @@ Description: Called when the graphics window appears.
 
     Outputs: None.
 ******************************************************************************/
-static void graphics_window_appear(Window *window)
-{
+static void graphics_window_appear(Window *window) {
 #ifdef PBL_COLOR
   g_player_current_spell_animation = g_enemy_current_spell_animation = 0;
 #else
@@ -2813,8 +2531,7 @@ Description: Called when the main menu appears.
 
     Outputs: None.
 ******************************************************************************/
-static void main_menu_appear(Window *window)
-{
+static void main_menu_appear(Window *window) {
   g_current_window = MAIN_MENU;
 }
 
@@ -2830,12 +2547,8 @@ Description: The graphics window's single repeating click handler for the "up"
     Outputs: None.
 ******************************************************************************/
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
-                                        void *context)
-{
-  //Window *window = (Window *) context;
-
-  if (g_current_window == GRAPHICS_WINDOW)
-  {
+                                        void *context) {
+  if (g_current_window == GRAPHICS_WINDOW) {
     move_player(g_player->direction);
   }
 }
@@ -2851,12 +2564,8 @@ Description: The graphics window's multi-click handler for the "up" button.
 
     Outputs: None.
 ******************************************************************************/
-void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context)
-{
-  //Window *window = (Window *) context;
-
-  if (g_current_window == GRAPHICS_WINDOW)
-  {
+void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context) {
+  if (g_current_window == GRAPHICS_WINDOW) {
     set_player_direction(get_direction_to_the_left(g_player->direction));
   }
 }
@@ -2873,12 +2582,8 @@ Description: The graphics window's single repeating click handler for the
     Outputs: None.
 ******************************************************************************/
 void graphics_down_single_repeating_click(ClickRecognizerRef recognizer,
-                                          void *context)
-{
-  //Window *window = (Window *) context;
-
-  if (g_current_window == GRAPHICS_WINDOW)
-  {
+                                          void *context) {
+  if (g_current_window == GRAPHICS_WINDOW) {
     move_player(get_opposite_direction(g_player->direction));
   }
 }
@@ -2894,12 +2599,8 @@ Description: The graphics window's multi-click handler for the "down" button.
 
     Outputs: None.
 ******************************************************************************/
-void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context)
-{
-  //Window *window = (Window *) context;
-
-  if (g_current_window == GRAPHICS_WINDOW)
-  {
+void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context) {
+  if (g_current_window == GRAPHICS_WINDOW) {
     set_player_direction(get_direction_to_the_right(g_player->direction));
   }
 }
@@ -2917,37 +2618,31 @@ Description: The graphics window's single repeating click handler for the
     Outputs: None.
 ******************************************************************************/
 void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
-                                            void *context)
-{
+                                            void *context) {
   int8_t damage;
   GPoint cell;
   npc_t *npc           = NULL;
   heavy_item_t *weapon = get_heavy_item_equipped_at(RIGHT_HAND);
-  //Window *window = (Window *) context;
 
   if (g_current_window == GRAPHICS_WINDOW &&
       g_player->int16_stats[CURRENT_ENERGY] >=
-        g_player->int8_stats[FATIGUE_RATE])
-  {
+        g_player->int8_stats[FATIGUE_RATE]) {
     adjust_player_current_energy(g_player->int8_stats[FATIGUE_RATE] * -1);
 
     // Check for a targeted NPC:
     cell = get_cell_farther_away(g_player->position, g_player->direction, 1);
-    while (get_cell_type(cell) >= EMPTY)
-    {
+    while (get_cell_type(cell) >= EMPTY) {
       npc = get_npc_at(cell);
 
       // If we've found an NPC or the attack isn't ranged, we're done:
-      if (npc || g_player->equipped_pebble == NONE)
-      {
+      if (npc || g_player->equipped_pebble == NONE) {
         break;
       }
       cell = get_cell_farther_away(cell, g_player->direction, 1);
     }
 
     // If a Pebble is equipped, cast a spell:
-    if (g_player->equipped_pebble > NONE)
-    {
+    if (g_player->equipped_pebble > NONE) {
 #ifdef PBL_COLOR
       g_player_current_spell_animation = NUM_SPELL_ANIMATIONS;
       g_player_spell_timer             = app_timer_register(
@@ -2960,32 +2655,26 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
       cast_spell_on_npc(npc,
                         g_player->equipped_pebble,
                         g_player->int8_stats[MAGICAL_POWER]);
-    }
 
     // Otherwise, the player is attacking with a physical weapon:
-    else
-    {
-      if (npc)
-      {
+    } else {
+      if (npc) {
         damage = damage_npc(npc,
                             rand() % g_player->int8_stats[PHYSICAL_POWER] -
                               rand() % npc->physical_defense);
       }
 
-      if (weapon)
-      {
+      if (weapon) {
         // Check for wound/stun effect from sharp/blunt weapons:
         if (npc &&
             rand() % g_player->int8_stats[PHYSICAL_POWER] >
-              rand() % npc->physical_defense)
-        {
+              rand() % npc->physical_defense) {
           npc->status_effects[weapon->type % 2 ? DAMAGE_OVER_TIME : STUN] +=
             damage;
         }
 
         // Check for an infused Pebble:
-        if (weapon->infused_pebble > NONE)
-        {
+        if (weapon->infused_pebble > NONE) {
 #ifdef PBL_BW
           flash_screen();
 #endif
@@ -3023,10 +2712,7 @@ Description: Button-click configuration provider for the graphics window.
 
     Outputs: None.
 ******************************************************************************/
-void graphics_click_config_provider(void *context)
-{
-  //Window *window = (Window *) context;
-
+void graphics_click_config_provider(void *context) {
   // "Up" button:
   window_single_repeating_click_subscribe(BUTTON_ID_UP,
                                           PLAYER_ACTION_REPEAT_INTERVAL,
@@ -3066,14 +2752,10 @@ Description: The narration window's single-click handler for all buttons. Shows
 
     Outputs: None.
 ******************************************************************************/
-void narration_single_click(ClickRecognizerRef recognizer, void *context)
-{
-  if (g_current_narration < INTRO_NARRATION_4)
-  {
+void narration_single_click(ClickRecognizerRef recognizer, void *context) {
+  if (g_current_narration < INTRO_NARRATION_4) {
     show_narration(++g_current_narration);
-  }
-  else
-  {
+  } else {
     window_stack_pop(NOT_ANIMATED);
   }
 }
@@ -3087,8 +2769,7 @@ Description: Button-click configurations for the narration window.
 
     Outputs: None.
 ******************************************************************************/
-void narration_click_config_provider(void *context)
-{
+void narration_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, narration_single_click);
   window_single_click_subscribe(BUTTON_ID_UP, narration_single_click);
   window_single_click_subscribe(BUTTON_ID_DOWN, narration_single_click);
@@ -3106,8 +2787,7 @@ Description: Handles changes to the game world every second while in active
 
     Outputs: None.
 ******************************************************************************/
-static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
-{
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   int8_t i,
          j,
          diff_x,
@@ -3120,51 +2800,41 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
   GPoint cell;
   bool player_is_visible_to_npc = false;
 
-  if (g_current_window == GRAPHICS_WINDOW)
-  {
+  if (g_current_window == GRAPHICS_WINDOW) {
     // Handle NPC behavior:
-    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
-    {
+    for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i) {
       npc = &g_location->npcs[i];
-      if (npc->type > NONE)
-      {
+      if (npc->type > NONE) {
         if (npc->status_effects[STUN]     == 0 &&
-            npc->status_effects[SLOW] % 2 == 0)
-        {
+            npc->status_effects[SLOW] % 2 == 0) {
           damage = rand() % npc->power - npc->status_effects[WEAKNESS] / 2;
           diff_x = npc->position.x - g_player->position.x;
           diff_y = npc->position.y - g_player->position.y;
 
           // Determine whether the NPC can "see" the player:
-          if (diff_x == 0 || diff_y == 0)
-          {
+          if (diff_x == 0 || diff_y == 0) {
             j                    = 0;
             cell                 = npc->position;
             horizontal_direction = diff_x > 0 ? WEST  : EAST;
             vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
-            do
-            {
+            do {
               cell = get_cell_farther_away(cell,
                                            diff_x == 0 ?
                                              vertical_direction :
                                              horizontal_direction,
                                            1);
-              if (gpoint_equal(&g_player->position, &cell))
-              {
+              if (gpoint_equal(&g_player->position, &cell)) {
                 player_is_visible_to_npc = true;
                 break;
               }
             }while (occupiable(cell) && ++j < (MAX_VISIBILITY_DEPTH - 2));
           }
 
-          if (npc->status_effects[INTIMIDATION])
-          {
+          if (npc->status_effects[INTIMIDATION]) {
             move_npc(npc,
                     get_opposite_direction(get_pursuit_direction(npc->position,
                                                          g_player->position)));
-          }
-          else if (npc->type == MAGE && player_is_visible_to_npc)
-          {
+          } else if (npc->type == MAGE && player_is_visible_to_npc) {
 #ifdef PBL_COLOR
             g_enemy_current_spell_animation = NUM_SPELL_ANIMATIONS;
             g_enemy_spell_timer             = app_timer_register(
@@ -3176,39 +2846,30 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 #endif
             if (g_player->int8_stats[SHADOW_FORM] &&
                 (rand() % g_player->int8_stats[INTELLECT] +
-                   g_player->int8_stats[SHADOW_FORM] > damage))
-            {
+                   g_player->int8_stats[SHADOW_FORM] > damage)) {
               adjust_player_current_health(damage / 2 + 1);
               adjust_player_current_energy(damage / 2 + 1);
-            }
-            else
-            {
+            } else {
               damage_player(damage -
                               rand() % g_player->int8_stats[MAGICAL_DEFENSE]);
             }
-          }
-          else if ((diff_x == 0 && abs(diff_y) == 1) ||
-                   (diff_y == 0 && abs(diff_x) == 1))
-          {
+          } else if ((diff_x == 0 && abs(diff_y) == 1) ||
+                     (diff_y == 0 && abs(diff_x) == 1)) {
             damage_player(damage -
                             rand() % g_player->int8_stats[PHYSICAL_DEFENSE]);
-            if (g_player->int8_stats[BACKLASH_DAMAGE])
-            {
+            if (g_player->int8_stats[BACKLASH_DAMAGE]) {
               damage_npc(npc,
                          damage / (rand() % npc->magical_defense + 1) +
                            g_player->int8_stats[BACKLASH_DAMAGE]);
             }
-          }
-          else
-          {
+          } else {
             move_npc(npc,
                      get_pursuit_direction(npc->position, g_player->position));
           }
         }
 
         // Check for player death:
-        if (g_player->int16_stats[CURRENT_HEALTH] <= 0)
-        {
+        if (g_player->int16_stats[CURRENT_HEALTH] <= 0) {
           show_window(MAIN_MENU, NOT_ANIMATED);
           show_window(STATS_MENU, NOT_ANIMATED);
           show_narration(DEATH_NARRATION);
@@ -3216,16 +2877,13 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         }
 
         // Apply wounding/burning damage:
-        if (npc->status_effects[DAMAGE_OVER_TIME])
-        {
+        if (npc->status_effects[DAMAGE_OVER_TIME]) {
           damage_npc(npc, npc->status_effects[DAMAGE_OVER_TIME] / 2);
         }
 
         // Reduce all status effects:
-        for (j = 0; j < NUM_STATUS_EFFECTS; ++j)
-        {
-          if (npc->status_effects[j] > 0)
-          {
+        for (j = 0; j < NUM_STATUS_EFFECTS; ++j) {
+          if (npc->status_effects[j] > 0) {
             npc->status_effects[j]--;
           }
         }
@@ -3233,20 +2891,16 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
     }
 
     // Generate new NPCs periodically (does nothing if the NPC array is full):
-    if (rand() % 9 == 0)
-    {
+    if (rand() % 9 == 0) {
       // Attempt to find a viable spawn point:
-      for (i = 0; i < NUM_DIRECTIONS; ++i)
-      {
+      for (i = 0; i < NUM_DIRECTIONS; ++i) {
         cell = get_cell_farther_away(g_player->position,
                                      direction,
                                      MAX_VISIBILITY_DEPTH - 1);
-        if (occupiable(cell))
-        {
+        if (occupiable(cell)) {
           break;
         }
-        if (++direction == NUM_DIRECTIONS)
-        {
+        if (++direction == NUM_DIRECTIONS) {
           direction = 0;
         }
       }
@@ -3273,10 +2927,8 @@ Description: Handles PebbleQuest going out of, or coming back into, focus
 
     Outputs: None.
 ******************************************************************************/
-void app_focus_handler(const bool in_focus)
-{
-  if (!in_focus && g_current_window == GRAPHICS_WINDOW)
-  {
+void app_focus_handler(const bool in_focus) {
+  if (!in_focus && g_current_window == GRAPHICS_WINDOW) {
     show_window(MAIN_MENU, NOT_ANIMATED);
   }
 }
@@ -3293,19 +2945,14 @@ Description: Equips a given heavy item to its appropriate equip target,
 
     Outputs: None.
 ******************************************************************************/
-void equip_heavy_item(heavy_item_t *const heavy_item)
-{
-  if (heavy_item->equipped)
-  {
+void equip_heavy_item(heavy_item_t *const heavy_item) {
+  if (heavy_item->equipped) {
     unequip_heavy_item(heavy_item);
-  }
-  else
-  {
+  } else {
     unequip_item_at(heavy_item->equip_target);
     heavy_item->equipped = true;
     if (heavy_item->equip_target < RIGHT_HAND &&
-        heavy_item->infused_pebble > NONE)
-    {
+        heavy_item->infused_pebble > NONE) {
       g_player->int8_stats[heavy_item->infused_pebble + FIRST_MAJOR_STAT]++;
     }
     set_player_minor_stats();
@@ -3322,12 +2969,10 @@ Description: Unequips a given heavy item, then adjusts constant status effects
 
     Outputs: None.
 ******************************************************************************/
-void unequip_heavy_item(heavy_item_t *const heavy_item)
-{
+void unequip_heavy_item(heavy_item_t *const heavy_item) {
   heavy_item->equipped = false;
   if (heavy_item->equip_target < RIGHT_HAND &&
-      heavy_item->infused_pebble > NONE)
-  {
+      heavy_item->infused_pebble > NONE) {
     g_player->int8_stats[heavy_item->infused_pebble + FIRST_MAJOR_STAT]--;
   }
   set_player_minor_stats();
@@ -3344,16 +2989,13 @@ Description: Unequips the equipped item (if any) at a given equip target, then
 
     Outputs: None.
 ******************************************************************************/
-void unequip_item_at(const int8_t equip_target)
-{
+void unequip_item_at(const int8_t equip_target) {
   heavy_item_t *heavy_item = get_heavy_item_equipped_at(equip_target);
 
-  if (equip_target == RIGHT_HAND)
-  {
+  if (equip_target == RIGHT_HAND) {
     g_player->equipped_pebble = NONE;
   }
-  if (heavy_item)
-  {
+  if (heavy_item) {
     unequip_heavy_item(heavy_item);
   }
 }
@@ -3369,8 +3011,7 @@ Description: Assigns values to the player's minor stats according to major stat
 
     Outputs: None.
 ******************************************************************************/
-void set_player_minor_stats(void)
-{
+void set_player_minor_stats(void) {
   int8_t i;
   heavy_item_t *heavy_item;
 
@@ -3396,51 +3037,42 @@ void set_player_minor_stats(void)
 
   // Weapon:
   heavy_item = get_heavy_item_equipped_at(RIGHT_HAND);
-  if (heavy_item)
-  {
-    for (i = DAGGER; i <= heavy_item->type; i += 2)
-    {
+  if (heavy_item) {
+    for (i = DAGGER; i <= heavy_item->type; i += 2) {
       g_player->int8_stats[PHYSICAL_POWER] += DEFAULT_ITEM_BONUS;
       g_player->int8_stats[FATIGUE_RATE]++;
     }
-    if (heavy_item->infused_pebble > NONE)
-    {
+    if (heavy_item->infused_pebble > NONE) {
       g_player->int8_stats[FATIGUE_RATE]++;
     }
   }
 
   // Armor/Robe:
   heavy_item = get_heavy_item_equipped_at(BODY);
-  if (heavy_item)
-  {
-    for (i = LIGHT_ARMOR; i <= heavy_item->type; ++i)
-    {
+  if (heavy_item) {
+    for (i = LIGHT_ARMOR; i <= heavy_item->type; ++i) {
       g_player->int8_stats[PHYSICAL_DEFENSE] += DEFAULT_ITEM_BONUS;
       g_player->int8_stats[MAGICAL_POWER]--;
       g_player->int8_stats[FATIGUE_RATE]++;
     }
-    if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW)
-    {
+    if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW) {
       g_player->int8_stats[PHYSICAL_DEFENSE]++;
     }
   }
 
   // Shield:
   heavy_item = get_heavy_item_equipped_at(LEFT_HAND);
-  if (heavy_item)
-  {
+  if (heavy_item) {
     g_player->int8_stats[PHYSICAL_DEFENSE] += DEFAULT_ITEM_BONUS;
     g_player->int8_stats[MAGICAL_POWER]--;
     g_player->int8_stats[FATIGUE_RATE]++;
-    if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW)
-    {
+    if (heavy_item->infused_pebble == PEBBLE_OF_SHADOW) {
       g_player->int8_stats[PHYSICAL_DEFENSE]++;
     }
   }
 
   // Ensure magical power doesn't fall too low:
-  if (g_player->int8_stats[MAGICAL_POWER] < DEFAULT_MAJOR_STAT_VALUE)
-  {
+  if (g_player->int8_stats[MAGICAL_POWER] < DEFAULT_MAJOR_STAT_VALUE) {
     g_player->int8_stats[MAGICAL_POWER] = DEFAULT_MAJOR_STAT_VALUE;
   }
 }
@@ -3455,13 +3087,11 @@ Description: Initializes the global player character struct according to
 
     Outputs: None.
 ******************************************************************************/
-void init_player(void)
-{
+void init_player(void) {
   int8_t i;
 
   // Set major stats (attributes), etc.:
-  for (i = FIRST_MAJOR_STAT; i < NUM_MAJOR_STATS + FIRST_MAJOR_STAT; ++i)
-  {
+  for (i = FIRST_MAJOR_STAT; i < NUM_MAJOR_STATS + FIRST_MAJOR_STAT; ++i) {
     g_player->int8_stats[i] = DEFAULT_MAJOR_STAT_VALUE;
   }
   g_player->int8_stats[LEVEL]             =
@@ -3473,13 +3103,11 @@ void init_player(void)
     g_player->int8_stats[SHADOW_FORM]     = 0;
 
   // Assign starting inventory:
-  for (i = 0; i < NUM_PEBBLE_TYPES; ++i)
-  {
+  for (i = 0; i < NUM_PEBBLE_TYPES; ++i) {
     g_player->pebbles[i] = 0;
   }
   g_player->equipped_pebble = NONE;
-  for (i = 1; i < MAX_HEAVY_ITEMS; ++i)
-  {
+  for (i = 1; i < MAX_HEAVY_ITEMS; ++i) {
     init_heavy_item(&g_player->heavy_items[i], NONE);
   }
   init_heavy_item(&g_player->heavy_items[0], ROBE);
@@ -3504,15 +3132,13 @@ Description: Initializes a given non-player character (NPC) struct according to
 
     Outputs: None.
 ******************************************************************************/
-void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
-{
+void init_npc(npc_t *const npc, const int8_t type, const GPoint position) {
   int8_t i;
 
   npc->type     = type;
   npc->position = position;
   npc->item     = NONE;
-  for (i = 0; i < NUM_STATUS_EFFECTS; ++i)
-  {
+  for (i = 0; i < NUM_STATUS_EFFECTS; ++i) {
     npc->status_effects[i] = 0;
   }
 
@@ -3524,38 +3150,31 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position)
   if (type <= WHITE_MONSTER_MEDIUM ||
       type == WARRIOR_MEDIUM       ||
       type == WARRIOR_LARGE        ||
-      (type >= DARK_OGRE && type <= PALE_TROLL))
-  {
+      (type >= DARK_OGRE && type <= PALE_TROLL)) {
     npc->power++;
   }
   if (type <= WHITE_MONSTER_LARGE ||
       type == WARRIOR_LARGE       ||
       type == DARK_OGRE           ||
-      type == PALE_OGRE)
-  {
+      type == PALE_OGRE) {
     npc->power++;
   }
 
   // Check for increased/decreased defenses:
-  if (type == MAGE || (type < WARRIOR_LARGE && type % 2))
-  {
+  if (type == MAGE || (type < WARRIOR_LARGE && type % 2)) {
     npc->magical_defense++;
     npc->physical_defense--;
-  }
-  else if (type >= WARRIOR_LARGE)
-  {
+  } else if (type >= WARRIOR_LARGE) {
     npc->physical_defense++;
   }
 
   // Some NPCs may carry a random item:
-  if (type > WHITE_MONSTER_SMALL)
-  {
+  if (type > WHITE_MONSTER_SMALL) {
     npc->item = rand() % 2 ? NONE : RANDOM_ITEM; // Excludes Pebbles.
   }
 
   // Mages are the only source of Pebbles:
-  if (type == MAGE)
-  {
+  if (type == MAGE) {
     npc->item = rand() % NUM_PEBBLE_TYPES;
   }
 }
@@ -3570,21 +3189,15 @@ Description: Initializes a new heavy item struct according to a given type.
 
     Outputs: None.
 ******************************************************************************/
-void init_heavy_item(heavy_item_t *const item, const int8_t type)
-{
+void init_heavy_item(heavy_item_t *const item, const int8_t type) {
   item->type           = type;
   item->infused_pebble = NONE;
   item->equipped       = false;
-  if (type < SHIELD)
-  {
+  if (type < SHIELD) {
     item->equip_target = RIGHT_HAND;
-  }
-  else if (type == SHIELD)
-  {
+  } else if (type == SHIELD) {
     item->equip_target = LEFT_HAND;
-  }
-  else
-  {
+  } else {
     item->equip_target = BODY;
   }
 }
@@ -3602,26 +3215,21 @@ Description: Initializes the global "back_wall_coords" array so that it
 
     Outputs: None.
 ******************************************************************************/
-void init_wall_coords(void)
-{
+void init_wall_coords(void) {
   uint8_t i, j, wall_width;
   const float perspective_modifier = 2.0; // Helps determine FOV, etc.
 
-  for (i = 0; i < MAX_VISIBILITY_DEPTH - 1; ++i)
-  {
-    for (j = 0; j < (STRAIGHT_AHEAD * 2) + 1; ++j)
-    {
+  for (i = 0; i < MAX_VISIBILITY_DEPTH - 1; ++i) {
+    for (j = 0; j < (STRAIGHT_AHEAD * 2) + 1; ++j) {
       g_back_wall_coords[i][j][TOP_LEFT]     = GPoint(0, 0);
       g_back_wall_coords[i][j][BOTTOM_RIGHT] = GPoint(0, 0);
     }
   }
-  for (i = 0; i < MAX_VISIBILITY_DEPTH - 1; ++i)
-  {
+  for (i = 0; i < MAX_VISIBILITY_DEPTH - 1; ++i) {
     g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT] =
       GPoint(FIRST_WALL_OFFSET - i * perspective_modifier,
              FIRST_WALL_OFFSET - i * perspective_modifier);
-    if (i > 0)
-    {
+    if (i > 0) {
       g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].x +=
         g_back_wall_coords[i - 1][STRAIGHT_AHEAD][TOP_LEFT].x;
       g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].y +=
@@ -3634,8 +3242,7 @@ void init_wall_coords(void)
         g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].y;
     wall_width = g_back_wall_coords[i][STRAIGHT_AHEAD][BOTTOM_RIGHT].x -
                    g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].x;
-    for (j = 1; j <= STRAIGHT_AHEAD; ++j)
-    {
+    for (j = 1; j <= STRAIGHT_AHEAD; ++j) {
       g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT]       =
         g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT];
       g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT].x     -= wall_width *
@@ -3667,8 +3274,7 @@ Description: Initializes the global location struct, setting up a new location
 
     Outputs: None.
 ******************************************************************************/
-void init_location(void)
-{
+void init_location(void) {
   int8_t i, j, builder_direction;
   GPoint builder_position;
 
@@ -3678,23 +3284,19 @@ void init_location(void)
 #endif
 
   // Remove any preexisting NPCs:
-  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i)
-  {
+  for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i) {
     g_location->npcs[i].type = NONE;
   }
 
   // Now set each cell to solid:
-  for (i = 0; i < MAP_WIDTH; ++i)
-  {
-    for (j = 0; j < MAP_HEIGHT; ++j)
-    {
+  for (i = 0; i < MAP_WIDTH; ++i) {
+    for (j = 0; j < MAP_HEIGHT; ++j) {
       g_location->map[i][j] = SOLID;
     }
   }
 
   // Next, set entrance and exit points:
-  switch (builder_direction = rand() % NUM_DIRECTIONS)
-  {
+  switch (builder_direction = rand() % NUM_DIRECTIONS) {
     case NORTH:
       builder_position = RANDOM_POINT_SOUTH;
       set_cell_type(RANDOM_POINT_NORTH, EXIT);
@@ -3717,43 +3319,34 @@ void init_location(void)
   set_player_direction(builder_direction);
 
   // Now carve a path between the entrance and exit points:
-  while (get_cell_type(builder_position) != EXIT)
-  {
+  while (get_cell_type(builder_position) != EXIT) {
     // Add random loot or simply make the cell EMPTY:
     if (rand() % 25 == 0 &&
-        !gpoint_equal(&builder_position, &g_location->entrance))
-    {
+        !gpoint_equal(&builder_position, &g_location->entrance)) {
       set_cell_type(builder_position, RANDOM_ITEM); // Excludes Pebbles.
-    }
-    else
-    {
+    } else {
       set_cell_type(builder_position, EMPTY);
     }
 
     // Move the builder:
-    switch (builder_direction)
-    {
+    switch (builder_direction) {
       case NORTH:
-        if (builder_position.y > 0)
-        {
+        if (builder_position.y > 0) {
           builder_position.y--;
         }
         break;
       case SOUTH:
-        if (builder_position.y < MAP_HEIGHT - 1)
-        {
+        if (builder_position.y < MAP_HEIGHT - 1) {
           builder_position.y++;
         }
         break;
       case EAST:
-        if (builder_position.x < MAP_WIDTH - 1)
-        {
+        if (builder_position.x < MAP_WIDTH - 1) {
           builder_position.x++;
         }
         break;
       default: // case WEST:
-        if (builder_position.x > 0)
-        {
+        if (builder_position.x > 0) {
           builder_position.x--;
         }
         break;
@@ -3763,16 +3356,14 @@ void init_location(void)
     init_npc(&g_location->npcs[0], MAGE, builder_position);
 
     // 50% chance of turning:
-    if (rand() % 2)
-    {
+    if (rand() % 2) {
       builder_direction = rand() % NUM_DIRECTIONS;
     }
   }
 
   // Increment the player's depth, then remove the exit if at maximum depth:
   g_player->int8_stats[DEPTH]++;
-  if (g_player->int8_stats[DEPTH] == MAX_DEPTH)
-  {
+  if (g_player->int8_stats[DEPTH] == MAX_DEPTH) {
     set_cell_type(builder_position, EMPTY);
   }
 
@@ -3790,13 +3381,11 @@ Description: Initializes the window at a given index of the "g_windows" array.
 
     Outputs: None.
 ******************************************************************************/
-void init_window(const int8_t window_index)
-{
+void init_window(const int8_t window_index) {
   g_windows[window_index] = window_create();
 
   // Menu windows:
-  if (window_index < NUM_MENUS)
-  {
+  if (window_index < NUM_MENUS) {
     g_menu_layers[window_index] = menu_layer_create(FULL_SCREEN_FRAME);
     layer_add_child(window_get_root_layer(g_windows[window_index]),
                     menu_layer_get_layer(g_menu_layers[window_index]));
@@ -3804,106 +3393,85 @@ void init_window(const int8_t window_index)
                                             g_windows[window_index]);
 
     // Main menu:
-    if (window_index == MAIN_MENU)
-    {
-      window_set_window_handlers(g_windows[window_index], (WindowHandlers)
-      {
+    if (window_index == MAIN_MENU) {
+      window_set_window_handlers(g_windows[window_index], (WindowHandlers) {
         .appear = main_menu_appear,
       });
       menu_layer_set_callbacks(g_menu_layers[window_index],
                                NULL,
-                               (MenuLayerCallbacks)
-      {
+                               (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
         .draw_header       = main_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = main_menu_draw_row_callback,
         .select_click      = menu_select_callback,
       });
-    }
 
     // Inventory menu:
-    else if (window_index == INVENTORY_MENU)
-    {
+    } else if (window_index == INVENTORY_MENU) {
       menu_layer_set_callbacks(g_menu_layers[window_index],
                                NULL,
-                               (MenuLayerCallbacks)
-      {
+                               (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
         .draw_header       = inventory_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = inventory_menu_draw_row_callback,
         .select_click      = menu_select_callback,
       });
-    }
 
     // Level-up menu:
-    else if (window_index == LEVEL_UP_MENU)
-    {
+    } else if (window_index == LEVEL_UP_MENU) {
       menu_layer_set_callbacks(g_menu_layers[window_index],
                                NULL,
-                               (MenuLayerCallbacks)
-      {
+                               (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
         .draw_header       = level_up_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = level_up_menu_draw_row_callback,
         .select_click      = menu_select_callback,
       });
-    }
 
     // Loot menu:
-    else if (window_index == LOOT_MENU)
-    {
+    } else if (window_index == LOOT_MENU) {
       menu_layer_set_callbacks(g_menu_layers[window_index],
                                NULL,
-                               (MenuLayerCallbacks)
-      {
+                               (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
         .draw_header       = loot_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = loot_menu_draw_row_callback,
         .select_click      = menu_select_callback,
       });
-    }
 
     // Pebble options menu:
-    else if (window_index == PEBBLE_OPTIONS_MENU)
-    {
+    } else if (window_index == PEBBLE_OPTIONS_MENU) {
       menu_layer_set_callbacks(g_menu_layers[window_index],
                                NULL,
-                               (MenuLayerCallbacks)
-      {
+                               (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
         .draw_header       = pebble_options_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = pebble_options_menu_draw_row_callback,
         .select_click      = menu_select_callback,
       });
-    }
 
     // Heavy items menu:
-    else if (window_index == HEAVY_ITEMS_MENU)
-    {
+    } else if (window_index == HEAVY_ITEMS_MENU) {
       menu_layer_set_callbacks(g_menu_layers[window_index],
                                NULL,
-                               (MenuLayerCallbacks)
-      {
+                               (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
         .draw_header       = heavy_items_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
         .draw_row          = heavy_items_menu_draw_row_callback,
         .select_click      = menu_select_callback,
       });
-    }
 
     // Character stats menu:
-    else // if (window_index == STATS_MENU)
-    {
+    } else {  // if (window_index == STATS_MENU)
       menu_layer_set_callbacks(g_menu_layers[window_index],
                                NULL,
-                               (MenuLayerCallbacks)
-      {
+                               (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
         .draw_header       = stats_menu_draw_header_callback,
         .get_num_rows      = menu_get_num_rows_callback,
@@ -3911,11 +3479,9 @@ void init_window(const int8_t window_index)
         .select_click      = menu_select_callback,
       });
     }
-  }
 
   // Narration window:
-  else if (window_index == NARRATION_WINDOW)
-  {
+  } else if (window_index == NARRATION_WINDOW) {
     window_set_background_color(g_windows[window_index], GColorBlack);
     window_set_click_config_provider(g_windows[window_index],
                                      narration_click_config_provider);
@@ -3926,14 +3492,11 @@ void init_window(const int8_t window_index)
     text_layer_set_text_alignment(g_narration_text_layer, GTextAlignmentLeft);
     layer_add_child(window_get_root_layer(g_windows[window_index]),
                     text_layer_get_layer(g_narration_text_layer));
-  }
 
   // Graphics window:
-  else // if (window_index == GRAPHICS_WINDOW)
-  {
+  } else {  // if (window_index == GRAPHICS_WINDOW)
     window_set_background_color(g_windows[window_index], GColorBlack);
-    window_set_window_handlers(g_windows[window_index], (WindowHandlers)
-    {
+    window_set_window_handlers(g_windows[window_index], (WindowHandlers) {
       .appear = graphics_window_appear,
     });
     window_set_click_config_provider(g_windows[window_index],
@@ -4080,22 +3643,17 @@ Description: Deinitializes the window at a given index of the "g_windows"
 
     Outputs: None.
 ******************************************************************************/
-void deinit_window(const int8_t window_index)
-{
-  if (window_index < NUM_MENUS)
-  {
+void deinit_window(const int8_t window_index) {
+  if (window_index < NUM_MENUS) {
     menu_layer_destroy(g_menu_layers[window_index]);
-  }
-  else if (window_index == NARRATION_WINDOW)
-  {
+  } else if (window_index == NARRATION_WINDOW) {
     text_layer_destroy(g_narration_text_layer);
-  }
 #ifdef PBL_BW
-  else // if (window_index == GRAPHICS_WINDOW)
-  {
+  } else {  // if (window_index == GRAPHICS_WINDOW)
     inverter_layer_destroy(g_inverter_layer);
   }
 #else
+  }
   status_bar_layer_destroy(g_status_bars[window_index]);
 #endif
   window_destroy(g_windows[window_index]);
@@ -4110,8 +3668,7 @@ Description: Initializes the PebbleQuest app.
 
     Outputs: None.
 ******************************************************************************/
-void init(void)
-{
+void init(void) {
   int8_t i;
 
   srand(time(0));
@@ -4136,20 +3693,16 @@ void init(void)
   // Load saved data or initialize a brand new player struct:
   g_player   = malloc(sizeof(player_t));
   g_location = malloc(sizeof(location_t));
-  if (persist_exists(PLAYER_STORAGE_KEY))
-  {
+  if (persist_exists(PLAYER_STORAGE_KEY)) {
     persist_read_data(PLAYER_STORAGE_KEY, g_player, sizeof(player_t));
     persist_read_data(LOCATION_STORAGE_KEY, g_location, sizeof(location_t));
     set_player_direction(g_player->direction); // To update compass.
-  }
-  else
-  {
+  } else {
     init_player();
   }
 
   // Initialize all other windows and display the main menu:
-  for (i = 0; i < GRAPHICS_WINDOW; ++i)
-  {
+  for (i = 0; i < GRAPHICS_WINDOW; ++i) {
     init_window(i);
   }
   show_window(MAIN_MENU, ANIMATED);
@@ -4168,8 +3721,7 @@ Description: Deinitializes the PebbleQuest app.
 
     Outputs: None.
 ******************************************************************************/
-void deinit(void)
-{
+void deinit(void) {
   int8_t i;
 
   persist_write_data(PLAYER_STORAGE_KEY, g_player, sizeof(player_t));
@@ -4178,8 +3730,7 @@ void deinit(void)
   app_focus_service_unsubscribe();
   free(g_player);
   free(g_location);
-  for (i = 0; i < NUM_WINDOWS; ++i)
-  {
+  for (i = 0; i < NUM_WINDOWS; ++i) {
     deinit_window(i);
   }
 }
@@ -4193,8 +3744,7 @@ Description: Main function for the PebbleQuest app.
 
     Outputs: Number of errors encountered.
 ******************************************************************************/
-int main(void)
-{
+int main(void) {
   init();
   app_event_loop();
   deinit();
