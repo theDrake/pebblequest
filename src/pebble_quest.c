@@ -1425,7 +1425,6 @@ void draw_scene(Layer *layer, GContext *ctx) {
       }
     }
   }
-#endif
 
   // Draw health meter:
   draw_status_meter(ctx,
