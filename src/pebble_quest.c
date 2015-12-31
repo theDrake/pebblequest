@@ -1265,14 +1265,13 @@ Description: Draws a (simplistic) 3D scene based on the player's current
     Outputs: None.
 ******************************************************************************/
 void draw_scene(Layer *layer, GContext *ctx) {
-  int8_t i, depth;
-  GPoint cell, cell_2;
+  int8_t i, depth, spell_beam_width;
 #ifdef PBL_COLOR
-  int8_t spell_beam_width,
-         magic_type    = NONE;
+  int8_t magic_type = NONE;
+#endif
+  GPoint cell, cell_2;
   heavy_item_t *weapon = get_heavy_item_equipped_at(RIGHT_HAND);
   npc_t *mage          = &g_location->npcs[0];
-#endif
 
   // First, draw the background, floor, and ceiling:
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -1344,22 +1343,30 @@ void draw_scene(Layer *layer, GContext *ctx) {
     }
   }
 
-  // Draw "spell beams," if applicable (Basalt only):
-#ifdef PBL_COLOR
+  // Draw "spell beams," if applicable:
   if (g_player_current_spell_animation > 0) {
     magic_type = g_player->equipped_pebble;
     spell_beam_width = g_player_current_spell_animation % 2 ?
                          MIN_SPELL_BEAM_BASE_WIDTH          :
                          MAX_SPELL_BEAM_BASE_WIDTH;
+#ifdef PBL_COLOR
     graphics_context_set_stroke_color(ctx, g_magic_type_colors[magic_type][0]);
+#else
+    graphics_context_set_stroke_color(ctx, GColorWhite);
+#endif
     graphics_draw_line(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
                        GPoint(SCREEN_CENTER_POINT.x,
                               SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
     for (i = 0; i <= spell_beam_width; ++i) {
+#ifdef PBL_COLOR
       graphics_context_set_stroke_color(ctx,
                                        g_magic_type_colors[magic_type][i % 2]);
+#else
+      graphics_context_set_stroke_color(ctx,
+                                        i % 2 ? GColorBlack : GColorWhite);
+#endif
       graphics_draw_line(ctx,
                          GPoint(SCREEN_CENTER_POINT_X - i,
                                 GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
@@ -1381,21 +1388,30 @@ void draw_scene(Layer *layer, GContext *ctx) {
         ((cell.y == cell_2.y) &&
          ((cell.x < cell_2.x && g_player->direction == EAST) ||
           (cell.x > cell_2.x && g_player->direction == WEST)))) {
-      magic_type       = mage->item;
       spell_beam_width = g_enemy_current_spell_animation % 2 ?
                            MIN_SPELL_BEAM_BASE_WIDTH         :
                            MAX_SPELL_BEAM_BASE_WIDTH;
+#ifdef PBL_COLOR
+      magic_type       = mage->item;
       graphics_context_set_stroke_color(ctx,
                                         g_magic_type_colors[magic_type][0]);
+#else
+      graphics_context_set_stroke_color(ctx, GColorWhite);
+#endif
       graphics_draw_line(ctx,
                          GPoint(SCREEN_CENTER_POINT_X,
                                 GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
                          GPoint(SCREEN_CENTER_POINT.x,
                                 SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
       for (i = 0; i <= spell_beam_width; ++i) {
+#ifdef PBL_COLOR
         graphics_context_set_stroke_color(ctx,
                                           g_magic_type_colors[magic_type]
                                                              [i % 2]);
+#else
+        graphics_context_set_stroke_color(ctx,
+                                          i % 2 ? GColorBlack : GColorWhite);
+#endif
         graphics_draw_line(ctx,
                            GPoint(SCREEN_CENTER_POINT_X - i,
                                   GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
@@ -1483,14 +1499,9 @@ void draw_floor_and_ceiling(GContext *ctx) {
          x < GRAPHICS_FRAME_WIDTH;
          x += shading_offset) {
       // Draw one point on the ceiling and another on the floor:
-#ifdef PBL_COLOR
       graphics_draw_pixel(ctx, GPoint(x, y + STATUS_BAR_HEIGHT));
       graphics_draw_pixel(ctx, GPoint(x, GRAPHICS_FRAME_HEIGHT - y +
                                            STATUS_BAR_HEIGHT));
-#else
-      graphics_draw_pixel(ctx, GPoint(x, y));
-      graphics_draw_pixel(ctx, GPoint(x, GRAPHICS_FRAME_HEIGHT - y));
-#endif
     }
   }
 }
@@ -1529,7 +1540,6 @@ void draw_cell_walls(GContext *ctx,
   back_wall_drawn = left_wall_drawn = right_wall_drawn = false;
   cell_2          = get_cell_farther_away(cell, g_player->direction, 1);
   if (get_cell_type(cell_2) <= SOLID) {
-#ifdef PBL_COLOR
     draw_shaded_quad(ctx,
                      GPoint(left, top + STATUS_BAR_HEIGHT),
                      GPoint(left, bottom + STATUS_BAR_HEIGHT),
@@ -1543,29 +1553,12 @@ void draw_cell_walls(GContext *ctx,
     graphics_draw_line(ctx,
                        GPoint(left, bottom + STATUS_BAR_HEIGHT),
                        GPoint(right, bottom + STATUS_BAR_HEIGHT));
-#else
-    draw_shaded_quad(ctx,
-                     GPoint(left, top),
-                     GPoint(left, bottom),
-                     GPoint(right, top),
-                     GPoint(right, bottom),
-                     GPoint(left, top));
-    graphics_context_set_stroke_color(ctx, GColorBlack);
-    graphics_draw_line(ctx, GPoint(left, top), GPoint(right, top));
-    graphics_draw_line(ctx, GPoint(left, bottom), GPoint(right, bottom));
-#endif
 
     // Ad hoc solution to a minor visual issue (remove if no longer relevant):
     if (top == g_back_wall_coords[1][0][TOP_LEFT].y) {
-#ifdef PBL_COLOR
       graphics_draw_line(ctx,
                          GPoint(left, bottom + 1 + STATUS_BAR_HEIGHT),
                          GPoint(right, bottom + 1 + STATUS_BAR_HEIGHT));
-#else
-      graphics_draw_line(ctx,
-                         GPoint(left, bottom + 1),
-                         GPoint(right, bottom + 1));
-#endif
     }
 
     back_wall_drawn = true;
@@ -1585,7 +1578,6 @@ void draw_cell_walls(GContext *ctx,
                                 get_direction_to_the_left(g_player->direction),
                                 1);
     if (get_cell_type(cell_2) <= SOLID) {
-#ifdef PBL_COLOR
       draw_shaded_quad(ctx,
                        GPoint(left, top - y_offset + STATUS_BAR_HEIGHT),
                        GPoint(left, bottom + y_offset + STATUS_BAR_HEIGHT),
@@ -1599,21 +1591,6 @@ void draw_cell_walls(GContext *ctx,
       graphics_draw_line(ctx,
                          GPoint(left, bottom + y_offset + STATUS_BAR_HEIGHT),
                          GPoint(right, bottom + STATUS_BAR_HEIGHT));
-#else
-      draw_shaded_quad(ctx,
-                       GPoint(left, top - y_offset),
-                       GPoint(left, bottom + y_offset),
-                       GPoint(right, top),
-                       GPoint(right, bottom),
-                       GPoint(left, top - y_offset));
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-      graphics_draw_line(ctx,
-                         GPoint(left, top - y_offset),
-                         GPoint(right, top));
-      graphics_draw_line(ctx,
-                         GPoint(left, bottom + y_offset),
-                         GPoint(right, bottom));
-#endif
       left_wall_drawn = true;
     }
   }
@@ -1630,7 +1607,6 @@ void draw_cell_walls(GContext *ctx,
                                get_direction_to_the_right(g_player->direction),
                                1);
     if (get_cell_type(cell_2) <= SOLID) {
-#ifdef PBL_COLOR
       draw_shaded_quad(ctx,
                        GPoint(left, top + STATUS_BAR_HEIGHT),
                        GPoint(left, bottom + STATUS_BAR_HEIGHT),
@@ -1644,21 +1620,6 @@ void draw_cell_walls(GContext *ctx,
       graphics_draw_line(ctx,
                          GPoint(left, bottom + STATUS_BAR_HEIGHT),
                          GPoint(right, bottom + y_offset + STATUS_BAR_HEIGHT));
-#else
-      draw_shaded_quad(ctx,
-                       GPoint(left, top),
-                       GPoint(left, bottom),
-                       GPoint(right, top - y_offset),
-                       GPoint(right, bottom + y_offset),
-                       GPoint(left, top));
-      graphics_context_set_stroke_color(ctx, GColorBlack);
-      graphics_draw_line(ctx,
-                         GPoint(left, top),
-                         GPoint(right, top - y_offset));
-      graphics_draw_line(ctx,
-                         GPoint(left, bottom),
-                         GPoint(right, bottom + y_offset));
-#endif
       right_wall_drawn = true;
     }
   }
@@ -1674,7 +1635,6 @@ void draw_cell_walls(GContext *ctx,
        get_cell_type(get_cell_farther_away(cell_2,
                                 get_direction_to_the_left(g_player->direction),
                                 1)) >= EMPTY)) {
-#ifdef PBL_COLOR
     graphics_draw_line(ctx,
                        GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x,
                               g_back_wall_coords[depth][position][TOP_LEFT].y +
@@ -1682,12 +1642,6 @@ void draw_cell_walls(GContext *ctx,
                        GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x,
                           g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
                             STATUS_BAR_HEIGHT));
-#else
-    graphics_draw_line(ctx,
-                       g_back_wall_coords[depth][position][TOP_LEFT],
-                       GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x,
-                         g_back_wall_coords[depth][position][BOTTOM_RIGHT].y));
-#endif
   }
   if ((back_wall_drawn && (right_wall_drawn ||
        get_cell_type(get_cell_farther_away(cell_2,
@@ -1697,7 +1651,6 @@ void draw_cell_walls(GContext *ctx,
        get_cell_type(get_cell_farther_away(cell_2,
                                get_direction_to_the_right(g_player->direction),
                                1)) >= EMPTY)) {
-#ifdef PBL_COLOR
     graphics_draw_line(ctx,
                     GPoint(g_back_wall_coords[depth][position][BOTTOM_RIGHT].x,
                           g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
@@ -1705,12 +1658,6 @@ void draw_cell_walls(GContext *ctx,
                     GPoint(g_back_wall_coords[depth][position][BOTTOM_RIGHT].x,
                            g_back_wall_coords[depth][position][TOP_LEFT].y +
                              STATUS_BAR_HEIGHT));
-#else
-    graphics_draw_line(ctx,
-                    g_back_wall_coords[depth][position][BOTTOM_RIGHT],
-                    GPoint(g_back_wall_coords[depth][position][BOTTOM_RIGHT].x,
-                           g_back_wall_coords[depth][position][TOP_LEFT].y));
-#endif
   }
 }
 
@@ -1767,22 +1714,15 @@ void draw_cell_contents(GContext *ctx,
        g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].y) / 2;
   }
   floor_center_point.x = (x_midpoint1 + x_midpoint2) / 2;
-
-#ifdef PBL_COLOR
   floor_center_point.y += STATUS_BAR_HEIGHT;
   top_left_point.y     += STATUS_BAR_HEIGHT;
-#endif
 
   // Check for an entrance (hole in the ceiling):
   if (gpoint_equal(&cell, &g_location->entrance)) {
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x,
-#ifdef PBL_COLOR
                         GRAPHICS_FRAME_HEIGHT - floor_center_point.y +
                           STATUS_BAR_HEIGHT * 2),
-#else
-                        GRAPHICS_FRAME_HEIGHT - floor_center_point.y),
-#endif
                  ELLIPSE_RADIUS_RATIO *
                    (g_back_wall_coords[depth][position][BOTTOM_RIGHT].x -
                     top_left_point.x),
@@ -2037,7 +1977,7 @@ void draw_cell_contents(GContext *ctx,
                                   drawing_unit / 2),
                          drawing_unit / 6);
 
-    // Mouth (Basalt only):
+    // Mouth:
 #ifdef PBL_COLOR
     if (depth < 4) {
       for (i = floor_center_point.x - drawing_unit / 2 -
@@ -2415,41 +2355,6 @@ void fill_ellipse(GContext *ctx,
 }
 
 /******************************************************************************
-   Function: flash_screen
-
-Description: Briefly "flashes" the graphics frame by inverting all its pixels
-             (Aplite watches only).
-
-     Inputs: None.
-
-    Outputs: None.
-******************************************************************************/
-#ifdef PBL_BW
-void flash_screen(void) {
-  layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), false);
-  g_flash_timer = app_timer_register(DEFAULT_TIMER_DURATION,
-                                     flash_timer_callback,
-                                     NULL);
-}
-#endif
-
-/******************************************************************************
-   Function: flash_timer_callback
-
-Description: Called when the flash timer reaches zero. Hides the inverter
-             layer, ending the "flash" (Aplite watches only).
-
-     Inputs: data - Pointer to additional data (not used).
-
-    Outputs: None.
-******************************************************************************/
-#ifdef PBL_BW
-static void flash_timer_callback(void *data) {
-  layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
-}
-#endif
-
-/******************************************************************************
    Function: player_spell_timer_callback
 
 Description: Called when the player's spell timer reaches zero.
@@ -2458,7 +2363,6 @@ Description: Called when the player's spell timer reaches zero.
 
     Outputs: None.
 ******************************************************************************/
-#ifdef PBL_COLOR
 static void player_spell_timer_callback(void *data) {
   if (--g_player_current_spell_animation > 0) {
     g_player_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
@@ -2467,7 +2371,6 @@ static void player_spell_timer_callback(void *data) {
   }
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
-#endif
 
 /******************************************************************************
    Function: enemy_spell_timer_callback
@@ -2478,7 +2381,6 @@ Description: Called when the enemy's spell timer reaches zero.
 
     Outputs: None.
 ******************************************************************************/
-#ifdef PBL_COLOR
 static void enemy_spell_timer_callback(void *data) {
   if (--g_enemy_current_spell_animation > 0) {
     g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
@@ -2487,7 +2389,6 @@ static void enemy_spell_timer_callback(void *data) {
   }
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
-#endif
 
 /******************************************************************************
    Function: attack_timer_callback
@@ -2513,11 +2414,7 @@ Description: Called when the graphics window appears.
     Outputs: None.
 ******************************************************************************/
 static void graphics_window_appear(Window *window) {
-#ifdef PBL_COLOR
   g_player_current_spell_animation = g_enemy_current_spell_animation = 0;
-#else
-  layer_set_hidden(inverter_layer_get_layer(g_inverter_layer), true);
-#endif
   g_player_is_attacking = false;
   g_current_window      = GRAPHICS_WINDOW;
 }
@@ -2643,15 +2540,11 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 
     // If a Pebble is equipped, cast a spell:
     if (g_player->equipped_pebble > NONE) {
-#ifdef PBL_COLOR
       g_player_current_spell_animation = NUM_SPELL_ANIMATIONS;
       g_player_spell_timer             = app_timer_register(
                                                    DEFAULT_TIMER_DURATION,
                                                    player_spell_timer_callback,
                                                    NULL);
-#else
-      flash_screen();
-#endif
       cast_spell_on_npc(npc,
                         g_player->equipped_pebble,
                         g_player->int8_stats[MAGICAL_POWER]);
@@ -2675,9 +2568,6 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 
         // Check for an infused Pebble:
         if (weapon->infused_pebble > NONE) {
-#ifdef PBL_BW
-          flash_screen();
-#endif
           cast_spell_on_npc(npc,
                             weapon->infused_pebble,
                             g_player->int8_stats[MAGICAL_POWER] / 2);
@@ -2835,15 +2725,11 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
                     get_opposite_direction(get_pursuit_direction(npc->position,
                                                          g_player->position)));
           } else if (npc->type == MAGE && player_is_visible_to_npc) {
-#ifdef PBL_COLOR
             g_enemy_current_spell_animation = NUM_SPELL_ANIMATIONS;
             g_enemy_spell_timer             = app_timer_register(
                                                     DEFAULT_TIMER_DURATION,
                                                     enemy_spell_timer_callback,
                                                     NULL);
-#else
-            flash_screen();
-#endif
             if (g_player->int8_stats[SHADOW_FORM] &&
                 (rand() % g_player->int8_stats[INTELLECT] +
                    g_player->int8_stats[SHADOW_FORM] > damage)) {
@@ -3505,12 +3391,7 @@ void init_window(const int8_t window_index) {
     layer_set_update_proc(window_get_root_layer(g_windows[window_index]),
                           draw_scene);
 
-#ifdef PBL_BW
-    // Graphics frame inverter (for the "flash" effect):
-    g_inverter_layer = inverter_layer_create(GRAPHICS_FRAME);
-    layer_add_child(window_get_root_layer(g_windows[window_index]),
-                    inverter_layer_get_layer(g_inverter_layer));
-#else
+#ifdef PBL_COLOR
     // Colors for magical effects:
     g_magic_type_colors[PEBBLE_OF_THUNDER][0] = GColorYellow;
     g_magic_type_colors[PEBBLE_OF_THUNDER][1] = GColorOxfordBlue;
@@ -3625,12 +3506,10 @@ void init_window(const int8_t window_index) {
 #endif
   }
 
-  // Add top status bar (Basalt watches only):
-#ifdef PBL_COLOR
+  // Add top status bar:
   g_status_bars[window_index] = status_bar_layer_create();
   layer_add_child(window_get_root_layer(g_windows[window_index]),
                   status_bar_layer_get_layer(g_status_bars[window_index]));
-#endif
 }
 
 /******************************************************************************
@@ -3648,14 +3527,8 @@ void deinit_window(const int8_t window_index) {
     menu_layer_destroy(g_menu_layers[window_index]);
   } else if (window_index == NARRATION_WINDOW) {
     text_layer_destroy(g_narration_text_layer);
-#ifdef PBL_BW
-  } else {  // if (window_index == GRAPHICS_WINDOW)
-    inverter_layer_destroy(g_inverter_layer);
-  }
-#else
   }
   status_bar_layer_destroy(g_status_bars[window_index]);
-#endif
   window_destroy(g_windows[window_index]);
 }
 
@@ -3679,16 +3552,10 @@ void init(void) {
   init_wall_coords();
   g_player_is_attacking = false;
   g_compass_path        = gpath_create(&COMPASS_PATH_INFO);
-#ifdef PBL_COLOR
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
                                          STATUS_BAR_HEIGHT   +
                                          STATUS_BAR_HEIGHT / 2));
-#else
-  gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
-                                       GRAPHICS_FRAME_HEIGHT +
-                                         STATUS_BAR_HEIGHT / 2));
-#endif
 
   // Load saved data or initialize a brand new player struct:
   g_player   = malloc(sizeof(player_t));

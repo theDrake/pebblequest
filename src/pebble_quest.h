@@ -139,7 +139,7 @@ enum {
   WEAKNESS,
   DAMAGE_OVER_TIME,
   SLOW,
-  PEBBLE_OF_LIFE_STATUS_EFFECT, // Not actually used.
+  PEBBLE_OF_LIFE_STATUS_EFFECT,  // Not actually used.
   INTIMIDATION,
   STUN,
   DISINTEGRATION,
@@ -159,11 +159,11 @@ enum {
   Other Constants
 ******************************************************************************/
 
-#define NUM_MAJOR_STATS                  3 // AGILITY, STRENGTH, and INTELLECT.
+#define NUM_MAJOR_STATS                  3  // AGILITY, STRENGTH, INTELLECT
 #define FIRST_MAJOR_STAT                 AGILITY
 #define NUM_NEGATIVE_STAT_CONSTANTS      3
 #define NUM_MENUS                        (STATS_MENU + 1)
-#define DEFAULT_MAJOR_STAT_VALUE         1 // AGILITY, STRENGTH, and INTELLECT.
+#define DEFAULT_MAJOR_STAT_VALUE         1  // AGILITY, STRENGTH, INTELLECT
 #define DEFAULT_MAX_HEALTH               10
 #define DEFAULT_MAX_ENERGY               10
 #define MIN_DAMAGE_TO_NPC                1
@@ -187,26 +187,13 @@ enum {
 #define SCREEN_CENTER_POINT_X            (SCREEN_WIDTH / 2)
 #define SCREEN_CENTER_POINT_Y            (SCREEN_HEIGHT / 2 - STATUS_BAR_HEIGHT * 0.75)
 #define SCREEN_CENTER_POINT              GPoint(SCREEN_CENTER_POINT_X, SCREEN_CENTER_POINT_Y)
-#define STATUS_BAR_HEIGHT                16 // Applies to top and bottom status bars.
-
-#ifdef PBL_COLOR
+#define STATUS_BAR_HEIGHT                16  // Top and bottom status bars.
 #define FULL_SCREEN_FRAME                GRect(0, STATUS_BAR_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
 #define GRAPHICS_FRAME                   GRect(0, STATUS_BAR_HEIGHT, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
 #define NARRATION_TEXT_LAYER_FRAME       GRect(2, STATUS_BAR_HEIGHT, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
-#define NUM_BACKGROUND_COLOR_SCHEMES     8
-#define NUM_BACKGROUND_COLORS_PER_SCHEME 10
-#define RANDOM_COLOR                     GColorFromRGB(rand() % 256, rand() % 256, rand() % 256)
-#define RANDOM_DARK_COLOR                GColorFromRGB(rand() % 128, rand() % 128, rand() % 128)
-#define RANDOM_BRIGHT_COLOR              GColorFromRGB(rand() % 128 + 128, rand() % 128 + 128, rand() % 128 + 128)
 #define NUM_SPELL_ANIMATIONS             3
 #define MIN_SPELL_BEAM_BASE_WIDTH        8
 #define MAX_SPELL_BEAM_BASE_WIDTH        12
-#else
-#define FULL_SCREEN_FRAME                GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - STATUS_BAR_HEIGHT)
-#define GRAPHICS_FRAME                   GRect(0, 0, GRAPHICS_FRAME_WIDTH, GRAPHICS_FRAME_HEIGHT)
-#define NARRATION_TEXT_LAYER_FRAME       GRect(2, 0, SCREEN_WIDTH - 4, SCREEN_HEIGHT)
-#endif
-
 #define STATUS_BAR_FONT                  fonts_get_system_font(FONT_KEY_GOTHIC_14)
 #define STATUS_METER_PADDING             4
 #define STATUS_METER_WIDTH               (GRAPHICS_FRAME_WIDTH / 2 - COMPASS_RADIUS - 2 * STATUS_METER_PADDING)
@@ -215,31 +202,31 @@ enum {
 #define MIN_WALL_HEIGHT                  STATUS_BAR_HEIGHT
 #define GRAPHICS_FRAME_WIDTH             SCREEN_WIDTH
 #define GRAPHICS_FRAME_HEIGHT            (SCREEN_HEIGHT - 2 * STATUS_BAR_HEIGHT)
-#define MAX_VISIBILITY_DEPTH             6 // Helps determine no. of cells visible in a given line of sight.
-#define STRAIGHT_AHEAD                   (MAX_VISIBILITY_DEPTH - 1) // Index value for "g_back_wall_coords".
-#define TOP_LEFT                         0                          // Index value for "g_back_wall_coords".
-#define BOTTOM_RIGHT                     1                          // Index value for "g_back_wall_coords".
+#define MAX_VISIBILITY_DEPTH             6  // Helps determine no. of cells visible in a given line of sight.
+#define STRAIGHT_AHEAD                   (MAX_VISIBILITY_DEPTH - 1)  // Index value for "g_back_wall_coords".
+#define TOP_LEFT                         0  // Index value for "g_back_wall_coords".
+#define BOTTOM_RIGHT                     1  // Index value for "g_back_wall_coords".
 #define COMPASS_RADIUS                   5
 #define NO_CORNER_RADIUS                 0
 #define SMALL_CORNER_RADIUS              3
 #define NINETY_DEGREES                   (TRIG_MAX_ANGLE / 4)
-#define DEFAULT_ROTATION_RATE            (TRIG_MAX_ANGLE / 26) // 13.8 degrees per rotation event.
+#define DEFAULT_ROTATION_RATE            (TRIG_MAX_ANGLE / 26)  // 13.8 degrees per rotation event.
 #define ELLIPSE_RADIUS_RATIO             0.4
 #define HEAVY_ITEMS_MENU_HEADER_STR_LEN  16
 #define ITEM_TITLE_STR_LEN               19
 #define ITEM_SUBTITLE_STR_LEN            13
 #define STAT_TITLE_STR_LEN               19
 #define STATS_MENU_NUM_ROWS              (NUM_INT8_STATS + NUM_NEGATIVE_STAT_CONSTANTS)
-#define LEVEL_UP_MENU_NUM_ROWS           NUM_MAJOR_STATS // 3
+#define LEVEL_UP_MENU_NUM_ROWS           NUM_MAJOR_STATS  // 3
 #define MAIN_MENU_NUM_ROWS               3
 #define PEBBLE_OPTIONS_MENU_NUM_ROWS     2
 #define LOOT_MENU_NUM_ROWS               1
 #define EQUIPPED_STR                     "Equipped"
 #define LAST_CLICK_ONLY                  true
 #define MULTI_CLICK_MIN                  2
-#define MULTI_CLICK_MAX                  2   // We only care about double-clicks.
-#define MULTI_CLICK_TIMEOUT              0   // milliseconds
-#define PLAYER_ACTION_REPEAT_INTERVAL    250 // milliseconds
+#define MULTI_CLICK_MAX                  2  // We only care about double-clicks.
+#define MULTI_CLICK_TIMEOUT              0  // milliseconds
+#define PLAYER_ACTION_REPEAT_INTERVAL    250  // milliseconds
 #define DEFAULT_TIMER_DURATION           20  // milliseconds
 #define DEFAULT_MAX_SMALL_INT_VALUE      100
 #define MAX_SMALL_INT_DIGITS             3
@@ -250,6 +237,13 @@ enum {
 #define LOCATION_STORAGE_KEY             (PLAYER_STORAGE_KEY + 1)
 #define ANIMATED                         true
 #define NOT_ANIMATED                     false
+#ifdef PBL_COLOR
+#define NUM_BACKGROUND_COLOR_SCHEMES     8
+#define NUM_BACKGROUND_COLORS_PER_SCHEME 10
+#define RANDOM_COLOR                     GColorFromRGB(rand() % 256, rand() % 256, rand() % 256)
+#define RANDOM_DARK_COLOR                GColorFromRGB(rand() % 128, rand() % 128, rand() % 128)
+#define RANDOM_BRIGHT_COLOR              GColorFromRGB(rand() % 128 + 128, rand() % 128 + 128, rand() % 128 + 128)
+#endif
 
 static const GPathInfo COMPASS_PATH_INFO = {
   .num_points = 4,
@@ -356,7 +350,7 @@ typedef struct PlayerCharacter {
          equipped_pebble;
   int16_t int16_stats[NUM_INT16_STATS];
   uint16_t exp_points;
-  heavy_item_t heavy_items[MAX_HEAVY_ITEMS]; // Clothing, armor, and weapons.
+  heavy_item_t heavy_items[MAX_HEAVY_ITEMS];  // Clothing, armor, and weapons.
 } __attribute__((__packed__)) player_t;
 
 typedef struct NonPlayerCharacter {
@@ -389,10 +383,16 @@ typedef struct Location {
 Window *g_windows[NUM_WINDOWS];
 MenuLayer *g_menu_layers[NUM_MENUS];
 TextLayer *g_narration_text_layer;
-AppTimer *g_attack_timer;
+StatusBarLayer *g_status_bars[NUM_WINDOWS];
+AppTimer *g_attack_timer,
+         *g_player_spell_timer,
+         *g_enemy_spell_timer;
 GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
+GPath *g_compass_path;
+player_t *g_player;
+location_t *g_location;
 uint8_t g_current_window,
         g_current_narration,
         g_current_selection,
@@ -400,23 +400,13 @@ uint8_t g_current_window,
         g_attack_slash_x2,
         g_attack_slash_y1,
         g_attack_slash_y2;
-bool g_player_is_attacking;
-GPath *g_compass_path;
-player_t *g_player;
-location_t *g_location;
-
-#ifdef PBL_COLOR
-AppTimer *g_player_spell_timer,
-         *g_enemy_spell_timer;
 int8_t g_player_current_spell_animation,
        g_enemy_current_spell_animation;
+bool g_player_is_attacking;
+#ifdef PBL_COLOR
 GColor g_magic_type_colors[NUM_PEBBLE_TYPES][2],
        g_background_colors[NUM_BACKGROUND_COLOR_SCHEMES]
                           [NUM_BACKGROUND_COLORS_PER_SCHEME];
-StatusBarLayer *g_status_bars[NUM_WINDOWS];
-#else
-AppTimer *g_flash_timer;
-InverterLayer *g_inverter_layer;
 #endif
 
 /******************************************************************************
@@ -541,13 +531,8 @@ void fill_ellipse(GContext *ctx,
                   const uint8_t h_radius,
                   const uint8_t v_radius,
                   const GColor color);
-#ifdef PBL_BW
-void flash_screen(void);
-static void flash_timer_callback(void *data);
-#else
 static void player_spell_timer_callback(void *data);
 static void enemy_spell_timer_callback(void *data);
-#endif
 static void attack_timer_callback(void *data);
 static void graphics_window_appear(Window *window);
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
@@ -577,4 +562,4 @@ void init(void);
 void deinit(void);
 int main(void);
 
-#endif // PEBBLE_QUEST_H_
+#endif  // PEBBLE_QUEST_H_
