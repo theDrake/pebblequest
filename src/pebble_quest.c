@@ -1266,12 +1266,12 @@ Description: Draws a (simplistic) 3D scene based on the player's current
 ******************************************************************************/
 void draw_scene(Layer *layer, GContext *ctx) {
   int8_t i, depth, spell_beam_width;
+  GPoint cell, cell_2;
+  npc_t *mage = &g_location->npcs[0];
 #ifdef PBL_COLOR
   int8_t magic_type = NONE;
-#endif
-  GPoint cell, cell_2;
   heavy_item_t *weapon = get_heavy_item_equipped_at(RIGHT_HAND);
-  npc_t *mage          = &g_location->npcs[0];
+#endif
 
   // First, draw the background, floor, and ceiling:
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -1345,11 +1345,11 @@ void draw_scene(Layer *layer, GContext *ctx) {
 
   // Draw "spell beams," if applicable:
   if (g_player_current_spell_animation > 0) {
-    magic_type = g_player->equipped_pebble;
     spell_beam_width = g_player_current_spell_animation % 2 ?
                          MIN_SPELL_BEAM_BASE_WIDTH          :
                          MAX_SPELL_BEAM_BASE_WIDTH;
 #ifdef PBL_COLOR
+    magic_type = g_player->equipped_pebble;
     graphics_context_set_stroke_color(ctx, g_magic_type_colors[magic_type][0]);
 #else
     graphics_context_set_stroke_color(ctx, GColorWhite);
