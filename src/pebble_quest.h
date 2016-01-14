@@ -256,7 +256,7 @@ static const GPathInfo COMPASS_PATH_INFO = {
 static const char *const g_narration_strings[] = {
   "Evil wizards stole the Elderstone and sundered it, creating a hundred Pebbles of Power.",
   "You have entered the wizards' vast underground lair to recover the Pebbles and save the realm.",
-  "Welcome, hero, to PebbleQuest v1.3!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
+  "Welcome, hero, to PebbleQuest v1.4!\n\nBy David C. Drake:\ndavidcdrake.com/\n            pebblequest",
   "       CONTROLS\nForward: \"Up\"\nBack: \"Down\"\nLeft: \"Up\" x 2\nRight: \"Down\" x 2\nAttack: \"Select\"",
   "You're at your maximum weight capacity. Drop an old item if you're sure you want to keep this new one.",
   "Alas, another hero has perished in the dank, dark depths. A new champion must arise to save humanity!",
