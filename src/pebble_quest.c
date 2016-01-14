@@ -1378,6 +1378,7 @@ void draw_scene(Layer *layer, GContext *ctx) {
                                 SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
     }
   }
+#ifdef PBL_COLOR
   if (g_enemy_current_spell_animation > 0) {
     cell = g_player->position;
     cell_2 = mage->position;
@@ -1390,27 +1391,18 @@ void draw_scene(Layer *layer, GContext *ctx) {
       spell_beam_width = g_enemy_current_spell_animation % 2 ?
                            MIN_SPELL_BEAM_BASE_WIDTH         :
                            MAX_SPELL_BEAM_BASE_WIDTH;
-#ifdef PBL_COLOR
       magic_type = mage->item;
       graphics_context_set_stroke_color(ctx,
                                         g_magic_type_colors[magic_type][0]);
-#else
-      graphics_context_set_stroke_color(ctx, GColorWhite);
-#endif
       graphics_draw_line(ctx,
                          GPoint(SCREEN_CENTER_POINT_X,
                                 GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
                          GPoint(SCREEN_CENTER_POINT.x,
                                 SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
       for (i = 0; i <= spell_beam_width; ++i) {
-#ifdef PBL_COLOR
         graphics_context_set_stroke_color(ctx,
                                           g_magic_type_colors[magic_type]
                                                              [i % 2]);
-#else
-        graphics_context_set_stroke_color(ctx,
-                                          i % 2 ? GColorBlack : GColorWhite);
-#endif
         graphics_draw_line(ctx,
                            GPoint(SCREEN_CENTER_POINT_X - i,
                                   GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
@@ -1424,6 +1416,7 @@ void draw_scene(Layer *layer, GContext *ctx) {
       }
     }
   }
+#endif
 
   // Draw health meter:
   draw_status_meter(ctx,
@@ -1443,18 +1436,13 @@ void draw_scene(Layer *layer, GContext *ctx) {
   // Draw compass:
 #ifdef PBL_COLOR
   graphics_context_set_fill_color(ctx, GColorLightGray);
+  graphics_context_set_stroke_color(ctx, GColorDarkGreen);
+#endif
   graphics_fill_circle(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2 +
                                 STATUS_BAR_HEIGHT),
                        COMPASS_RADIUS);
-  graphics_context_set_stroke_color(ctx, GColorDarkGreen);
-#else
-  graphics_fill_circle(ctx,
-                       GPoint(SCREEN_CENTER_POINT_X,
-                              GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2),
-                       COMPASS_RADIUS);
-#endif
   graphics_context_set_fill_color(ctx, GColorBlack);
   gpath_draw_outline(ctx, g_compass_path);
   gpath_draw_filled(ctx, g_compass_path);
@@ -2379,6 +2367,7 @@ Description: Called when the enemy's spell timer reaches zero.
 
     Outputs: None.
 ******************************************************************************/
+#ifdef PBL_COLOR
 static void enemy_spell_timer_callback(void *data) {
   if (--g_enemy_current_spell_animation > 0) {
     g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
@@ -2387,6 +2376,7 @@ static void enemy_spell_timer_callback(void *data) {
   }
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
+#endif
 
 /******************************************************************************
    Function: attack_timer_callback
@@ -2412,7 +2402,9 @@ Description: Called when the graphics window appears.
     Outputs: None.
 ******************************************************************************/
 static void graphics_window_appear(Window *window) {
+#ifdef PBL_COLOR
   g_player_current_spell_animation = g_enemy_current_spell_animation = 0;
+#endif
   g_player_is_attacking = false;
   g_current_window = GRAPHICS_WINDOW;
 }
@@ -2721,10 +2713,12 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
                     get_opposite_direction(get_pursuit_direction(npc->position,
                                                          g_player->position)));
           } else if (npc->type == MAGE && player_is_visible_to_npc) {
+#ifdef PBL_COLOR
             g_enemy_current_spell_animation = NUM_SPELL_ANIMATIONS;
             g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                                     enemy_spell_timer_callback,
                                                     NULL);
+#endif
             if (g_player->int8_stats[SHADOW_FORM] &&
                 (rand() % g_player->int8_stats[INTELLECT] +
                    g_player->int8_stats[SHADOW_FORM] > damage)) {

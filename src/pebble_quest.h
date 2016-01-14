@@ -385,8 +385,7 @@ MenuLayer *g_menu_layers[NUM_MENUS];
 TextLayer *g_narration_text_layer;
 StatusBarLayer *g_status_bars[NUM_WINDOWS];
 AppTimer *g_attack_timer,
-         *g_player_spell_timer,
-         *g_enemy_spell_timer;
+         *g_player_spell_timer;
 GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
@@ -400,13 +399,14 @@ uint8_t g_current_window,
         g_attack_slash_x2,
         g_attack_slash_y1,
         g_attack_slash_y2;
-int8_t g_player_current_spell_animation,
-       g_enemy_current_spell_animation;
+int8_t g_player_current_spell_animation;
 bool g_player_is_attacking;
 #ifdef PBL_COLOR
 GColor g_magic_type_colors[NUM_PEBBLE_TYPES][2],
        g_background_colors[NUM_BACKGROUND_COLOR_SCHEMES]
                           [NUM_BACKGROUND_COLORS_PER_SCHEME];
+AppTimer *g_enemy_spell_timer;
+int8_t g_enemy_current_spell_animation;
 #endif
 
 /******************************************************************************
@@ -532,7 +532,9 @@ void fill_ellipse(GContext *ctx,
                   const uint8_t v_radius,
                   const GColor color);
 static void player_spell_timer_callback(void *data);
+#ifdef PBL_COLOR
 static void enemy_spell_timer_callback(void *data);
+#endif
 static void attack_timer_callback(void *data);
 static void graphics_window_appear(Window *window);
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
