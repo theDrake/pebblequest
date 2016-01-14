@@ -188,7 +188,7 @@ int8_t cast_spell_on_npc(npc_t *const npc,
                          const int8_t magic_type,
                          const int8_t max_potency) {
   int8_t potency = 0,
-         damage  = 0,
+         damage = 0,
          spell_resistance;
 
   if (npc) {
@@ -309,7 +309,7 @@ GPoint get_cell_farther_away(const GPoint reference_point,
       return GPoint(reference_point.x, reference_point.y + distance);
     case EAST:
       return GPoint(reference_point.x + distance, reference_point.y);
-    default: // case WEST:
+    default:  // case WEST:
       return GPoint(reference_point.x - distance, reference_point.y);
   }
 }
@@ -327,12 +327,12 @@ Description: Determines in which direction a character at a given position
     Outputs: Integer representing the direction in which the NPC ought to move.
 ******************************************************************************/
 int8_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee) {
-  int8_t diff_x                     = pursuer.x - pursuee.x,
-         diff_y                     = pursuer.y - pursuee.y;
-  const int8_t horizontal_direction = diff_x > 0 ? WEST  : EAST,
-               vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
+  int8_t diff_x = pursuer.x - pursuee.x,
+         diff_y = pursuer.y - pursuee.y;
+  const int8_t horizontal_direction = diff_x > 0 ? WEST : EAST,
+               vertical_direction = diff_y > 0 ? NORTH : SOUTH;
   bool checked_horizontal_direction = false,
-       checked_vertical_direction   = false;
+       checked_vertical_direction = false;
 
   // Check for alignment along the x-axis:
   if (diff_x == 0) {
@@ -557,9 +557,9 @@ Description: Returns the type of cell at a given set of coordinates.
     Outputs: The indicated cell's type.
 ******************************************************************************/
 int8_t get_cell_type(const GPoint cell) {
-  if (cell.x < 0          ||
+  if (cell.x < 0 ||
       cell.x >= MAP_WIDTH ||
-      cell.y < 0          ||
+      cell.y < 0 ||
       cell.y >= MAP_HEIGHT) {
     return SOLID;
   }
@@ -661,7 +661,7 @@ Description: Determines whether the cell at a given set of coordinates may be
     Outputs: "True" if the cell is occupiable.
 ******************************************************************************/
 bool occupiable(const GPoint cell) {
-  return get_cell_type(cell) >= EMPTY              &&
+  return get_cell_type(cell) >= EMPTY &&
          !gpoint_equal(&g_player->position, &cell) &&
          get_npc_at(cell) == NULL;
 }
@@ -1133,8 +1133,7 @@ void menu_select_callback(MenuLayer *menu_layer,
     if (cell_index->row == 0) {  // Equip
       unequip_item_at(RIGHT_HAND);
       g_player->equipped_pebble = g_current_selection;
-      g_current_selection       =
-        get_inventory_row_for_pebble(g_current_selection);
+      g_current_selection = get_inventory_row_for_pebble(g_current_selection);
       show_window(INVENTORY_MENU, NOT_ANIMATED);
     } else {  // Infuse into Item
       show_window(HEAVY_ITEMS_MENU, ANIMATED);
@@ -1380,7 +1379,7 @@ void draw_scene(Layer *layer, GContext *ctx) {
     }
   }
   if (g_enemy_current_spell_animation > 0) {
-    cell   = g_player->position;
+    cell = g_player->position;
     cell_2 = mage->position;
     if (((cell.x == cell_2.x) &&
          ((cell.y < cell_2.y && g_player->direction == SOUTH) ||
@@ -1392,7 +1391,7 @@ void draw_scene(Layer *layer, GContext *ctx) {
                            MIN_SPELL_BEAM_BASE_WIDTH         :
                            MAX_SPELL_BEAM_BASE_WIDTH;
 #ifdef PBL_COLOR
-      magic_type       = mage->item;
+      magic_type = mage->item;
       graphics_context_set_stroke_color(ctx,
                                         g_magic_type_colors[magic_type][0]);
 #else
@@ -1529,15 +1528,15 @@ void draw_cell_walls(GContext *ctx,
   GPoint cell_2;
 
   // Back wall:
-  left   = g_back_wall_coords[depth][position][TOP_LEFT].x;
-  right  = g_back_wall_coords[depth][position][BOTTOM_RIGHT].x;
-  top    = g_back_wall_coords[depth][position][TOP_LEFT].y;
+  left = g_back_wall_coords[depth][position][TOP_LEFT].x;
+  right = g_back_wall_coords[depth][position][BOTTOM_RIGHT].x;
+  top = g_back_wall_coords[depth][position][TOP_LEFT].y;
   bottom = g_back_wall_coords[depth][position][BOTTOM_RIGHT].y;
   if (bottom - top < MIN_WALL_HEIGHT) {
     return;
   }
   back_wall_drawn = left_wall_drawn = right_wall_drawn = false;
-  cell_2          = get_cell_farther_away(cell, g_player->direction, 1);
+  cell_2 = get_cell_farther_away(cell, g_player->direction, 1);
   if (get_cell_type(cell_2) <= SOLID) {
     draw_shaded_quad(ctx,
                      GPoint(left, top + STATUS_BAR_HEIGHT),
@@ -1566,10 +1565,10 @@ void draw_cell_walls(GContext *ctx,
   // Left wall:
   right = left;
   if (depth == 0) {
-    left     = 0;
+    left = 0;
     y_offset = top;
   } else {
-    left     = g_back_wall_coords[depth - 1][position][TOP_LEFT].x;
+    left = g_back_wall_coords[depth - 1][position][TOP_LEFT].x;
     y_offset = top - g_back_wall_coords[depth - 1][position][TOP_LEFT].y;
   }
   if (position <= STRAIGHT_AHEAD) {
@@ -1678,7 +1677,7 @@ void draw_cell_contents(GContext *ctx,
                         const GPoint cell,
                         const int8_t depth,
                         const int8_t position) {
-  uint8_t drawing_unit; // Reference variable for drawing contents at depth.
+  uint8_t drawing_unit;  // Reference variable for drawing contents at depth.
   int16_t i, x_midpoint1, x_midpoint2;
   GPoint floor_center_point, top_left_point;
   npc_t *npc = get_npc_at(cell);
@@ -1696,16 +1695,16 @@ void draw_cell_contents(GContext *ctx,
   x_midpoint1 = (top_left_point.x +
                  g_back_wall_coords[depth][position][BOTTOM_RIGHT].x) / 2;
   if (depth == 0) {
-    if (position < STRAIGHT_AHEAD) {         // To the left of the player.
+    if (position < STRAIGHT_AHEAD) {  // To the left of the player.
       x_midpoint2 = GRAPHICS_FRAME_WIDTH / -2;
     } else if (position > STRAIGHT_AHEAD) {  // To the right of the player.
       x_midpoint2 = GRAPHICS_FRAME_WIDTH + GRAPHICS_FRAME_WIDTH / 2;
-    } else {                                 // Directly under the player.
+    } else {  // Directly under the player.
       x_midpoint2 = x_midpoint1;
     }
     floor_center_point.y = GRAPHICS_FRAME_HEIGHT;
   } else {
-    x_midpoint2          =
+    x_midpoint2 =
       (g_back_wall_coords[depth - 1][position][TOP_LEFT].x +
        g_back_wall_coords[depth - 1][position][BOTTOM_RIGHT].x) / 2;
     floor_center_point.y =
@@ -1714,7 +1713,7 @@ void draw_cell_contents(GContext *ctx,
   }
   floor_center_point.x = (x_midpoint1 + x_midpoint2) / 2;
   floor_center_point.y += STATUS_BAR_HEIGHT;
-  top_left_point.y     += STATUS_BAR_HEIGHT;
+  top_left_point.y += STATUS_BAR_HEIGHT;
 
   // Check for an entrance (hole in the ceiling):
   if (gpoint_equal(&cell, &g_location->entrance)) {
@@ -1773,15 +1772,15 @@ void draw_cell_contents(GContext *ctx,
   }
 
   // Prepare to draw the NPC:
-  if (npc->type  <= WHITE_MONSTER_MEDIUM ||
-      npc->type  == WARRIOR_MEDIUM       ||
-      npc->type  == WARRIOR_LARGE        ||
+  if (npc->type <= WHITE_MONSTER_MEDIUM ||
+      npc->type == WARRIOR_MEDIUM ||
+      npc->type == WARRIOR_LARGE ||
       (npc->type >= DARK_OGRE && npc->type <= PALE_TROLL)) {
     drawing_unit++;
   }
   if (npc->type <= WHITE_MONSTER_LARGE ||
-      npc->type == WARRIOR_LARGE       ||
-      npc->type == DARK_OGRE           ||
+      npc->type == WARRIOR_LARGE ||
+      npc->type == DARK_OGRE ||
       npc->type == PALE_OGRE) {
     drawing_unit++;
   }
@@ -2205,8 +2204,8 @@ void draw_shaded_quad(GContext *ctx,
                       const GPoint lower_right,
                       const GPoint shading_ref) {
   int16_t i, j, shading_offset, half_shading_offset;
-  float dy_over_dx     = (float) (upper_right.y - upper_left.y) /
-                                 (upper_right.x - upper_left.x);
+  float dy_over_dx = (float) (upper_right.y - upper_left.y) /
+                             (upper_right.x - upper_left.x);
   GColor primary_color = GColorWhite;
 
   for (i = upper_left.x; i <= upper_right.x && i < GRAPHICS_FRAME_WIDTH; ++i) {
@@ -2274,7 +2273,7 @@ void draw_status_meter(GContext *ctx,
   origin.y += STATUS_BAR_HEIGHT;
   if (origin.x < SCREEN_CENTER_POINT_X) {  // Health meter:
     graphics_context_set_fill_color(ctx, GColorRed);
-  } else {                                 // Energy meter:
+  } else {  // Energy meter:
     graphics_context_set_fill_color(ctx, GColorBlue);
   }
 #endif
@@ -2293,7 +2292,7 @@ void draw_status_meter(GContext *ctx,
   if (ratio < 1) {
     if (origin.x < SCREEN_CENTER_POINT_X) {  // Health meter:
       graphics_context_set_fill_color(ctx, GColorBulgarianRose);
-    } else {                                 // Energy meter:
+    } else {  // Energy meter:
       graphics_context_set_fill_color(ctx, GColorOxfordBlue);
     }
     graphics_fill_rect(ctx,
@@ -2415,7 +2414,7 @@ Description: Called when the graphics window appears.
 static void graphics_window_appear(Window *window) {
   g_player_current_spell_animation = g_enemy_current_spell_animation = 0;
   g_player_is_attacking = false;
-  g_current_window      = GRAPHICS_WINDOW;
+  g_current_window = GRAPHICS_WINDOW;
 }
 
 /******************************************************************************
@@ -2517,7 +2516,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                                             void *context) {
   int8_t damage;
   GPoint cell;
-  npc_t *npc           = NULL;
+  npc_t *npc = NULL;
   heavy_item_t *weapon = get_heavy_item_equipped_at(RIGHT_HAND);
 
   if (g_current_window == GRAPHICS_WINDOW &&
@@ -2540,10 +2539,9 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
     // If a Pebble is equipped, cast a spell:
     if (g_player->equipped_pebble > NONE) {
       g_player_current_spell_animation = NUM_SPELL_ANIMATIONS;
-      g_player_spell_timer             = app_timer_register(
-                                                   DEFAULT_TIMER_DURATION,
-                                                   player_spell_timer_callback,
-                                                   NULL);
+      g_player_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
+                                                player_spell_timer_callback,
+                                                NULL);
       cast_spell_on_npc(npc,
                         g_player->equipped_pebble,
                         g_player->int8_stats[MAGICAL_POWER]);
@@ -2575,17 +2573,17 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
 
       // Set up the "attack slash" graphic:
       g_player_is_attacking = true;
-      g_attack_slash_x1     = rand() % (GRAPHICS_FRAME_WIDTH / 3) +
-                                GRAPHICS_FRAME_WIDTH / 3;
-      g_attack_slash_x2     = rand() % (GRAPHICS_FRAME_WIDTH / 3) +
-                                GRAPHICS_FRAME_WIDTH / 3;
-      g_attack_slash_y1     = rand() % (GRAPHICS_FRAME_HEIGHT / 3) +
-                                STATUS_BAR_HEIGHT;
-      g_attack_slash_y2     = GRAPHICS_FRAME_HEIGHT - STATUS_BAR_HEIGHT -
-                                rand() % (GRAPHICS_FRAME_HEIGHT / 3);
-      g_attack_timer        = app_timer_register(DEFAULT_TIMER_DURATION,
-                                                 attack_timer_callback,
-                                                 NULL);
+      g_attack_slash_x1 = rand() % (GRAPHICS_FRAME_WIDTH / 3) +
+                            GRAPHICS_FRAME_WIDTH / 3;
+      g_attack_slash_x2 = rand() % (GRAPHICS_FRAME_WIDTH / 3) +
+                            GRAPHICS_FRAME_WIDTH / 3;
+      g_attack_slash_y1 = rand() % (GRAPHICS_FRAME_HEIGHT / 3) +
+                            STATUS_BAR_HEIGHT;
+      g_attack_slash_y2 = GRAPHICS_FRAME_HEIGHT - STATUS_BAR_HEIGHT -
+                            rand() % (GRAPHICS_FRAME_HEIGHT / 3);
+      g_attack_timer = app_timer_register(DEFAULT_TIMER_DURATION,
+                                          attack_timer_callback,
+                                          NULL);
     }
 
     layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
@@ -2694,7 +2692,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i) {
       npc = &g_location->npcs[i];
       if (npc->type > NONE) {
-        if (npc->status_effects[STUN]     == 0 &&
+        if (npc->status_effects[STUN] == 0 &&
             npc->status_effects[SLOW] % 2 == 0) {
           damage = rand() % npc->power - npc->status_effects[WEAKNESS] / 2;
           diff_x = npc->position.x - g_player->position.x;
@@ -2702,15 +2700,14 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 
           // Determine whether the NPC can "see" the player:
           if (diff_x == 0 || diff_y == 0) {
-            j                    = 0;
-            cell                 = npc->position;
-            horizontal_direction = diff_x > 0 ? WEST  : EAST;
-            vertical_direction   = diff_y > 0 ? NORTH : SOUTH;
+            j = 0;
+            cell = npc->position;
+            horizontal_direction = diff_x > 0 ? WEST : EAST;
+            vertical_direction = diff_y > 0 ? NORTH : SOUTH;
             do {
               cell = get_cell_farther_away(cell,
-                                           diff_x == 0 ?
-                                             vertical_direction :
-                                             horizontal_direction,
+                                           diff_x == 0 ? vertical_direction :
+                                                         horizontal_direction,
                                            1);
               if (gpoint_equal(&g_player->position, &cell)) {
                 player_is_visible_to_npc = true;
@@ -2725,8 +2722,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
                                                          g_player->position)));
           } else if (npc->type == MAGE && player_is_visible_to_npc) {
             g_enemy_current_spell_animation = NUM_SPELL_ANIMATIONS;
-            g_enemy_spell_timer             = app_timer_register(
-                                                    DEFAULT_TIMER_DURATION,
+            g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                                     enemy_spell_timer_callback,
                                                     NULL);
             if (g_player->int8_stats[SHADOW_FORM] &&
@@ -2900,25 +2896,27 @@ void set_player_minor_stats(void) {
   int8_t i;
   heavy_item_t *heavy_item;
 
-  g_player->int8_stats[PHYSICAL_POWER]   =
-    g_player->int8_stats[STRENGTH] + g_player->int8_stats[AGILITY] / 2 +
-    g_player->int8_stats[INTELLECT] / 5;
-  g_player->int8_stats[PHYSICAL_DEFENSE] =
-    g_player->int8_stats[STRENGTH] / 2 + g_player->int8_stats[AGILITY] +
-    g_player->int8_stats[INTELLECT] / 5;
-  g_player->int8_stats[MAGICAL_POWER]    =
-    g_player->int8_stats[STRENGTH] / 2 + g_player->int8_stats[AGILITY] / 5 +
-    g_player->int8_stats[INTELLECT];
-  g_player->int8_stats[MAGICAL_DEFENSE]  =
-    g_player->int8_stats[STRENGTH] / 5 + g_player->int8_stats[AGILITY] / 2 +
-    g_player->int8_stats[INTELLECT];
-  g_player->int16_stats[MAX_HEALTH]      =
-    DEFAULT_MAX_HEALTH + g_player->int8_stats[STRENGTH] * 4 +
-    g_player->int8_stats[LEVEL];
-  g_player->int16_stats[MAX_ENERGY]      =
-    DEFAULT_MAX_ENERGY + g_player->int8_stats[INTELLECT] * 2 +
-    g_player->int8_stats[AGILITY] * 2 + g_player->int8_stats[STRENGTH];
-  g_player->int8_stats[FATIGUE_RATE]     = MIN_FATIGUE_RATE;
+  g_player->int8_stats[PHYSICAL_POWER] = g_player->int8_stats[STRENGTH] +
+                                           g_player->int8_stats[AGILITY] / 2 +
+                                           g_player->int8_stats[INTELLECT] / 5;
+  g_player->int8_stats[PHYSICAL_DEFENSE] = g_player->int8_stats[STRENGTH] / 2 +
+                                             g_player->int8_stats[AGILITY] +
+                                             g_player->int8_stats[INTELLECT] /
+                                             5;
+  g_player->int8_stats[MAGICAL_POWER] = g_player->int8_stats[STRENGTH] / 2 +
+                                          g_player->int8_stats[AGILITY] / 5 +
+                                          g_player->int8_stats[INTELLECT];
+  g_player->int8_stats[MAGICAL_DEFENSE] = g_player->int8_stats[STRENGTH] / 5 +
+                                          g_player->int8_stats[AGILITY] / 2 +
+                                          g_player->int8_stats[INTELLECT];
+  g_player->int16_stats[MAX_HEALTH] = DEFAULT_MAX_HEALTH +
+                                        g_player->int8_stats[STRENGTH] * 4 +
+                                        g_player->int8_stats[LEVEL];
+  g_player->int16_stats[MAX_ENERGY] = DEFAULT_MAX_ENERGY +
+                                        g_player->int8_stats[INTELLECT] * 2 +
+                                        g_player->int8_stats[AGILITY] * 2 +
+                                        g_player->int8_stats[STRENGTH];
+  g_player->int8_stats[FATIGUE_RATE] = MIN_FATIGUE_RATE;
 
   // Weapon:
   heavy_item = get_heavy_item_equipped_at(RIGHT_HAND);
@@ -2979,13 +2977,13 @@ void init_player(void) {
   for (i = FIRST_MAJOR_STAT; i < NUM_MAJOR_STATS + FIRST_MAJOR_STAT; ++i) {
     g_player->int8_stats[i] = DEFAULT_MAJOR_STAT_VALUE;
   }
-  g_player->int8_stats[LEVEL]             =
-    g_player->int8_stats[HEALTH_REGEN]    =
-    g_player->int8_stats[ENERGY_REGEN]    = 1;
-  g_player->exp_points                    = // 58806 to reach max. level!
-    g_player->int8_stats[DEPTH]           =
+  g_player->int8_stats[LEVEL] =
+    g_player->int8_stats[HEALTH_REGEN] =
+    g_player->int8_stats[ENERGY_REGEN] = 1;
+  g_player->exp_points =  // 58806 to reach max. level!
+    g_player->int8_stats[DEPTH] =
     g_player->int8_stats[BACKLASH_DAMAGE] =
-    g_player->int8_stats[SHADOW_FORM]     = 0;
+    g_player->int8_stats[SHADOW_FORM] = 0;
 
   // Assign starting inventory:
   for (i = 0; i < NUM_PEBBLE_TYPES; ++i) {
@@ -3020,9 +3018,9 @@ Description: Initializes a given non-player character (NPC) struct according to
 void init_npc(npc_t *const npc, const int8_t type, const GPoint position) {
   int8_t i;
 
-  npc->type     = type;
+  npc->type = type;
   npc->position = position;
-  npc->item     = NONE;
+  npc->item = NONE;
   for (i = 0; i < NUM_STATUS_EFFECTS; ++i) {
     npc->status_effects[i] = 0;
   }
@@ -3033,14 +3031,14 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position) {
 
   // Check for increased power:
   if (type <= WHITE_MONSTER_MEDIUM ||
-      type == WARRIOR_MEDIUM       ||
-      type == WARRIOR_LARGE        ||
+      type == WARRIOR_MEDIUM ||
+      type == WARRIOR_LARGE ||
       (type >= DARK_OGRE && type <= PALE_TROLL)) {
     npc->power++;
   }
   if (type <= WHITE_MONSTER_LARGE ||
-      type == WARRIOR_LARGE       ||
-      type == DARK_OGRE           ||
+      type == WARRIOR_LARGE ||
+      type == DARK_OGRE ||
       type == PALE_OGRE) {
     npc->power++;
   }
@@ -3055,7 +3053,7 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position) {
 
   // Some NPCs may carry a random item:
   if (type > WHITE_MONSTER_SMALL) {
-    npc->item = rand() % 2 ? NONE : RANDOM_ITEM; // Excludes Pebbles.
+    npc->item = rand() % 2 ? NONE : RANDOM_ITEM;  // Excludes Pebbles.
   }
 
   // Mages are the only source of Pebbles:
@@ -3075,9 +3073,9 @@ Description: Initializes a new heavy item struct according to a given type.
     Outputs: None.
 ******************************************************************************/
 void init_heavy_item(heavy_item_t *const item, const int8_t type) {
-  item->type           = type;
+  item->type = type;
   item->infused_pebble = NONE;
-  item->equipped       = false;
+  item->equipped = false;
   if (type < SHIELD) {
     item->equip_target = RIGHT_HAND;
   } else if (type == SHIELD) {
@@ -3102,11 +3100,11 @@ Description: Initializes the global "back_wall_coords" array so that it
 ******************************************************************************/
 void init_wall_coords(void) {
   uint8_t i, j, wall_width;
-  const float perspective_modifier = 2.0; // Helps determine FOV, etc.
+  const float perspective_modifier = 2.0;  // Helps determine FOV, etc.
 
   for (i = 0; i < MAX_VISIBILITY_DEPTH - 1; ++i) {
     for (j = 0; j < (STRAIGHT_AHEAD * 2) + 1; ++j) {
-      g_back_wall_coords[i][j][TOP_LEFT]     = GPoint(0, 0);
+      g_back_wall_coords[i][j][TOP_LEFT] = GPoint(0, 0);
       g_back_wall_coords[i][j][BOTTOM_RIGHT] = GPoint(0, 0);
     }
   }
@@ -3128,19 +3126,17 @@ void init_wall_coords(void) {
     wall_width = g_back_wall_coords[i][STRAIGHT_AHEAD][BOTTOM_RIGHT].x -
                    g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT].x;
     for (j = 1; j <= STRAIGHT_AHEAD; ++j) {
-      g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT]       =
+      g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT] =
         g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT];
-      g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT].x     -= wall_width *
-                                                                     j;
-      g_back_wall_coords[i][STRAIGHT_AHEAD - j][BOTTOM_RIGHT]   =
+      g_back_wall_coords[i][STRAIGHT_AHEAD - j][TOP_LEFT].x -= wall_width * j;
+      g_back_wall_coords[i][STRAIGHT_AHEAD - j][BOTTOM_RIGHT] =
         g_back_wall_coords[i][STRAIGHT_AHEAD][BOTTOM_RIGHT];
       g_back_wall_coords[i][STRAIGHT_AHEAD - j][BOTTOM_RIGHT].x -= wall_width *
                                                                      j;
-      g_back_wall_coords[i][STRAIGHT_AHEAD + j][TOP_LEFT]       =
+      g_back_wall_coords[i][STRAIGHT_AHEAD + j][TOP_LEFT] =
         g_back_wall_coords[i][STRAIGHT_AHEAD][TOP_LEFT];
-      g_back_wall_coords[i][STRAIGHT_AHEAD + j][TOP_LEFT].x     += wall_width *
-                                                                     j;
-      g_back_wall_coords[i][STRAIGHT_AHEAD + j][BOTTOM_RIGHT]   =
+      g_back_wall_coords[i][STRAIGHT_AHEAD + j][TOP_LEFT].x += wall_width * j;
+      g_back_wall_coords[i][STRAIGHT_AHEAD + j][BOTTOM_RIGHT] =
         g_back_wall_coords[i][STRAIGHT_AHEAD][BOTTOM_RIGHT];
       g_back_wall_coords[i][STRAIGHT_AHEAD + j][BOTTOM_RIGHT].x += wall_width *
                                                                      j;
@@ -3165,7 +3161,7 @@ void init_location(void) {
 
 #ifdef PBL_COLOR
   g_location->floor_color_scheme = rand() % NUM_BACKGROUND_COLOR_SCHEMES;
-  g_location->wall_color_scheme  = rand() % NUM_BACKGROUND_COLOR_SCHEMES;
+  g_location->wall_color_scheme = rand() % NUM_BACKGROUND_COLOR_SCHEMES;
 #endif
 
   // Remove any preexisting NPCs:
@@ -3194,12 +3190,12 @@ void init_location(void) {
       builder_position = RANDOM_POINT_WEST;
       set_cell_type(RANDOM_POINT_EAST, EXIT);
       break;
-    default: // case WEST:
+    default:  // case WEST:
       builder_position = RANDOM_POINT_EAST;
       set_cell_type(RANDOM_POINT_WEST, EXIT);
       break;
   }
-  g_player->position   = GPoint(builder_position.x, builder_position.y);
+  g_player->position = GPoint(builder_position.x, builder_position.y);
   g_location->entrance = GPoint(builder_position.x, builder_position.y);
   set_player_direction(builder_direction);
 
@@ -3208,7 +3204,7 @@ void init_location(void) {
     // Add random loot or simply make the cell EMPTY:
     if (rand() % 25 == 0 &&
         !gpoint_equal(&builder_position, &g_location->entrance)) {
-      set_cell_type(builder_position, RANDOM_ITEM); // Excludes Pebbles.
+      set_cell_type(builder_position, RANDOM_ITEM);  // Excludes Pebbles.
     } else {
       set_cell_type(builder_position, EMPTY);
     }
@@ -3230,7 +3226,7 @@ void init_location(void) {
           builder_position.x++;
         }
         break;
-      default: // case WEST:
+      default:  // case WEST:
         if (builder_position.x > 0) {
           builder_position.x--;
         }
@@ -3286,10 +3282,10 @@ void init_window(const int8_t window_index) {
                                NULL,
                                (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = main_menu_draw_header_callback,
-        .get_num_rows      = menu_get_num_rows_callback,
-        .draw_row          = main_menu_draw_row_callback,
-        .select_click      = menu_select_callback,
+        .draw_header = main_menu_draw_header_callback,
+        .get_num_rows = menu_get_num_rows_callback,
+        .draw_row = main_menu_draw_row_callback,
+        .select_click = menu_select_callback,
       });
 
     // Inventory menu:
@@ -3298,10 +3294,10 @@ void init_window(const int8_t window_index) {
                                NULL,
                                (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = inventory_menu_draw_header_callback,
-        .get_num_rows      = menu_get_num_rows_callback,
-        .draw_row          = inventory_menu_draw_row_callback,
-        .select_click      = menu_select_callback,
+        .draw_header = inventory_menu_draw_header_callback,
+        .get_num_rows = menu_get_num_rows_callback,
+        .draw_row = inventory_menu_draw_row_callback,
+        .select_click = menu_select_callback,
       });
 
     // Level-up menu:
@@ -3310,10 +3306,10 @@ void init_window(const int8_t window_index) {
                                NULL,
                                (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = level_up_menu_draw_header_callback,
-        .get_num_rows      = menu_get_num_rows_callback,
-        .draw_row          = level_up_menu_draw_row_callback,
-        .select_click      = menu_select_callback,
+        .draw_header = level_up_menu_draw_header_callback,
+        .get_num_rows = menu_get_num_rows_callback,
+        .draw_row = level_up_menu_draw_row_callback,
+        .select_click = menu_select_callback,
       });
 
     // Loot menu:
@@ -3322,10 +3318,10 @@ void init_window(const int8_t window_index) {
                                NULL,
                                (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = loot_menu_draw_header_callback,
-        .get_num_rows      = menu_get_num_rows_callback,
-        .draw_row          = loot_menu_draw_row_callback,
-        .select_click      = menu_select_callback,
+        .draw_header = loot_menu_draw_header_callback,
+        .get_num_rows = menu_get_num_rows_callback,
+        .draw_row = loot_menu_draw_row_callback,
+        .select_click = menu_select_callback,
       });
 
     // Pebble options menu:
@@ -3334,10 +3330,10 @@ void init_window(const int8_t window_index) {
                                NULL,
                                (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = pebble_options_menu_draw_header_callback,
-        .get_num_rows      = menu_get_num_rows_callback,
-        .draw_row          = pebble_options_menu_draw_row_callback,
-        .select_click      = menu_select_callback,
+        .draw_header = pebble_options_menu_draw_header_callback,
+        .get_num_rows = menu_get_num_rows_callback,
+        .draw_row = pebble_options_menu_draw_row_callback,
+        .select_click = menu_select_callback,
       });
 
     // Heavy items menu:
@@ -3346,10 +3342,10 @@ void init_window(const int8_t window_index) {
                                NULL,
                                (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = heavy_items_menu_draw_header_callback,
-        .get_num_rows      = menu_get_num_rows_callback,
-        .draw_row          = heavy_items_menu_draw_row_callback,
-        .select_click      = menu_select_callback,
+        .draw_header = heavy_items_menu_draw_header_callback,
+        .get_num_rows = menu_get_num_rows_callback,
+        .draw_row = heavy_items_menu_draw_row_callback,
+        .select_click = menu_select_callback,
       });
 
     // Character stats menu:
@@ -3358,10 +3354,10 @@ void init_window(const int8_t window_index) {
                                NULL,
                                (MenuLayerCallbacks) {
         .get_header_height = menu_get_header_height_callback,
-        .draw_header       = stats_menu_draw_header_callback,
-        .get_num_rows      = menu_get_num_rows_callback,
-        .draw_row          = stats_menu_draw_row_callback,
-        .select_click      = menu_select_callback,
+        .draw_header = stats_menu_draw_header_callback,
+        .get_num_rows = menu_get_num_rows_callback,
+        .draw_row = stats_menu_draw_row_callback,
+        .select_click = menu_select_callback,
       });
     }
 
@@ -3394,18 +3390,18 @@ void init_window(const int8_t window_index) {
     // Colors for magical effects:
     g_magic_type_colors[PEBBLE_OF_THUNDER][0] = GColorYellow;
     g_magic_type_colors[PEBBLE_OF_THUNDER][1] = GColorOxfordBlue;
-    g_magic_type_colors[PEBBLE_OF_FIRE][0]    = GColorRed;
-    g_magic_type_colors[PEBBLE_OF_FIRE][1]    = GColorChromeYellow;
-    g_magic_type_colors[PEBBLE_OF_ICE][0]     = GColorElectricBlue;
-    g_magic_type_colors[PEBBLE_OF_ICE][1]     = GColorCeleste;
-    g_magic_type_colors[PEBBLE_OF_LIFE][0]    = GColorMediumAquamarine;
-    g_magic_type_colors[PEBBLE_OF_LIFE][1]    = GColorMidnightGreen;
-    g_magic_type_colors[PEBBLE_OF_LIGHT][0]   = GColorWhite;
-    g_magic_type_colors[PEBBLE_OF_LIGHT][1]   = GColorPastelYellow;
-    g_magic_type_colors[PEBBLE_OF_SHADOW][0]  = GColorBlack;
-    g_magic_type_colors[PEBBLE_OF_SHADOW][1]  = GColorImperialPurple;
-    g_magic_type_colors[PEBBLE_OF_DEATH][0]   = GColorBlack;
-    g_magic_type_colors[PEBBLE_OF_DEATH][1]   = GColorBulgarianRose;
+    g_magic_type_colors[PEBBLE_OF_FIRE][0] = GColorRed;
+    g_magic_type_colors[PEBBLE_OF_FIRE][1] = GColorChromeYellow;
+    g_magic_type_colors[PEBBLE_OF_ICE][0] = GColorElectricBlue;
+    g_magic_type_colors[PEBBLE_OF_ICE][1] = GColorCeleste;
+    g_magic_type_colors[PEBBLE_OF_LIFE][0] = GColorMediumAquamarine;
+    g_magic_type_colors[PEBBLE_OF_LIFE][1] = GColorMidnightGreen;
+    g_magic_type_colors[PEBBLE_OF_LIGHT][0] = GColorWhite;
+    g_magic_type_colors[PEBBLE_OF_LIGHT][1] = GColorPastelYellow;
+    g_magic_type_colors[PEBBLE_OF_SHADOW][0] = GColorBlack;
+    g_magic_type_colors[PEBBLE_OF_SHADOW][1] = GColorImperialPurple;
+    g_magic_type_colors[PEBBLE_OF_DEATH][0] = GColorBlack;
+    g_magic_type_colors[PEBBLE_OF_DEATH][1] = GColorBulgarianRose;
 
     // Blue background color scheme:
     g_background_colors[0][0] = GColorCeleste;
@@ -3550,19 +3546,19 @@ void init(void) {
   init_window(GRAPHICS_WINDOW);
   init_wall_coords();
   g_player_is_attacking = false;
-  g_compass_path        = gpath_create(&COMPASS_PATH_INFO);
+  g_compass_path = gpath_create(&COMPASS_PATH_INFO);
   gpath_move_to(g_compass_path, GPoint(SCREEN_CENTER_POINT_X,
                                        GRAPHICS_FRAME_HEIGHT +
-                                         STATUS_BAR_HEIGHT   +
+                                         STATUS_BAR_HEIGHT +
                                          STATUS_BAR_HEIGHT / 2));
 
   // Load saved data or initialize a brand new player struct:
-  g_player   = malloc(sizeof(player_t));
+  g_player = malloc(sizeof(player_t));
   g_location = malloc(sizeof(location_t));
   if (persist_exists(PLAYER_STORAGE_KEY)) {
     persist_read_data(PLAYER_STORAGE_KEY, g_player, sizeof(player_t));
     persist_read_data(LOCATION_STORAGE_KEY, g_location, sizeof(location_t));
-    set_player_direction(g_player->direction); // To update compass.
+    set_player_direction(g_player->direction);  // To update compass.
   } else {
     init_player();
   }
