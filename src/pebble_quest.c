@@ -1988,6 +1988,9 @@ void draw_cell_contents(GContext *ctx,
     // Legs:
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorWindsorTan);
+#else
+    graphics_context_set_fill_color(ctx, GColorDarkGray);
+#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit -
                                drawing_unit / 2,
@@ -2003,36 +2006,13 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
-#else
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x - drawing_unit -
-                              drawing_unit / 2,
-                            floor_center_point.y),
-                     GPoint(floor_center_point.x - drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x - drawing_unit / 2,
-                            floor_center_point.y),
-                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x + drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x + drawing_unit / 2,
-                            floor_center_point.y),
-                     GPoint(floor_center_point.x + drawing_unit +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x + drawing_unit +
-                              drawing_unit / 2,
-                            floor_center_point.y),
-                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
-#endif
 
     // Arms (as one big rectangle behind the torso, shield, and weapon):
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorMelon);
+#else
+    graphics_context_set_fill_color(ctx, GColorLightGray);
+#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 -
                                drawing_unit / 2,
@@ -2042,26 +2022,11 @@ void draw_cell_contents(GContext *ctx,
                                (time(0) % 2 ? drawing_unit / 2 : 0)),
                        drawing_unit / 2,
                        GCornersAll);
-#else
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit * 2 -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x - drawing_unit * 2 -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 5 + 1),
-                     GPoint(floor_center_point.x + drawing_unit * 2 +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x + drawing_unit * 2 +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 5 + 1),
-                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
-#endif
 
     // Torso:
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorDarkGray);
+#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit -
                                drawing_unit / 2,
@@ -2070,26 +2035,13 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
-#else
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x - drawing_unit -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 3),
-                     GPoint(floor_center_point.x + drawing_unit +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x + drawing_unit +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 3),
-                     GPoint(top_left_point.x + 4, top_left_point.y + 4));
-#endif
 
     // Head:
 #ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorLightGray);
+#else
+    graphics_context_set_fill_color(ctx, GColorDarkGray);
+#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit + 1,
                              floor_center_point.y - drawing_unit * 9,
@@ -2098,18 +2050,6 @@ void draw_cell_contents(GContext *ctx,
                        drawing_unit / 4,
                        GCornersTop);
     graphics_context_set_fill_color(ctx, GColorBlack);
-#else
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit + 1,
-                            floor_center_point.y - drawing_unit * 9),
-                     GPoint(floor_center_point.x - drawing_unit + 1,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x + drawing_unit - 1,
-                            floor_center_point.y - drawing_unit * 9),
-                     GPoint(floor_center_point.x + drawing_unit - 1,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
-#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit / 2 -
                                drawing_unit % 2,
