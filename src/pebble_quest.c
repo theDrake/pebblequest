@@ -1421,7 +1421,8 @@ void draw_scene(Layer *layer, GContext *ctx) {
   // Draw health meter:
   draw_status_meter(ctx,
                     GPoint(STATUS_METER_PADDING,
-                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
+                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING +
+                             STATUS_BAR_HEIGHT),
                     (float) g_player->int16_stats[CURRENT_HEALTH] /
                       g_player->int16_stats[MAX_HEALTH]);
 
@@ -1429,7 +1430,8 @@ void draw_scene(Layer *layer, GContext *ctx) {
   draw_status_meter(ctx,
                     GPoint(SCREEN_CENTER_POINT_X + STATUS_METER_PADDING +
                              COMPASS_RADIUS + 1,
-                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING),
+                           GRAPHICS_FRAME_HEIGHT + STATUS_METER_PADDING +
+                             STATUS_BAR_HEIGHT),
                     (float) g_player->int16_stats[CURRENT_ENERGY] /
                       g_player->int16_stats[MAX_ENERGY]);
 
@@ -1437,6 +1439,8 @@ void draw_scene(Layer *layer, GContext *ctx) {
 #ifdef PBL_COLOR
   graphics_context_set_fill_color(ctx, GColorLightGray);
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
+#else
+  graphics_context_set_fill_color(ctx, GColorWhite);
 #endif
   graphics_fill_circle(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
@@ -2180,20 +2184,16 @@ Description: Draws a "status meter" (such as a "health meter") at a given point
 void draw_status_meter(GContext *ctx,
                        GPoint origin,
                        const float ratio) {
-#ifdef PBL_BW
-  uint8_t i, j;
-
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_context_set_fill_color(ctx, GColorWhite);
-#else
   uint8_t filled_meter_width = ratio * STATUS_METER_WIDTH;
 
-  origin.y += STATUS_BAR_HEIGHT;
+#ifdef PBL_COLOR
   if (origin.x < SCREEN_CENTER_POINT_X) {  // Health meter:
     graphics_context_set_fill_color(ctx, GColorRed);
   } else {  // Energy meter:
     graphics_context_set_fill_color(ctx, GColorBlue);
   }
+#else
+  graphics_context_set_fill_color(ctx, GColorWhite);
 #endif
 
   // First, draw a "full" meter:
@@ -2206,13 +2206,16 @@ void draw_status_meter(GContext *ctx,
                      GCornersAll);
 
   // Now draw the "empty" portion:
-#ifdef PBL_COLOR
   if (ratio < 1) {
+#ifdef PBL_COLOR
     if (origin.x < SCREEN_CENTER_POINT_X) {  // Health meter:
       graphics_context_set_fill_color(ctx, GColorBulgarianRose);
     } else {  // Energy meter:
       graphics_context_set_fill_color(ctx, GColorOxfordBlue);
     }
+#else
+    graphics_context_set_fill_color(ctx, GColorDarkGray);
+#endif
     graphics_fill_rect(ctx,
                        GRect(origin.x + filled_meter_width,
                              origin.y,
@@ -2222,17 +2225,6 @@ void draw_status_meter(GContext *ctx,
                        filled_meter_width < SMALL_CORNER_RADIUS ? GCornersAll :
                                                                 GCornersRight);
   }
-#else
-  for (i = origin.x + STATUS_METER_WIDTH;
-       i >= origin.x + (ratio * STATUS_METER_WIDTH);
-       --i) {
-    for (j = origin.y + (i % 2);
-         j <= origin.y + STATUS_METER_HEIGHT;
-         j += 2) {
-      graphics_draw_pixel(ctx, GPoint(i, j));
-    }
-  }
-#endif
 }
 
 /******************************************************************************
