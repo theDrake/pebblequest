@@ -1859,12 +1859,12 @@ void draw_cell_contents(GContext *ctx,
 #endif
 
     // Mouth:
+#ifdef PBL_COLOR
     for (i = floor_center_point.x - drawing_unit +
                ((npc->type == BLACK_MONSTER_MEDIUM ||
                  npc->type == WHITE_MONSTER_MEDIUM) ? 1 : 0);
          i < floor_center_point.x + drawing_unit - drawing_unit / 4;
          i += drawing_unit / 2) {
-#ifdef PBL_COLOR
       graphics_context_set_fill_color(ctx, GColorSunsetOrange);
       graphics_fill_rect(ctx,
                          GRect(i,
@@ -1874,16 +1874,8 @@ void draw_cell_contents(GContext *ctx,
                                  (time(0) % 2 + 1)),
                          drawing_unit / 2,
                          GCornersAll);
-#else
-      graphics_fill_rect(ctx,
-                         GRect(i,
-                               floor_center_point.y - drawing_unit * 4,
-                               drawing_unit / 2,
-                               drawing_unit * 2 - drawing_unit / 2),
-                         drawing_unit / 2,
-                         GCornersAll);
-#endif
     }
+#endif
 
   // Goblins, trolls, and ogres:
   } else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN) {
