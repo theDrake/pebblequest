@@ -1840,25 +1840,23 @@ void draw_cell_contents(GContext *ctx,
                  GColorPastelYellow);
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorVividCerulean :
                                                          GColorDukeBlue);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x, i),
+                         drawing_unit / 2);
+    graphics_context_set_fill_color(ctx, GColorBlack);
+    graphics_fill_circle(ctx,
+                         GPoint(floor_center_point.x, i),
+                         drawing_unit / 5);
 #else
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x, i),
                  drawing_unit + 1,
                  drawing_unit / 2 + 1,
                  npc->type % 2 ? GColorBlack : GColorWhite);
+     graphics_fill_circle(ctx,
+                          GPoint(floor_center_point.x, i),
+                          drawing_unit / 3);
 #endif
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x, i),
-                         drawing_unit / 2);
-#ifdef PBL_COLOR
-    graphics_context_set_fill_color(ctx, GColorBlack);
-#else
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
-                                                         GColorWhite);
-#endif
-    graphics_fill_circle(ctx,
-                         GPoint(floor_center_point.x, i),
-                         drawing_unit / 5);
 
     // Mouth:
     for (i = floor_center_point.x - drawing_unit +
