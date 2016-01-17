@@ -1264,13 +1264,10 @@ Description: Draws a (simplistic) 3D scene based on the player's current
     Outputs: None.
 ******************************************************************************/
 void draw_scene(Layer *layer, GContext *ctx) {
-  int8_t i, depth, spell_beam_width;
+  int8_t i, depth, spell_beam_width, magic_type = NONE;
   GPoint cell, cell_2;
   npc_t *mage = &g_location->npcs[0];
-#ifdef PBL_COLOR
-  int8_t magic_type = NONE;
   heavy_item_t *weapon = get_heavy_item_equipped_at(RIGHT_HAND);
-#endif
 
   // First, draw the background, floor, and ceiling:
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -1312,15 +1309,10 @@ void draw_scene(Layer *layer, GContext *ctx) {
 
   // Draw the "attack slash," if applicable:
   if (g_player_is_attacking) {
-#ifdef PBL_COLOR
     if (weapon) {
       magic_type = weapon->infused_pebble;
     }
-#else
-    graphics_context_set_stroke_color(ctx, GColorWhite);
-#endif
     for (i = 0; i < 3; ++i) {
-#ifdef PBL_COLOR
       if (magic_type > NONE) {
         graphics_context_set_stroke_color(ctx,
                                       g_magic_type_colors[magic_type][i == 2]);
@@ -1328,11 +1320,6 @@ void draw_scene(Layer *layer, GContext *ctx) {
         graphics_context_set_stroke_color(ctx, i < 2 ? GColorLightGray :
                                                        GColorDarkGray);
       }
-#else
-      if (i == 2) {
-        graphics_context_set_stroke_color(ctx, GColorBlack);
-      }
-#endif
       graphics_draw_line(ctx,
                          GPoint(g_attack_slash_x1 + i, g_attack_slash_y1),
                          GPoint(g_attack_slash_x2 + i, g_attack_slash_y2));
@@ -1347,25 +1334,16 @@ void draw_scene(Layer *layer, GContext *ctx) {
     spell_beam_width = g_player_current_spell_animation % 2 ?
                          MIN_SPELL_BEAM_BASE_WIDTH          :
                          MAX_SPELL_BEAM_BASE_WIDTH;
-#ifdef PBL_COLOR
     magic_type = g_player->equipped_pebble;
     graphics_context_set_stroke_color(ctx, g_magic_type_colors[magic_type][0]);
-#else
-    graphics_context_set_stroke_color(ctx, GColorWhite);
-#endif
     graphics_draw_line(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
                        GPoint(SCREEN_CENTER_POINT.x,
                               SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
     for (i = 0; i <= spell_beam_width; ++i) {
-#ifdef PBL_COLOR
       graphics_context_set_stroke_color(ctx,
                                        g_magic_type_colors[magic_type][i % 2]);
-#else
-      graphics_context_set_stroke_color(ctx,
-                                        i % 2 ? GColorBlack : GColorWhite);
-#endif
       graphics_draw_line(ctx,
                          GPoint(SCREEN_CENTER_POINT_X - i,
                                 GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
@@ -1378,7 +1356,6 @@ void draw_scene(Layer *layer, GContext *ctx) {
                                 SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
     }
   }
-#ifdef PBL_COLOR
   if (g_enemy_current_spell_animation > 0) {
     cell = g_player->position;
     cell_2 = mage->position;
@@ -1416,7 +1393,6 @@ void draw_scene(Layer *layer, GContext *ctx) {
       }
     }
   }
-#endif
 
   // Draw health meter:
   draw_status_meter(ctx,
@@ -1436,12 +1412,8 @@ void draw_scene(Layer *layer, GContext *ctx) {
                       g_player->int16_stats[MAX_ENERGY]);
 
   // Draw compass:
-#ifdef PBL_COLOR
   graphics_context_set_fill_color(ctx, GColorLightGray);
   graphics_context_set_stroke_color(ctx, GColorDarkGreen);
-#else
-  graphics_context_set_fill_color(ctx, GColorWhite);
-#endif
   graphics_fill_circle(ctx,
                        GPoint(SCREEN_CENTER_POINT_X,
                               GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT / 2 +
@@ -1468,9 +1440,6 @@ void draw_floor_and_ceiling(GContext *ctx) {
   uint8_t x, y, max_y, shading_offset;
 
   max_y = g_back_wall_coords[MAX_VISIBILITY_DEPTH - 2][0][TOP_LEFT].y;
-#ifdef PBL_BW
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-#endif
   for (y = 0; y < max_y; ++y) {
     // Determine horizontal distance between points:
     shading_offset = 1 + y / MAX_VISIBILITY_DEPTH;
@@ -1478,13 +1447,11 @@ void draw_floor_and_ceiling(GContext *ctx) {
                                     MAX_VISIBILITY_DEPTH % 2) {
       shading_offset++;
     }
-#ifdef PBL_COLOR
     graphics_context_set_stroke_color(ctx,
       g_background_colors[g_location->floor_color_scheme]
                          [shading_offset > NUM_BACKGROUND_COLORS_PER_SCHEME ?
                             NUM_BACKGROUND_COLORS_PER_SCHEME - 1            :
                             shading_offset - 1]);
-#endif
     for (x = y % 2 ? 0 : (shading_offset / 2) + (shading_offset % 2);
          x < GRAPHICS_FRAME_WIDTH;
          x += shading_offset) {
@@ -1746,11 +1713,7 @@ void draw_cell_contents(GContext *ctx,
   // If there's no NPC, check for loot, then we're done:
   if (npc == NULL) {
     if (get_cell_type(cell) >= 0) {  // Loot!
-#ifdef PBL_COLOR
       graphics_context_set_fill_color(ctx, GColorYellow);
-#else
-      graphics_context_set_fill_color(ctx, GColorLightGray);
-#endif
       graphics_fill_rect(ctx,
                          GRect(floor_center_point.x - drawing_unit * 2,
                                floor_center_point.y - drawing_unit * 2.5,
@@ -1776,19 +1739,11 @@ void draw_cell_contents(GContext *ctx,
       npc->type == PALE_OGRE) {
     drawing_unit++;
   }
-#ifdef PBL_BW
-  graphics_context_set_fill_color(ctx,
-                                  (npc->type % 2 == 0 ||
-                                   npc->type >= WARRIOR_LARGE) ? GColorBlack :
-                                                                 GColorWhite);
-#endif
 
   // Mages:
   if (npc->type == MAGE) {
     // Body:
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorBlack);
-#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2,
                              floor_center_point.y - drawing_unit * 8,
@@ -1807,11 +1762,7 @@ void draw_cell_contents(GContext *ctx,
                        GCornersTop);
 
     // Eyes:
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, RANDOM_BRIGHT_COLOR);
-#else
-    graphics_context_set_fill_color(ctx, GColorWhite);
-#endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 3,
                                 floor_center_point.y - drawing_unit * 9),
@@ -1824,11 +1775,9 @@ void draw_cell_contents(GContext *ctx,
   // Floating monsters:
   } else if (npc->type <= WHITE_MONSTER_SMALL) {
     // Body/head:
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx,
                                     npc->type % 2 ? GColorDarkCandyAppleRed :
                                                     GColorBulgarianRose);
-#endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x,
                                 floor_center_point.y - drawing_unit * 4),
@@ -1836,7 +1785,6 @@ void draw_cell_contents(GContext *ctx,
 
     // Eye:
     i = floor_center_point.y - drawing_unit * 5;
-#ifdef PBL_COLOR
     fill_ellipse(ctx,
                  GPoint(floor_center_point.x, i),
                  drawing_unit + 1,
@@ -1851,19 +1799,8 @@ void draw_cell_contents(GContext *ctx,
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x, i),
                          drawing_unit / 5);
-#else
-    fill_ellipse(ctx,
-                 GPoint(floor_center_point.x, i),
-                 drawing_unit + 1,
-                 drawing_unit / 2 + 1,
-                 npc->type % 2 ? GColorBlack : GColorWhite);
-     graphics_fill_circle(ctx,
-                          GPoint(floor_center_point.x, i),
-                          drawing_unit / 3);
-#endif
 
     // Mouth:
-#ifdef PBL_COLOR
     for (i = floor_center_point.x - drawing_unit +
                ((npc->type == BLACK_MONSTER_MEDIUM ||
                  npc->type == WHITE_MONSTER_MEDIUM) ? 1 : 0);
@@ -1879,15 +1816,12 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 2,
                          GCornersAll);
     }
-#endif
 
   // Goblins, trolls, and ogres:
   } else if (npc->type >= DARK_OGRE && npc->type <= PALE_GOBLIN) {
     // Legs:
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorLimerick :
                                                          GColorArmyGreen);
-#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2,
                              floor_center_point.y - drawing_unit * 3,
@@ -1940,12 +1874,7 @@ void draw_cell_contents(GContext *ctx,
                        GCornersAll);
 
     // Eyes:
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorPastelYellow);
-#else
-    graphics_context_set_fill_color(ctx, npc->type % 2 ? GColorBlack :
-                                                         GColorWhite);
-#endif
     graphics_fill_circle(ctx,
                          GPoint(floor_center_point.x - drawing_unit / 2,
                                 floor_center_point.y - drawing_unit * 5 -
@@ -1958,7 +1887,6 @@ void draw_cell_contents(GContext *ctx,
                          drawing_unit / 6);
 
     // Mouth:
-#ifdef PBL_COLOR
     if (depth < 4) {
       for (i = floor_center_point.x - drawing_unit / 2 -
                  (npc->type <= PALE_OGRE ? 1 : 0);
@@ -1975,12 +1903,10 @@ void draw_cell_contents(GContext *ctx,
                            GCornersAll);
       }
     }
-#endif
 
   // Warriors:
   } else {
     // Legs:
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorWindsorTan);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit -
@@ -1997,35 +1923,8 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
-#else
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x - drawing_unit -
-                              drawing_unit / 2,
-                            floor_center_point.y),
-                     GPoint(floor_center_point.x - drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x - drawing_unit / 2,
-                            floor_center_point.y),
-                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x + drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x + drawing_unit / 2,
-                            floor_center_point.y),
-                     GPoint(floor_center_point.x + drawing_unit +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 4),
-                     GPoint(floor_center_point.x + drawing_unit +
-                              drawing_unit / 2,
-                            floor_center_point.y),
-                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
-#endif
 
     // Arms (as one big rectangle behind the torso, shield, and weapon):
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorMelon);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 -
@@ -2036,25 +1935,8 @@ void draw_cell_contents(GContext *ctx,
                                (time(0) % 2 ? drawing_unit / 2 : 0)),
                        drawing_unit / 2,
                        GCornersAll);
-#else
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit * 2 -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x - drawing_unit * 2 -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 5 + 1),
-                     GPoint(floor_center_point.x + drawing_unit * 2 +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x + drawing_unit * 2 +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 5 + 1),
-                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
-#endif
 
     // Torso:
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorDarkGray);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit -
@@ -2064,25 +1946,8 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        NO_CORNER_RADIUS,
                        GCornerNone);
-#else
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x - drawing_unit -
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 3),
-                     GPoint(floor_center_point.x + drawing_unit +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x + drawing_unit +
-                              drawing_unit / 2,
-                            floor_center_point.y - drawing_unit * 3),
-                     GPoint(top_left_point.x + 4, top_left_point.y + 4));
-#endif
 
     // Head:
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorLightGray);
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit + 1,
@@ -2092,18 +1957,6 @@ void draw_cell_contents(GContext *ctx,
                        drawing_unit / 4,
                        GCornersTop);
     graphics_context_set_fill_color(ctx, GColorBlack);
-#else
-    draw_shaded_quad(ctx,
-                     GPoint(floor_center_point.x - drawing_unit + 1,
-                            floor_center_point.y - drawing_unit * 9),
-                     GPoint(floor_center_point.x - drawing_unit + 1,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(floor_center_point.x + drawing_unit - 1,
-                            floor_center_point.y - drawing_unit * 9),
-                     GPoint(floor_center_point.x + drawing_unit - 1,
-                            floor_center_point.y - drawing_unit * 7),
-                     GPoint(top_left_point.x - 10, top_left_point.y - 10));
-#endif
          graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit / 2 -
                                drawing_unit % 2,
@@ -2115,9 +1968,7 @@ void draw_cell_contents(GContext *ctx,
                        GCornerNone);
 
     // Shield:
-#ifdef PBL_COLOR
     graphics_context_set_fill_color(ctx, GColorBrass);
-#endif
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x + drawing_unit / 2,
                              floor_center_point.y - drawing_unit * 6,
@@ -2127,7 +1978,6 @@ void draw_cell_contents(GContext *ctx,
                        GCornersBottom);
 
     // Weapon:
-#ifdef PBL_COLOR
     graphics_fill_rect(ctx,
                        GRect(floor_center_point.x - drawing_unit * 2 -
                                drawing_unit / 2 - drawing_unit / 4,
@@ -2147,17 +1997,6 @@ void draw_cell_contents(GContext *ctx,
                              drawing_unit * 4),
                        drawing_unit,
                        GCornersTop);
-#else
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_rect(ctx,
-                       GRect(floor_center_point.x - drawing_unit * 2 -
-                               drawing_unit / 4,
-                             floor_center_point.y - drawing_unit * 10,
-                             drawing_unit / 2,
-                             drawing_unit * 4),
-                       drawing_unit,
-                       GCornersTop);
-#endif
   }
 }
 
@@ -2200,7 +2039,6 @@ void draw_shaded_quad(GContext *ctx,
       shading_offset++;
     }
     half_shading_offset = (shading_offset / 2) + (shading_offset % 2);
-#ifdef PBL_COLOR
     if (shading_offset - 3 > NUM_BACKGROUND_COLORS_PER_SCHEME) {
       primary_color = g_background_colors[g_location->wall_color_scheme]
                                         [NUM_BACKGROUND_COLORS_PER_SCHEME - 1];
@@ -2210,7 +2048,6 @@ void draw_shaded_quad(GContext *ctx,
     } else {
       primary_color = g_background_colors[g_location->wall_color_scheme][0];
     }
-#endif
 
     // Now, draw points from top to bottom:
     for (j = upper_left.y + (i - upper_left.x) * dy_over_dx;
@@ -2246,15 +2083,11 @@ void draw_status_meter(GContext *ctx,
                        const float ratio) {
   uint8_t filled_meter_width = ratio * STATUS_METER_WIDTH;
 
-#ifdef PBL_COLOR
   if (origin.x < SCREEN_CENTER_POINT_X) {  // Health meter:
     graphics_context_set_fill_color(ctx, GColorRed);
   } else {  // Energy meter:
     graphics_context_set_fill_color(ctx, GColorBlue);
   }
-#else
-  graphics_context_set_fill_color(ctx, GColorWhite);
-#endif
 
   // First, draw a "full" meter:
   graphics_fill_rect(ctx,
@@ -2267,15 +2100,11 @@ void draw_status_meter(GContext *ctx,
 
   // Now draw the "empty" portion:
   if (ratio < 1) {
-#ifdef PBL_COLOR
     if (origin.x < SCREEN_CENTER_POINT_X) {  // Health meter:
       graphics_context_set_fill_color(ctx, GColorBulgarianRose);
     } else {  // Energy meter:
       graphics_context_set_fill_color(ctx, GColorOxfordBlue);
     }
-#else
-    graphics_context_set_fill_color(ctx, GColorDarkGray);
-#endif
     graphics_fill_rect(ctx,
                        GRect(origin.x + filled_meter_width,
                              origin.y,
@@ -2349,7 +2178,6 @@ Description: Called when the enemy's spell timer reaches zero.
 
     Outputs: None.
 ******************************************************************************/
-#ifdef PBL_COLOR
 static void enemy_spell_timer_callback(void *data) {
   if (--g_enemy_current_spell_animation > 0) {
     g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
@@ -2358,7 +2186,6 @@ static void enemy_spell_timer_callback(void *data) {
   }
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
-#endif
 
 /******************************************************************************
    Function: attack_timer_callback
@@ -2384,9 +2211,7 @@ Description: Called when the graphics window appears.
     Outputs: None.
 ******************************************************************************/
 static void graphics_window_appear(Window *window) {
-#ifdef PBL_COLOR
   g_player_current_spell_animation = g_enemy_current_spell_animation = 0;
-#endif
   g_player_is_attacking = false;
   g_current_window = GRAPHICS_WINDOW;
 }
@@ -2695,12 +2520,10 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
                     get_opposite_direction(get_pursuit_direction(npc->position,
                                                          g_player->position)));
           } else if (npc->type == MAGE && player_is_visible_to_npc) {
-#ifdef PBL_COLOR
             g_enemy_current_spell_animation = NUM_SPELL_ANIMATIONS;
             g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
                                                     enemy_spell_timer_callback,
                                                     NULL);
-#endif
             if (g_player->int8_stats[SHADOW_FORM] &&
                 (rand() % g_player->int8_stats[INTELLECT] +
                    g_player->int8_stats[SHADOW_FORM] > damage)) {
@@ -3135,10 +2958,9 @@ void init_location(void) {
   int8_t i, j, builder_direction;
   GPoint builder_position;
 
-#ifdef PBL_COLOR
+  // Set color scheme:
   g_location->floor_color_scheme = rand() % NUM_BACKGROUND_COLOR_SCHEMES;
   g_location->wall_color_scheme = rand() % NUM_BACKGROUND_COLOR_SCHEMES;
-#endif
 
   // Remove any preexisting NPCs:
   for (i = 0; i < MAX_NPCS_AT_ONE_TIME; ++i) {
@@ -3362,7 +3184,6 @@ void init_window(const int8_t window_index) {
     layer_set_update_proc(window_get_root_layer(g_windows[window_index]),
                           draw_scene);
 
-#ifdef PBL_COLOR
     // Colors for magical effects:
     g_magic_type_colors[PEBBLE_OF_THUNDER][0] = GColorYellow;
     g_magic_type_colors[PEBBLE_OF_THUNDER][1] = GColorOxfordBlue;
@@ -3474,7 +3295,6 @@ void init_window(const int8_t window_index) {
     g_background_colors[7][7] = GColorFashionMagenta;
     g_background_colors[7][8] = GColorJazzberryJam;
     g_background_colors[7][9] = GColorJazzberryJam;
-#endif
   }
 
   // Add top status bar:

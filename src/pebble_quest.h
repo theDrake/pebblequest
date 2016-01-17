@@ -237,13 +237,11 @@ enum {
 #define LOCATION_STORAGE_KEY             (PLAYER_STORAGE_KEY + 1)
 #define ANIMATED                         true
 #define NOT_ANIMATED                     false
-#ifdef PBL_COLOR
 #define NUM_BACKGROUND_COLOR_SCHEMES     8
 #define NUM_BACKGROUND_COLORS_PER_SCHEME 10
 #define RANDOM_COLOR                     GColorFromRGB(rand() % 256, rand() % 256, rand() % 256)
 #define RANDOM_DARK_COLOR                GColorFromRGB(rand() % 128, rand() % 128, rand() % 128)
 #define RANDOM_BRIGHT_COLOR              GColorFromRGB(rand() % 128 + 128, rand() % 128 + 128, rand() % 128 + 128)
-#endif
 
 static const GPathInfo COMPASS_PATH_INFO = {
   .num_points = 4,
@@ -365,13 +363,9 @@ typedef struct NonPlayerCharacter {
 } __attribute__((__packed__)) npc_t;
 
 typedef struct Location {
-#ifdef PBL_COLOR
   int8_t map[MAP_WIDTH][MAP_HEIGHT],
          floor_color_scheme,
          wall_color_scheme;
-#else
-  int8_t map[MAP_WIDTH][MAP_HEIGHT];
-#endif
   GPoint entrance;
   npc_t npcs[MAX_NPCS_AT_ONE_TIME];
 } __attribute__((__packed__)) location_t;
@@ -385,11 +379,15 @@ MenuLayer *g_menu_layers[NUM_MENUS];
 TextLayer *g_narration_text_layer;
 StatusBarLayer *g_status_bars[NUM_WINDOWS];
 AppTimer *g_attack_timer,
-         *g_player_spell_timer;
+         *g_player_spell_timer,
+         *g_enemy_spell_timer;
 GPoint g_back_wall_coords[MAX_VISIBILITY_DEPTH - 1]
                          [(STRAIGHT_AHEAD * 2) + 1]
                          [2];
 GPath *g_compass_path;
+GColor g_magic_type_colors[NUM_PEBBLE_TYPES][2],
+       g_background_colors[NUM_BACKGROUND_COLOR_SCHEMES]
+                          [NUM_BACKGROUND_COLORS_PER_SCHEME];
 player_t *g_player;
 location_t *g_location;
 uint8_t g_current_window,
@@ -399,15 +397,9 @@ uint8_t g_current_window,
         g_attack_slash_x2,
         g_attack_slash_y1,
         g_attack_slash_y2;
-int8_t g_player_current_spell_animation;
+int8_t g_player_current_spell_animation,
+       g_enemy_current_spell_animation;
 bool g_player_is_attacking;
-#ifdef PBL_COLOR
-GColor g_magic_type_colors[NUM_PEBBLE_TYPES][2],
-       g_background_colors[NUM_BACKGROUND_COLOR_SCHEMES]
-                          [NUM_BACKGROUND_COLORS_PER_SCHEME];
-AppTimer *g_enemy_spell_timer;
-int8_t g_enemy_current_spell_animation;
-#endif
 
 /******************************************************************************
   Function Declarations
@@ -532,9 +524,7 @@ void fill_ellipse(GContext *ctx,
                   const uint8_t v_radius,
                   const GColor color);
 static void player_spell_timer_callback(void *data);
-#ifdef PBL_COLOR
 static void enemy_spell_timer_callback(void *data);
-#endif
 static void attack_timer_callback(void *data);
 static void graphics_window_appear(Window *window);
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
