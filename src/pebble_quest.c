@@ -1,16 +1,16 @@
-/******************************************************************************
+/*******************************************************************************
    Filename: pebble_quest.c
 
-     Author: David C. Drake (http://davidcdrake.com)
+     Author: David C. Drake (https://davidcdrake.com)
 
 Description: Function definitions for PebbleQuest, a first-person 3D fantasy
              RPG developed for the Pebble smartwatch (SDK 3). More information
-             available online: http://davidcdrake.com/pebblequest
-******************************************************************************/
+             available online: https://davidcdrake.com/pebblequest
+*******************************************************************************/
 
 #include "pebble_quest.h"
 
-/******************************************************************************
+/*******************************************************************************
    Function: set_player_direction
 
 Description: Sets the player's orientation to a given direction and updates the
@@ -19,7 +19,7 @@ Description: Sets the player's orientation to a given direction and updates the
      Inputs: new_direction - Desired orientation.
 
     Outputs: The player's new direction.
-******************************************************************************/
+*******************************************************************************/
 int8_t set_player_direction(const int8_t new_direction) {
   if (new_direction == NORTH) {
     gpath_rotate_to(g_compass_path, TRIG_MAX_ANGLE / 2);
@@ -35,7 +35,7 @@ int8_t set_player_direction(const int8_t new_direction) {
   return g_player->direction = new_direction;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: move_player
 
 Description: Attempts to move the player one cell forward (or backward) in a
@@ -46,7 +46,7 @@ Description: Attempts to move the player one cell forward (or backward) in a
      Inputs: direction - Desired direction of movement.
 
     Outputs: "True" if the move is successful.
-******************************************************************************/
+*******************************************************************************/
 bool move_player(const int8_t direction) {
   GPoint destination = get_cell_farther_away(g_player->position, direction, 1);
 
@@ -74,17 +74,16 @@ bool move_player(const int8_t direction) {
   return false;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: move_npc
 
-Description: Attempts to move a given NPC one cell forward in a given
-             direction.
+Description: Attempts to move a given NPC one cell forward in a given direction.
 
      Inputs: npc       - Pointer to the NPC to be moved.
              direction - Desired direction of movement.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void move_npc(npc_t *const npc, const int8_t direction) {
   GPoint destination = get_cell_farther_away(npc->position, direction, 1);
 
@@ -93,7 +92,7 @@ void move_npc(npc_t *const npc, const int8_t direction) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: damage_player
 
 Description: Damages the player according to a given damage value (or one more
@@ -103,7 +102,7 @@ Description: Damages the player according to a given damage value (or one more
      Inputs: damage - Potential amount of damage.
 
     Outputs: The amount of damage actually dealt.
-******************************************************************************/
+*******************************************************************************/
 int8_t damage_player(int8_t damage) {
   int8_t min_damage = g_player->int8_stats[HEALTH_REGEN] + 1;
 
@@ -116,7 +115,7 @@ int8_t damage_player(int8_t damage) {
   return damage;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: damage_npc
 
 Description: Damages a given NPC according to a given damage value (or
@@ -128,7 +127,7 @@ Description: Damages a given NPC according to a given damage value (or
              damage - Potential amount of damage.
 
     Outputs: The amount of damage actually dealt.
-******************************************************************************/
+*******************************************************************************/
 int8_t damage_npc(npc_t *const npc, int8_t damage) {
   if (damage < MIN_DAMAGE_TO_NPC) {
     damage = MIN_DAMAGE_TO_NPC;
@@ -169,7 +168,7 @@ int8_t damage_npc(npc_t *const npc, int8_t damage) {
   return damage;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: cast_spell_on_npc
 
 Description: Applies the effects of a given spell type, according a given max.
@@ -177,13 +176,13 @@ Description: Applies the effects of a given spell type, according a given max.
              and the pointer check are both performed here, rather than in the
              areas where this function gets called, for memory-saving reasons.)
 
-     Inputs: npc            - Pointer to the targeted NPC.
-             magic_type     - Integer representing the spell's magic type.
-             max_potency    - Maximum amount of magical power that may be
-                              brought to bear.
+     Inputs: npc         - Pointer to the targeted NPC.
+             magic_type  - Integer representing the spell's magic type.
+             max_potency - Maximum amount of magical power that may be brought
+                           to bear.
 
     Outputs: The amount of damage caused by the spell.
-******************************************************************************/
+*******************************************************************************/
 int8_t cast_spell_on_npc(npc_t *const npc,
                          const int8_t magic_type,
                          const int8_t max_potency) {
@@ -213,7 +212,7 @@ int8_t cast_spell_on_npc(npc_t *const npc,
   return damage;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: adjust_player_current_health
 
 Description: Adjusts the player's current health by a given amount, which may
@@ -223,7 +222,7 @@ Description: Adjusts the player's current health by a given amount, which may
      Inputs: amount - Adjustment amount (which may be positive or negative).
 
     Outputs: The adjustment amount passed in as input.
-******************************************************************************/
+*******************************************************************************/
 int8_t adjust_player_current_health(const int8_t amount) {
   g_player->int16_stats[CURRENT_HEALTH] += amount;
   if (g_player->int16_stats[CURRENT_HEALTH] >
@@ -234,7 +233,7 @@ int8_t adjust_player_current_health(const int8_t amount) {
   return amount;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: adjust_player_current_energy
 
 Description: Adjusts the player's current energy by a given amount, which may
@@ -244,7 +243,7 @@ Description: Adjusts the player's current energy by a given amount, which may
      Inputs: amount - Adjustment amount (which may be positive or negative).
 
     Outputs: The adjustment amount passed in as input.
-******************************************************************************/
+*******************************************************************************/
 int8_t adjust_player_current_energy(const int8_t amount) {
   g_player->int16_stats[CURRENT_ENERGY] += amount;
   if (g_player->int16_stats[CURRENT_ENERGY] >
@@ -255,7 +254,7 @@ int8_t adjust_player_current_energy(const int8_t amount) {
   return amount;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: add_new_npc
 
 Description: Initializes a new NPC of a given type at a given position (unless
@@ -266,7 +265,7 @@ Description: Initializes a new NPC of a given type at a given position (unless
              position - Desired spawn point for the new NPC.
 
     Outputs: "True" if a new NPC is successfully added.
-******************************************************************************/
+*******************************************************************************/
 bool add_new_npc(const int8_t npc_type, const GPoint position) {
   int8_t i;
   npc_t *npc;
@@ -285,20 +284,20 @@ bool add_new_npc(const int8_t npc_type, const GPoint position) {
   return false;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_cell_farther_away
 
 Description: Given a set of cell coordinates, returns new cell coordinates a
-             given distance farther away in a given direction. (These may lie
+             given distance away in a given direction. (These may lie
              out-of-bounds.)
 
      Inputs: reference_point - Reference cell coordinates.
              direction       - Direction of interest.
              distance        - How far back we want to go.
 
-    Outputs: Cell coordinates a given distance farther away from those passed
-             in. (These may lie out-of-bounds.)
-******************************************************************************/
+    Outputs: Cell coordinates a given distance away from those passed in. (These
+             may lie out-of-bounds.)
+*******************************************************************************/
 GPoint get_cell_farther_away(const GPoint reference_point,
                              const int8_t direction,
                              const int8_t distance) {
@@ -314,18 +313,18 @@ GPoint get_cell_farther_away(const GPoint reference_point,
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_pursuit_direction
 
-Description: Determines in which direction a character at a given position
-             ought to move in order to pursue a character at another given
-             position. (Simplistic: no complex path-finding.)
+Description: Determines in which direction a character at a given position ought
+             to move in order to pursue a character at another given position.
+             (Simplistic: no complex path-finding.)
 
      Inputs: pursuer - Position of the pursuing character.
              pursuee - Position of the character being pursued.
 
     Outputs: Integer representing the direction in which the NPC ought to move.
-******************************************************************************/
+*******************************************************************************/
 int8_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee) {
   int8_t diff_x = pursuer.x - pursuee.x,
          diff_y = pursuer.y - pursuee.y;
@@ -380,7 +379,7 @@ int8_t get_pursuit_direction(const GPoint pursuer, const GPoint pursuee) {
   return horizontal_direction;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_direction_to_the_left
 
 Description: Given a north/south/east/west reference direction, returns the
@@ -390,7 +389,7 @@ Description: Given a north/south/east/west reference direction, returns the
 
     Outputs: Integer representing the direction to the left of the reference
              direction.
-******************************************************************************/
+*******************************************************************************/
 int8_t get_direction_to_the_left(const int8_t reference_direction) {
   if (reference_direction == NORTH) {
     return WEST;
@@ -403,7 +402,7 @@ int8_t get_direction_to_the_left(const int8_t reference_direction) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_direction_to_the_right
 
 Description: Given a north/south/east/west reference direction, returns the
@@ -413,7 +412,7 @@ Description: Given a north/south/east/west reference direction, returns the
 
     Outputs: Integer representing the direction to the right of the reference
              direction.
-******************************************************************************/
+*******************************************************************************/
 int8_t get_direction_to_the_right(const int8_t reference_direction) {
   if (reference_direction == NORTH) {
     return EAST;
@@ -426,7 +425,7 @@ int8_t get_direction_to_the_right(const int8_t reference_direction) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_opposite_direction
 
 Description: Returns the opposite of a given direction value (i.e., given the
@@ -435,7 +434,7 @@ Description: Returns the opposite of a given direction value (i.e., given the
      Inputs: direction - The direction whose opposite is desired.
 
     Outputs: Integer representing the opposite of the given direction.
-******************************************************************************/
+*******************************************************************************/
 int8_t get_opposite_direction(const int8_t direction) {
   if (direction == NORTH) {
     return SOUTH;
@@ -448,7 +447,7 @@ int8_t get_opposite_direction(const int8_t direction) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_nth_item_type
 
 Description: Returns the type of the nth item in the player's inventory.
@@ -456,7 +455,7 @@ Description: Returns the type of the nth item in the player's inventory.
      Inputs: n - Integer indicating the item of interest (0th, 1st, 2nd, etc.).
 
     Outputs: The nth item's type.
-******************************************************************************/
+*******************************************************************************/
 int8_t get_nth_item_type(const int8_t n) {
   int8_t i, item_count = 0;
 
@@ -477,7 +476,7 @@ int8_t get_nth_item_type(const int8_t n) {
   return NONE;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_num_pebble_types_owned
 
 Description: Returns the number of types of Pebbles in the player's inventory.
@@ -485,7 +484,7 @@ Description: Returns the number of types of Pebbles in the player's inventory.
      Inputs: None.
 
     Outputs: Number of Pebble types owned by the player.
-******************************************************************************/
+*******************************************************************************/
 int8_t get_num_pebble_types_owned(void) {
   int8_t i, num_pebble_types = 0;
 
@@ -498,7 +497,7 @@ int8_t get_num_pebble_types_owned(void) {
   return num_pebble_types;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_inventory_row_for_pebble
 
 Description: Returns the row where a given Pebble type will be displayed in the
@@ -509,7 +508,7 @@ Description: Returns the row where a given Pebble type will be displayed in the
 
     Outputs: Integer indicating the inventory row where the Pebble type will be
              found (starting from zero).
-******************************************************************************/
+*******************************************************************************/
 int8_t get_inventory_row_for_pebble(const int8_t pebble_type) {
   int8_t i;
 
@@ -522,17 +521,17 @@ int8_t get_inventory_row_for_pebble(const int8_t pebble_type) {
   return 0;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_heavy_item_equipped_at
 
-Description: Given an equip target (RIGHT_HAND, LEFT_HAND, or BODY), returns
-             a pointer to the heavy item equipped at that target or NULL if
+Description: Given an equip target (RIGHT_HAND, LEFT_HAND, or BODY), returns a
+             pointer to the heavy item equipped at that target or NULL if
              nothing (or a Pebble) is equipped there.
 
      Inputs: equip_target - Integer representing the equip target of interest.
 
     Outputs: Pointer to the item equipped at the specified target.
-******************************************************************************/
+*******************************************************************************/
 heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target) {
   int8_t i;
   heavy_item_t *heavy_item;
@@ -547,7 +546,7 @@ heavy_item_t *get_heavy_item_equipped_at(const int8_t equip_target) {
   return NULL;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_cell_type
 
 Description: Returns the type of cell at a given set of coordinates.
@@ -555,7 +554,7 @@ Description: Returns the type of cell at a given set of coordinates.
      Inputs: cell - Coordinates of the cell of interest.
 
     Outputs: The indicated cell's type.
-******************************************************************************/
+*******************************************************************************/
 int8_t get_cell_type(const GPoint cell) {
   if (cell.x < 0 ||
       cell.x >= MAP_WIDTH ||
@@ -567,7 +566,7 @@ int8_t get_cell_type(const GPoint cell) {
   return g_location->map[cell.x][cell.y];
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: set_cell_type
 
 Description: Sets the cell at a given set of coordinates to a given type.
@@ -577,21 +576,20 @@ Description: Sets the cell at a given set of coordinates to a given type.
              type - The cell type to be assigned at those coordinates.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void set_cell_type(GPoint cell, const int8_t type) {
   g_location->map[cell.x][cell.y] = type;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_npc_at
 
 Description: Returns a pointer to the NPC occupying a given cell.
 
      Inputs: cell - Coordinates of the cell of interest.
 
-    Outputs: Pointer to the NPC occupying the indicated cell, or NULL if there
-             is none.
-******************************************************************************/
+    Outputs: Pointer to the NPC occupying thecell, or NULL if there is none.
+*******************************************************************************/
 npc_t *get_npc_at(const GPoint cell) {
   int8_t i;
   npc_t *npc;
@@ -606,16 +604,16 @@ npc_t *get_npc_at(const GPoint cell) {
   return NULL;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: get_stat_title_str
 
-Description: Returns a "title" string for a given character stat, including
-             both the stat's name and its current value.
+Description: Returns a "title" string for a given character stat, including both
+             the stat's name and its current value.
 
      Inputs: stat_index - Integer representing the stat of interest.
 
     Outputs: String containing the stat name and its current value.
-******************************************************************************/
+*******************************************************************************/
 char *get_stat_title_str(const int8_t stat_index) {
   static char stat_str[STAT_TITLE_STR_LEN + 1];
   int8_t remaining_str_len;
@@ -649,7 +647,7 @@ char *get_stat_title_str(const int8_t stat_index) {
   return stat_str;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: occupiable
 
 Description: Determines whether the cell at a given set of coordinates may be
@@ -659,14 +657,14 @@ Description: Determines whether the cell at a given set of coordinates may be
      Inputs: cell - Coordinates of the cell of interest.
 
     Outputs: "True" if the cell is occupiable.
-******************************************************************************/
+*******************************************************************************/
 bool occupiable(const GPoint cell) {
   return get_cell_type(cell) >= EMPTY &&
          !gpoint_equal(&g_player->position, &cell) &&
          get_npc_at(cell) == NULL;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: show_narration
 
 Description: Displays desired narration text via the narration window.
@@ -674,7 +672,7 @@ Description: Displays desired narration text via the narration window.
      Inputs: narration - Integer indicating desired narration text.
 
     Outputs: Integer representing the narration text shown.
-******************************************************************************/
+*******************************************************************************/
 int8_t show_narration(const int8_t narration) {
   text_layer_set_text(g_narration_text_layer, g_narration_strings[narration]);
   show_window(NARRATION_WINDOW, NOT_ANIMATED);
@@ -682,7 +680,7 @@ int8_t show_narration(const int8_t narration) {
   return g_current_narration = narration;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: show_window
 
 Description: Prepares and displays a given window.
@@ -691,7 +689,7 @@ Description: Prepares and displays a given window.
              animated     - If "true", the window will slide into view.
 
     Outputs: Integer representing the newly-displayed window.
-******************************************************************************/
+*******************************************************************************/
 int8_t show_window(const int8_t window_index, const bool animated) {
   // If it's a menu, reload menu data and set to the appropriate index:
   if (window_index < NUM_MENUS) {
@@ -721,7 +719,7 @@ int8_t show_window(const int8_t window_index, const bool animated) {
   return g_current_window = window_index;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: main_menu_draw_header_callback
 
 Description: Instructions for drawing the main menu's header.
@@ -732,7 +730,7 @@ Description: Instructions for drawing the main menu's header.
              data          - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void main_menu_draw_header_callback(GContext *ctx,
                                            const Layer *cell_layer,
                                            uint16_t section_index,
@@ -740,7 +738,7 @@ static void main_menu_draw_header_callback(GContext *ctx,
   menu_cell_basic_header_draw(ctx, cell_layer, "MAIN MENU");
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: level_up_menu_draw_header_callback
 
 Description: Instructions for drawing the level-up menu's header.
@@ -751,7 +749,7 @@ Description: Instructions for drawing the level-up menu's header.
              data          - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void level_up_menu_draw_header_callback(GContext *ctx,
                                                const Layer *cell_layer,
                                                uint16_t section_index,
@@ -759,7 +757,7 @@ static void level_up_menu_draw_header_callback(GContext *ctx,
   menu_cell_basic_header_draw(ctx, cell_layer, "BOOST AN ATTRIBUTE");
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: stats_menu_draw_header_callback
 
 Description: Instructions for drawing the stats menu's header.
@@ -770,7 +768,7 @@ Description: Instructions for drawing the stats menu's header.
              data          - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void stats_menu_draw_header_callback(GContext *ctx,
                                             const Layer *cell_layer,
                                             uint16_t section_index,
@@ -778,7 +776,7 @@ static void stats_menu_draw_header_callback(GContext *ctx,
   menu_cell_basic_header_draw(ctx, cell_layer, "CHARACTER STATS");
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: inventory_menu_draw_header_callback
 
 Description: Instructions for drawing the inventory menu's header.
@@ -789,7 +787,7 @@ Description: Instructions for drawing the inventory menu's header.
              data          - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void inventory_menu_draw_header_callback(GContext *ctx,
                                                 const Layer *cell_layer,
                                                 uint16_t section_index,
@@ -797,7 +795,7 @@ static void inventory_menu_draw_header_callback(GContext *ctx,
   menu_cell_basic_header_draw(ctx, cell_layer, "INVENTORY");
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: loot_menu_draw_header_callback
 
 Description: Instructions for drawing the loot menu's header.
@@ -808,7 +806,7 @@ Description: Instructions for drawing the loot menu's header.
              data          - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void loot_menu_draw_header_callback(GContext *ctx,
                                            const Layer *cell_layer,
                                            uint16_t section_index,
@@ -816,7 +814,7 @@ static void loot_menu_draw_header_callback(GContext *ctx,
   menu_cell_basic_header_draw(ctx, cell_layer, "LOOT");
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: pebble_options_menu_draw_header_callback
 
 Description: Instructions for drawing the Pebble options menu's header.
@@ -827,7 +825,7 @@ Description: Instructions for drawing the Pebble options menu's header.
              data          - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void pebble_options_menu_draw_header_callback(GContext *ctx,
                                                      const Layer *cell_layer,
                                                      uint16_t section_index,
@@ -835,7 +833,7 @@ static void pebble_options_menu_draw_header_callback(GContext *ctx,
   menu_cell_basic_header_draw(ctx, cell_layer, "OPTIONS");
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: heavy_items_menu_draw_header_callback
 
 Description: Instructions for drawing the heavy items menu's header.
@@ -846,7 +844,7 @@ Description: Instructions for drawing the heavy items menu's header.
              data          - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void heavy_items_menu_draw_header_callback(GContext *ctx,
                                                   const Layer *cell_layer,
                                                   uint16_t section_index,
@@ -860,7 +858,7 @@ static void heavy_items_menu_draw_header_callback(GContext *ctx,
   menu_cell_basic_header_draw(ctx, cell_layer, header_str);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: main_menu_draw_row_callback
 
 Description: Instructions for drawing each row (cell) of the main menu.
@@ -871,7 +869,7 @@ Description: Instructions for drawing each row (cell) of the main menu.
              data       - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void main_menu_draw_row_callback(GContext *ctx,
                                         const Layer *cell_layer,
                                         MenuIndex *cell_index,
@@ -884,7 +882,7 @@ static void main_menu_draw_row_callback(GContext *ctx,
                        NULL);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: inventory_menu_draw_row_callback
 
 Description: Instructions for drawing each row (cell) of the inventory menu.
@@ -895,7 +893,7 @@ Description: Instructions for drawing each row (cell) of the inventory menu.
              data       - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void inventory_menu_draw_row_callback(GContext *ctx,
                                              const Layer *cell_layer,
                                              MenuIndex *cell_index,
@@ -926,7 +924,7 @@ static void inventory_menu_draw_row_callback(GContext *ctx,
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: level_up_menu_draw_row_callback
 
 Description: Instructions for drawing each row (cell) of the level-up menu.
@@ -937,7 +935,7 @@ Description: Instructions for drawing each row (cell) of the level-up menu.
              data       - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void level_up_menu_draw_row_callback(GContext *ctx,
                                             const Layer *cell_layer,
                                             MenuIndex *cell_index,
@@ -949,7 +947,7 @@ static void level_up_menu_draw_row_callback(GContext *ctx,
                        NULL);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: stats_menu_draw_row_callback
 
 Description: Instructions for drawing the rows (cells) of each "heavy items"
@@ -961,7 +959,7 @@ Description: Instructions for drawing the rows (cells) of each "heavy items"
              data       - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void stats_menu_draw_row_callback(GContext *ctx,
                                          const Layer *cell_layer,
                                          MenuIndex *cell_index,
@@ -974,7 +972,7 @@ static void stats_menu_draw_row_callback(GContext *ctx,
                        NULL);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: loot_menu_draw_row_callback
 
 Description: Instructions for drawing each row (cell) of the loot menu.
@@ -985,7 +983,7 @@ Description: Instructions for drawing each row (cell) of the loot menu.
              data       - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void loot_menu_draw_row_callback(GContext *ctx,
                                         const Layer *cell_layer,
                                         MenuIndex *cell_index,
@@ -997,7 +995,7 @@ static void loot_menu_draw_row_callback(GContext *ctx,
                        NULL);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: pebble_options_menu_draw_row_callback
 
 Description: Instructions for drawing each row (cell) of the Pebble options
@@ -1009,7 +1007,7 @@ Description: Instructions for drawing each row (cell) of the Pebble options
              data       - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void pebble_options_menu_draw_row_callback(GContext *ctx,
                                                   const Layer *cell_layer,
                                                   MenuIndex *cell_index,
@@ -1018,11 +1016,11 @@ static void pebble_options_menu_draw_row_callback(GContext *ctx,
                        cell_layer,
                        g_pebble_options_menu_strings[cell_index->row],
                        g_pebble_options_menu_strings[cell_index->row +
-                                                 PEBBLE_OPTIONS_MENU_NUM_ROWS],
+                                                  PEBBLE_OPTIONS_MENU_NUM_ROWS],
                        NULL);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: heavy_items_menu_draw_row_callback
 
 Description: Instructions for drawing the rows (cells) of each "heavy items"
@@ -1034,7 +1032,7 @@ Description: Instructions for drawing the rows (cells) of each "heavy items"
              data       - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void heavy_items_menu_draw_row_callback(GContext *ctx,
                                                const Layer *cell_layer,
                                                MenuIndex *cell_index,
@@ -1051,7 +1049,7 @@ static void heavy_items_menu_draw_row_callback(GContext *ctx,
   menu_cell_basic_draw(ctx, cell_layer, title_str, subtitle_str, NULL);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: menu_select_callback
 
 Description: Called when a menu cell is selected.
@@ -1061,7 +1059,7 @@ Description: Called when a menu cell is selected.
              data       - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void menu_select_callback(MenuLayer *menu_layer,
                           MenuIndex *cell_index,
                           void *data) {
@@ -1196,7 +1194,7 @@ void menu_select_callback(MenuLayer *menu_layer,
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: menu_get_header_height_callback
 
 Description: Returns the section height for a given section of a given menu.
@@ -1206,14 +1204,14 @@ Description: Returns the section height for a given section of a given menu.
              data          - Pointer to additional data (not used).
 
     Outputs: The number of sections in the indicated menu.
-******************************************************************************/
+*******************************************************************************/
 static int16_t menu_get_header_height_callback(MenuLayer *menu_layer,
                                                uint16_t section_index,
                                                void *data) {
   return MENU_CELL_BASIC_HEADER_HEIGHT;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: menu_get_num_rows_callback
 
 Description: Returns the number of rows in a given menu (or in a given section
@@ -1224,7 +1222,7 @@ Description: Returns the number of rows in a given menu (or in a given section
              data          - Pointer to additional data (not used).
 
     Outputs: The number of rows in the indicated menu.
-******************************************************************************/
+*******************************************************************************/
 static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
                                            uint16_t section_index,
                                            void *data) {
@@ -1252,7 +1250,7 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer,
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: draw_scene
 
 Description: Draws a (simplistic) 3D scene based on the player's current
@@ -1262,7 +1260,7 @@ Description: Draws a (simplistic) 3D scene based on the player's current
              ctx   - Pointer to the relevant graphics context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void draw_scene(Layer *layer, GContext *ctx) {
   int8_t i, depth, spell_beam_width, magic_type = NONE;
   GPoint cell, cell_2;
@@ -1291,15 +1289,15 @@ void draw_scene(Layer *layer, GContext *ctx) {
     // To the left and right at the same depth:
     for (i = depth + 1; i > 0; --i) {
       cell_2 = get_cell_farther_away(cell,
-                                get_direction_to_the_left(g_player->direction),
-                                i);
+                                 get_direction_to_the_left(g_player->direction),
+                                 i);
       if (get_cell_type(cell_2) >= EMPTY) {
         draw_cell_walls(ctx, cell_2, depth, STRAIGHT_AHEAD - i);
         draw_cell_contents(ctx, cell_2, depth, STRAIGHT_AHEAD - i);
       }
       cell_2 = get_cell_farther_away(cell,
-                               get_direction_to_the_right(g_player->direction),
-                               i);
+                                get_direction_to_the_right(g_player->direction),
+                                i);
       if (get_cell_type(cell_2) >= EMPTY) {
         draw_cell_walls(ctx, cell_2, depth, STRAIGHT_AHEAD + i);
         draw_cell_contents(ctx, cell_2, depth, STRAIGHT_AHEAD + i);
@@ -1315,7 +1313,7 @@ void draw_scene(Layer *layer, GContext *ctx) {
     for (i = 0; i < 3; ++i) {
       if (magic_type > NONE) {
         graphics_context_set_stroke_color(ctx,
-                                      g_magic_type_colors[magic_type][i == 2]);
+                                       g_magic_type_colors[magic_type][i == 2]);
       } else {
         graphics_context_set_stroke_color(ctx, i < 2 ? GColorLightGray :
                                                        GColorDarkGray);
@@ -1343,7 +1341,7 @@ void draw_scene(Layer *layer, GContext *ctx) {
                               SCREEN_CENTER_POINT_Y + STATUS_BAR_HEIGHT));
     for (i = 0; i <= spell_beam_width; ++i) {
       graphics_context_set_stroke_color(ctx,
-                                       g_magic_type_colors[magic_type][i % 2]);
+                                        g_magic_type_colors[magic_type][i % 2]);
       graphics_draw_line(ctx,
                          GPoint(SCREEN_CENTER_POINT_X - i,
                                 GRAPHICS_FRAME_HEIGHT + STATUS_BAR_HEIGHT),
@@ -1427,7 +1425,7 @@ void draw_scene(Layer *layer, GContext *ctx) {
   light_enable_interaction();
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: draw_floor_and_ceiling
 
 Description: Draws the floor and ceiling.
@@ -1435,7 +1433,7 @@ Description: Draws the floor and ceiling.
      Inputs: ctx - Pointer to the relevant graphics context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void draw_floor_and_ceiling(GContext *ctx) {
   uint8_t x, y, max_y, shading_offset;
 
@@ -1463,7 +1461,7 @@ void draw_floor_and_ceiling(GContext *ctx) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: draw_cell_walls
 
 Description: Draws any walls that exist along the back and sides of a given
@@ -1477,7 +1475,7 @@ Description: Draws any walls that exist along the back and sides of a given
                         "g_back_wall_coords".
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void draw_cell_walls(GContext *ctx,
                      const GPoint cell,
                      const int8_t depth,
@@ -1532,8 +1530,8 @@ void draw_cell_walls(GContext *ctx,
   }
   if (position <= STRAIGHT_AHEAD) {
     cell_2 = get_cell_farther_away(cell,
-                                get_direction_to_the_left(g_player->direction),
-                                1);
+                                 get_direction_to_the_left(g_player->direction),
+                                 1);
     if (get_cell_type(cell_2) <= SOLID) {
       draw_shaded_quad(ctx,
                        GPoint(left, top - y_offset + STATUS_BAR_HEIGHT),
@@ -1561,8 +1559,8 @@ void draw_cell_walls(GContext *ctx,
   }
   if (position >= STRAIGHT_AHEAD) {
     cell_2 = get_cell_farther_away(cell,
-                               get_direction_to_the_right(g_player->direction),
-                               1);
+                                get_direction_to_the_right(g_player->direction),
+                                1);
     if (get_cell_type(cell_2) <= SOLID) {
       draw_shaded_quad(ctx,
                        GPoint(left, top + STATUS_BAR_HEIGHT),
@@ -1586,39 +1584,39 @@ void draw_cell_walls(GContext *ctx,
   cell_2 = get_cell_farther_away(cell, g_player->direction, 1);
   if ((back_wall_drawn && (left_wall_drawn ||
        get_cell_type(get_cell_farther_away(cell_2,
-                                get_direction_to_the_left(g_player->direction),
-                                1)) >= EMPTY)) ||
+                                 get_direction_to_the_left(g_player->direction),
+                                 1)) >= EMPTY)) ||
       (left_wall_drawn &&
        get_cell_type(get_cell_farther_away(cell_2,
-                                get_direction_to_the_left(g_player->direction),
-                                1)) >= EMPTY)) {
+                                 get_direction_to_the_left(g_player->direction),
+                                 1)) >= EMPTY)) {
     graphics_draw_line(ctx,
                        GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x,
                               g_back_wall_coords[depth][position][TOP_LEFT].y +
                                 STATUS_BAR_HEIGHT),
                        GPoint(g_back_wall_coords[depth][position][TOP_LEFT].x,
-                          g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
-                            STATUS_BAR_HEIGHT));
+                           g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
+                             STATUS_BAR_HEIGHT));
   }
   if ((back_wall_drawn && (right_wall_drawn ||
        get_cell_type(get_cell_farther_away(cell_2,
-                               get_direction_to_the_right(g_player->direction),
-                               1)) >= EMPTY)) ||
+                                get_direction_to_the_right(g_player->direction),
+                                1)) >= EMPTY)) ||
       (right_wall_drawn &&
        get_cell_type(get_cell_farther_away(cell_2,
-                               get_direction_to_the_right(g_player->direction),
-                               1)) >= EMPTY)) {
+                                get_direction_to_the_right(g_player->direction),
+                                1)) >= EMPTY)) {
     graphics_draw_line(ctx,
                     GPoint(g_back_wall_coords[depth][position][BOTTOM_RIGHT].x,
-                          g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
-                            STATUS_BAR_HEIGHT),
+                           g_back_wall_coords[depth][position][BOTTOM_RIGHT].y +
+                             STATUS_BAR_HEIGHT),
                     GPoint(g_back_wall_coords[depth][position][BOTTOM_RIGHT].x,
                            g_back_wall_coords[depth][position][TOP_LEFT].y +
                              STATUS_BAR_HEIGHT));
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: draw_cell_contents
 
 Description: Draws an NPC or any other contents present in a given cell.
@@ -1631,7 +1629,7 @@ Description: Draws an NPC or any other contents present in a given cell.
                         "g_back_wall_coords".
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void draw_cell_contents(GContext *ctx,
                         const GPoint cell,
                         const int8_t depth,
@@ -2000,7 +1998,7 @@ void draw_cell_contents(GContext *ctx,
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: draw_shaded_quad
 
 Description: Draws a shaded quadrilateral according to specifications. Assumes
@@ -2017,7 +2015,7 @@ Description: Draws a shaded quadrilateral according to specifications. Assumes
                            "upper_left".)
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void draw_shaded_quad(GContext *ctx,
                       const GPoint upper_left,
                       const GPoint lower_left,
@@ -2041,7 +2039,7 @@ void draw_shaded_quad(GContext *ctx,
     half_shading_offset = (shading_offset / 2) + (shading_offset % 2);
     if (shading_offset - 3 > NUM_BACKGROUND_COLORS_PER_SCHEME) {
       primary_color = g_background_colors[g_location->wall_color_scheme]
-                                        [NUM_BACKGROUND_COLORS_PER_SCHEME - 1];
+                                         [NUM_BACKGROUND_COLORS_PER_SCHEME - 1];
     } else if (shading_offset > 4) {
       primary_color = g_background_colors[g_location->wall_color_scheme]
                                          [shading_offset - 4];
@@ -2064,7 +2062,7 @@ void draw_shaded_quad(GContext *ctx,
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: draw_status_meter
 
 Description: Draws a "status meter" (such as a "health meter") at a given point
@@ -2077,7 +2075,7 @@ Description: Draws a "status meter" (such as a "health meter") at a given point
                       to be represented.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void draw_status_meter(GContext *ctx,
                        GPoint origin,
                        const float ratio) {
@@ -2112,11 +2110,11 @@ void draw_status_meter(GContext *ctx,
                              STATUS_METER_HEIGHT),
                        SMALL_CORNER_RADIUS,
                        filled_meter_width < SMALL_CORNER_RADIUS ? GCornersAll :
-                                                                GCornersRight);
+                                                                 GCornersRight);
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: fill_ellipse
 
 Description: Draws a filled ellipse according to given specifications.
@@ -2129,7 +2127,7 @@ Description: Draws a filled ellipse according to given specifications.
              color    - Desired color ("GColorBlack" or "GColorWhite").
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void fill_ellipse(GContext *ctx,
                   const GPoint center,
                   const uint8_t h_radius,
@@ -2151,7 +2149,7 @@ void fill_ellipse(GContext *ctx,
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: player_spell_timer_callback
 
 Description: Called when the player's spell timer reaches zero.
@@ -2159,7 +2157,7 @@ Description: Called when the player's spell timer reaches zero.
      Inputs: data - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void player_spell_timer_callback(void *data) {
   if (--g_player_current_spell_animation > 0) {
     g_player_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
@@ -2169,7 +2167,7 @@ static void player_spell_timer_callback(void *data) {
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: enemy_spell_timer_callback
 
 Description: Called when the enemy's spell timer reaches zero.
@@ -2177,7 +2175,7 @@ Description: Called when the enemy's spell timer reaches zero.
      Inputs: data - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void enemy_spell_timer_callback(void *data) {
   if (--g_enemy_current_spell_animation > 0) {
     g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
@@ -2187,7 +2185,7 @@ static void enemy_spell_timer_callback(void *data) {
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: attack_timer_callback
 
 Description: Called when the attack timer reaches zero.
@@ -2195,13 +2193,13 @@ Description: Called when the attack timer reaches zero.
      Inputs: data - Pointer to additional data (not used).
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void attack_timer_callback(void *data) {
   g_player_is_attacking = false;
   layer_mark_dirty(window_get_root_layer(g_windows[GRAPHICS_WINDOW]));
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: graphics_window_appear
 
 Description: Called when the graphics window appears.
@@ -2209,14 +2207,14 @@ Description: Called when the graphics window appears.
      Inputs: window - Pointer to the graphics window.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void graphics_window_appear(Window *window) {
   g_player_current_spell_animation = g_enemy_current_spell_animation = 0;
   g_player_is_attacking = false;
   g_current_window = GRAPHICS_WINDOW;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: main_menu_appear
 
 Description: Called when the main menu appears.
@@ -2224,12 +2222,12 @@ Description: Called when the main menu appears.
      Inputs: window - Pointer to the main menu window.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void main_menu_appear(Window *window) {
   g_current_window = MAIN_MENU;
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: graphics_up_single_repeating_click
 
 Description: The graphics window's single repeating click handler for the "up"
@@ -2239,7 +2237,7 @@ Description: The graphics window's single repeating click handler for the "up"
              context    - Pointer to the associated context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
                                         void *context) {
   if (g_current_window == GRAPHICS_WINDOW) {
@@ -2247,7 +2245,7 @@ void graphics_up_single_repeating_click(ClickRecognizerRef recognizer,
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: graphics_up_multi_click
 
 Description: The graphics window's multi-click handler for the "up" button.
@@ -2257,24 +2255,24 @@ Description: The graphics window's multi-click handler for the "up" button.
              context    - Pointer to the associated context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void graphics_up_multi_click(ClickRecognizerRef recognizer, void *context) {
   if (g_current_window == GRAPHICS_WINDOW) {
     set_player_direction(get_direction_to_the_left(g_player->direction));
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: graphics_down_single_repeating_click
 
-Description: The graphics window's single repeating click handler for the
-             "down" button. Moves the player one cell backward.
+Description: The graphics window's single repeating click handler for the "down"
+             button. Moves the player one cell backward.
 
      Inputs: recognizer - The click recognizer.
              context    - Pointer to the associated context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void graphics_down_single_repeating_click(ClickRecognizerRef recognizer,
                                           void *context) {
   if (g_current_window == GRAPHICS_WINDOW) {
@@ -2282,7 +2280,7 @@ void graphics_down_single_repeating_click(ClickRecognizerRef recognizer,
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: graphics_down_multi_click
 
 Description: The graphics window's multi-click handler for the "down" button.
@@ -2292,14 +2290,14 @@ Description: The graphics window's multi-click handler for the "down" button.
              context    - Pointer to the associated context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void graphics_down_multi_click(ClickRecognizerRef recognizer, void *context) {
   if (g_current_window == GRAPHICS_WINDOW) {
     set_player_direction(get_direction_to_the_right(g_player->direction));
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: graphics_select_single_repeating_click
 
 Description: The graphics window's single repeating click handler for the
@@ -2310,7 +2308,7 @@ Description: The graphics window's single repeating click handler for the
              context    - Pointer to the associated context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
                                             void *context) {
   int8_t damage;
@@ -2389,7 +2387,7 @@ void graphics_select_single_repeating_click(ClickRecognizerRef recognizer,
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: graphics_click_config_provider
 
 Description: Button-click configuration provider for the graphics window.
@@ -2397,7 +2395,7 @@ Description: Button-click configuration provider for the graphics window.
      Inputs: context - Pointer to the associated context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void graphics_click_config_provider(void *context) {
   // "Up" button:
   window_single_repeating_click_subscribe(BUTTON_ID_UP,
@@ -2412,8 +2410,8 @@ void graphics_click_config_provider(void *context) {
 
   // "Down" button:
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN,
-                                         PLAYER_ACTION_REPEAT_INTERVAL,
-                                         graphics_down_single_repeating_click);
+                                          PLAYER_ACTION_REPEAT_INTERVAL,
+                                          graphics_down_single_repeating_click);
   window_multi_click_subscribe(BUTTON_ID_DOWN,
                                MULTI_CLICK_MIN,
                                MULTI_CLICK_MAX,
@@ -2423,11 +2421,11 @@ void graphics_click_config_provider(void *context) {
 
   // "Select" button:
   window_single_repeating_click_subscribe(BUTTON_ID_SELECT,
-                                       PLAYER_ACTION_REPEAT_INTERVAL,
-                                       graphics_select_single_repeating_click);
+                                        PLAYER_ACTION_REPEAT_INTERVAL,
+                                        graphics_select_single_repeating_click);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: narration_single_click
 
 Description: The narration window's single-click handler for all buttons. Shows
@@ -2437,7 +2435,7 @@ Description: The narration window's single-click handler for all buttons. Shows
              context    - Pointer to the associated context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void narration_single_click(ClickRecognizerRef recognizer, void *context) {
   if (g_current_narration < INTRO_NARRATION_4) {
     show_narration(++g_current_narration);
@@ -2446,7 +2444,7 @@ void narration_single_click(ClickRecognizerRef recognizer, void *context) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: narration_click_config_provider
 
 Description: Button-click configurations for the narration window.
@@ -2454,7 +2452,7 @@ Description: Button-click configurations for the narration window.
      Inputs: context - Pointer to the associated context.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void narration_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, narration_single_click);
   window_single_click_subscribe(BUTTON_ID_UP, narration_single_click);
@@ -2462,7 +2460,7 @@ void narration_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_BACK, narration_single_click);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: tick_handler
 
 Description: Handles changes to the game world every second while in active
@@ -2472,7 +2470,7 @@ Description: Handles changes to the game world every second while in active
              units_changed - Indicates which time unit changed.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   int8_t i,
          j,
@@ -2518,12 +2516,12 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
           if (npc->status_effects[INTIMIDATION]) {
             move_npc(npc,
                     get_opposite_direction(get_pursuit_direction(npc->position,
-                                                         g_player->position)));
+                                                          g_player->position)));
           } else if (npc->type == MAGE && player_is_visible_to_npc) {
             g_enemy_current_spell_animation = NUM_SPELL_ANIMATIONS;
             g_enemy_spell_timer = app_timer_register(DEFAULT_TIMER_DURATION,
-                                                    enemy_spell_timer_callback,
-                                                    NULL);
+                                                     enemy_spell_timer_callback,
+                                                     NULL);
             if (g_player->int8_stats[SHADOW_FORM] &&
                 (rand() % g_player->int8_stats[INTELLECT] +
                    g_player->int8_stats[SHADOW_FORM] > damage)) {
@@ -2597,23 +2595,23 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: app_focus_handler
 
-Description: Handles PebbleQuest going out of, or coming back into, focus
-             (e.g., when a notification window temporarily hides this app).
+Description: Handles PebbleQuest going out of, or coming back into, focus (e.g.,
+             when a notification window temporarily hides this app).
 
      Inputs: in_focus - "True" if PebbleQuest is now in focus.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void app_focus_handler(const bool in_focus) {
   if (!in_focus && g_current_window == GRAPHICS_WINDOW) {
     show_window(MAIN_MENU, NOT_ANIMATED);
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: equip_heavy_item
 
 Description: Equips a given heavy item to its appropriate equip target,
@@ -2624,7 +2622,7 @@ Description: Equips a given heavy item to its appropriate equip target,
      Inputs: heavy_item - Pointer to the heavy item to be equipped.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void equip_heavy_item(heavy_item_t *const heavy_item) {
   if (heavy_item->equipped) {
     unequip_heavy_item(heavy_item);
@@ -2639,7 +2637,7 @@ void equip_heavy_item(heavy_item_t *const heavy_item) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: unequip_heavy_item
 
 Description: Unequips a given heavy item, then adjusts constant status effects
@@ -2648,7 +2646,7 @@ Description: Unequips a given heavy item, then adjusts constant status effects
      Inputs: heavy_item - Pointer to the heavy item to be unequipped.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void unequip_heavy_item(heavy_item_t *const heavy_item) {
   heavy_item->equipped = false;
   if (heavy_item->equip_target < RIGHT_HAND &&
@@ -2658,7 +2656,7 @@ void unequip_heavy_item(heavy_item_t *const heavy_item) {
   set_player_minor_stats();
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: unequip_item_at
 
 Description: Unequips the equipped item (if any) at a given equip target, then
@@ -2668,7 +2666,7 @@ Description: Unequips the equipped item (if any) at a given equip target, then
                             LEFT_HAND, or RIGHT_HAND) that is to be emptied.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void unequip_item_at(const int8_t equip_target) {
   heavy_item_t *heavy_item = get_heavy_item_equipped_at(equip_target);
 
@@ -2680,7 +2678,7 @@ void unequip_item_at(const int8_t equip_target) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: set_player_minor_stats
 
 Description: Assigns values to the player's minor stats according to major stat
@@ -2690,7 +2688,7 @@ Description: Assigns values to the player's minor stats according to major stat
      Inputs: None.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void set_player_minor_stats(void) {
   int8_t i;
   heavy_item_t *heavy_item;
@@ -2759,16 +2757,15 @@ void set_player_minor_stats(void) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: init_player
 
-Description: Initializes the global player character struct according to
-             default values.
+Description: Initializes the global player struct according to default values.
 
      Inputs: None.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void init_player(void) {
   int8_t i;
 
@@ -2802,7 +2799,7 @@ void init_player(void) {
   g_player->int16_stats[CURRENT_ENERGY] = g_player->int16_stats[MAX_ENERGY];
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: init_npc
 
 Description: Initializes a given non-player character (NPC) struct according to
@@ -2813,7 +2810,7 @@ Description: Initializes a given non-player character (NPC) struct according to
              position - The NPC's starting position.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void init_npc(npc_t *const npc, const int8_t type, const GPoint position) {
   int8_t i;
 
@@ -2861,7 +2858,7 @@ void init_npc(npc_t *const npc, const int8_t type, const GPoint position) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: init_heavy_item
 
 Description: Initializes a new heavy item struct according to a given type.
@@ -2870,7 +2867,7 @@ Description: Initializes a new heavy item struct according to a given type.
              type - The type of heavy item to be initialized.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void init_heavy_item(heavy_item_t *const item, const int8_t type) {
   item->type = type;
   item->infused_pebble = NONE;
@@ -2884,19 +2881,19 @@ void init_heavy_item(heavy_item_t *const item, const int8_t type) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: init_wall_coords
 
-Description: Initializes the global "back_wall_coords" array so that it
-             contains the top-left and bottom-right coordinates for every
-             potential back wall location on the screen. (This establishes the
-             field of view and sense of perspective while also facilitating
-             convenient drawing of the 3D environment.)
+Description: Initializes the global "back_wall_coords" array so it contains the
+             top-left and bottom-right coordinates for every potential back wall
+             location on the screen. (This establishes the field of view and
+             sense of perspective while also facilitating convenient drawing of
+             the 3D environment.)
 
      Inputs: None.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void init_wall_coords(void) {
   uint8_t i, j, wall_width;
   const float perspective_modifier = 2.0;  // Helps determine FOV, etc.
@@ -2943,7 +2940,7 @@ void init_wall_coords(void) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: init_location
 
 Description: Initializes the global location struct, setting up a new location
@@ -2953,7 +2950,7 @@ Description: Initializes the global location struct, setting up a new location
      Inputs: None.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void init_location(void) {
   int8_t i, j, builder_direction;
   GPoint builder_position;
@@ -3051,7 +3048,7 @@ void init_location(void) {
   persist_write_data(LOCATION_STORAGE_KEY, g_location, sizeof(location_t));
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: init_window
 
 Description: Initializes the window at a given index of the "g_windows" array.
@@ -3059,7 +3056,7 @@ Description: Initializes the window at a given index of the "g_windows" array.
      Inputs: window_index - Integer indicating which window to initialize.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void init_window(const int8_t window_index) {
   g_windows[window_index] = window_create();
 
@@ -3303,16 +3300,15 @@ void init_window(const int8_t window_index) {
                   status_bar_layer_get_layer(g_status_bars[window_index]));
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: deinit_window
 
-Description: Deinitializes the window at a given index of the "g_windows"
-             array.
+Description: Deinitializes the window at a given index of the "g_windows" array.
 
      Inputs: window_index - Integer indicating which window to deinitialize.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void deinit_window(const int8_t window_index) {
   if (window_index < NUM_MENUS) {
     menu_layer_destroy(g_menu_layers[window_index]);
@@ -3323,7 +3319,7 @@ void deinit_window(const int8_t window_index) {
   window_destroy(g_windows[window_index]);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: init
 
 Description: Initializes the PebbleQuest app.
@@ -3331,7 +3327,7 @@ Description: Initializes the PebbleQuest app.
      Inputs: None.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void init(void) {
   int8_t i;
 
@@ -3370,7 +3366,7 @@ void init(void) {
   tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: deinit
 
 Description: Deinitializes the PebbleQuest app.
@@ -3378,7 +3374,7 @@ Description: Deinitializes the PebbleQuest app.
      Inputs: None.
 
     Outputs: None.
-******************************************************************************/
+*******************************************************************************/
 void deinit(void) {
   int8_t i;
 
@@ -3393,7 +3389,7 @@ void deinit(void) {
   }
 }
 
-/******************************************************************************
+/*******************************************************************************
    Function: main
 
 Description: Main function for the PebbleQuest app.
@@ -3401,7 +3397,7 @@ Description: Main function for the PebbleQuest app.
      Inputs: None.
 
     Outputs: Number of errors encountered.
-******************************************************************************/
+*******************************************************************************/
 int main(void) {
   init();
   app_event_loop();

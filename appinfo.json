@@ -1,22 +1,22 @@
 {
-    "appKeys": {},
-    "capabilities": [
-        ""
-    ],
-    "companyName": "David C. Drake",
-    "longName": "PebbleQuest",
-    "projectType": "native",
-    "resources": {
-        "media": []
-    },
-    "sdkVersion": "3",
-    "shortName": "PebbleQuest",
-    "targetPlatforms": [
-        "basalt"
-    ],
-    "uuid": "3fb0f2c1-9447-494c-b0e8-1338d9490672",
-    "versionLabel": "1.4",
-    "watchapp": {
-        "watchface": false
-    }
+  "appKeys": {},
+  "capabilities": [
+    ""
+  ],
+  "companyName": "David C. Drake",
+  "longName": "PebbleQuest",
+  "projectType": "native",
+  "resources": {
+    "media": []
+  },
+  "sdkVersion": "3",
+  "shortName": "PebbleQuest",
+  "targetPlatforms": [
+    "basalt"
+  ],
+  "uuid": "3fb0f2c1-9447-494c-b0e8-1338d9490672",
+  "versionLabel": "1.4",
+  "watchapp": {
+    "watchface": false
+  }
 }
